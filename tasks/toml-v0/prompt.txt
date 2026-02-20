@@ -4,6 +4,8 @@ Your validator must read a TOML file from stdin.
 If it is valid, exit with zero exit code.
 If it is invalid, exit with non-zero exit code.
 
+TOML is a complex format. Work incrementally: start with a minimal parser that handles basic key/value pairs and tables, submit it to see which tests pass, then add features (strings, numbers, arrays, inline tables, date-times, etc.) one at a time based on the failing tests. Each submission runs 745 tests — use the failure messages to guide what to implement next.
+
 The input is a TOML v1.1.0 document. The full specification follows.
 
 ---
