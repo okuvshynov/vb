@@ -31,6 +31,7 @@ python validation_bench.py --task bencode-cpp-v0 --n-repeats 10
 | `--model` | auto-detect | Model name; empty = query `/v1/models` |
 | `--temperature` | `1.0` | Sampling temperature |
 | `--max-turns` | `10` | Max conversation turns per repeat |
+| `--prompt` | `prompt` | Prompt variant name (see below) |
 
 ## Tasks
 
@@ -38,10 +39,18 @@ python validation_bench.py --task bencode-cpp-v0 --n-repeats 10
 
 Implement a bencode message validator in C++17. The model reads input from stdin and exits 0 for valid / non-zero for invalid. Test suite: 55 cases covering strings, integers, lists, dictionaries, edge cases, and binary data.
 
+**Prompt variants** (use `--prompt <name>`):
+| Variant | File | Description |
+|---|---|---|
+| `prompt` (default) | `prompt.txt` | Original bencode spec; no mention of leading zeros on string lengths |
+| `bijection` | `prompt-bijection.txt` | Adds canonical encoding / unique bijection requirement; model must infer leading-zero implications |
+| `explicit-leading-zero` | `prompt-explicit-leading-zero.txt` | Explicitly states string lengths must not have leading zeros |
+
 ## Adding tasks
 
 Create a directory under `tasks/` with:
-- `prompt.txt` — task specification (pure spec, no tool instructions)
+- `prompt.txt` — default task specification (pure spec, no tool instructions)
+- `prompt-{variant}.txt` — optional alternative prompt variants
 - `test.sh` — test script that takes the compiled binary path as `$1`
 
 Test script should print `ALL N TESTS PASSED` on success or `F/N TESTS FAILED` on failure.

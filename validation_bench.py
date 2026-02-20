@@ -261,9 +261,9 @@ def run_repeat(
     )
 
 
-def print_summary(results: list[RepeatResult], model: str, task: str):
+def print_summary(results: list[RepeatResult], model: str, task: str, prompt: str):
     print("\n" + "=" * 60)
-    print(f"Task: {task} | Model: {model} | Repeats: {len(results)}")
+    print(f"Task: {task} | Prompt: {prompt} | Model: {model} | Repeats: {len(results)}")
     print("=" * 60)
 
     for r in results:
@@ -295,6 +295,7 @@ def main():
     parser.add_argument("--model", default="", help="Model name (empty = auto-detect)")
     parser.add_argument("--temperature", type=float, default=1.0, help="Sampling temperature")
     parser.add_argument("--max-turns", type=int, default=10, help="Max conversation turns per repeat")
+    parser.add_argument("--prompt", default="prompt", help="Prompt variant (loads prompt-{name}.txt, or 'prompt' for prompt.txt)")
     args = parser.parse_args()
 
     # Resolve task directory
@@ -303,7 +304,10 @@ def main():
         print(f"Error: task directory not found: {tasks_dir}", file=sys.stderr)
         sys.exit(1)
 
-    prompt_file = tasks_dir / "prompt.txt"
+    if args.prompt == "prompt":
+        prompt_file = tasks_dir / "prompt.txt"
+    else:
+        prompt_file = tasks_dir / f"prompt-{args.prompt}.txt"
     test_sh = tasks_dir / "test.sh"
     for f in [prompt_file, test_sh]:
         if not f.exists():
@@ -317,7 +321,7 @@ def main():
 
     model = args.model if args.model else auto_detect_model(client)
 
-    print(f"Running task '{args.task}' with model '{model}'")
+    print(f"Running task '{args.task}' (prompt: {args.prompt}) with model '{model}'")
     print(f"Repeats: {args.n_repeats} | Max turns: {args.max_turns} | Temperature: {args.temperature}")
     print("-" * 60)
 
@@ -339,7 +343,7 @@ def main():
         print("\n\nInterrupted! Showing results collected so far.")
 
     if results:
-        print_summary(results, model, args.task)
+        print_summary(results, model, args.task, args.prompt)
 
 
 if __name__ == "__main__":
