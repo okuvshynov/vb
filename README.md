@@ -18,9 +18,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-```bash
-python validation_bench.py --task bencode-cpp-v0 --n-repeats 10
-```
+Both harnesses share the same CLI arguments:
 
 | Argument | Default | Description |
 |---|---|---|
@@ -32,6 +30,20 @@ python validation_bench.py --task bencode-cpp-v0 --n-repeats 10
 | `--temperature` | `1.0` | Sampling temperature |
 | `--max-turns` | `10` | Max conversation turns per repeat |
 | `--prompt` | `prompt` | Prompt variant name (see below) |
+
+### Bencode
+
+```bash
+python validation_bench.py --task bencode-cpp-v0 --n-repeats 10
+python validation_bench.py --task bencode-cpp-v0 --prompt bijection --n-repeats 10
+python validation_bench.py --task bencode-cpp-v0 --prompt explicit-leading-zero --n-repeats 10
+```
+
+### TOML
+
+```bash
+python toml_validation_bench.py --task toml-v0 --n-repeats 10
+```
 
 ## Tasks
 
@@ -45,6 +57,10 @@ Implement a bencode message validator in C++17. The model reads input from stdin
 | `prompt` (default) | `prompt.txt` | Original bencode spec; no mention of leading zeros on string lengths |
 | `bijection` | `prompt-bijection.txt` | Adds canonical encoding / unique bijection requirement; model must infer leading-zero implications |
 | `explicit-leading-zero` | `prompt-explicit-leading-zero.txt` | Explicitly states string lengths must not have leading zeros |
+
+### `toml-v0`
+
+Implement a TOML v1.1.0 validator in C++17. The model reads a TOML file from stdin and exits 0 for valid / non-zero for invalid. Test suite: 745 cases (262 valid, 483 invalid) from [toml-test](https://github.com/toml-lang/toml-test), covering strings, integers, floats, booleans, date-times, arrays, tables, inline tables, and arrays of tables.
 
 ## Adding tasks
 
