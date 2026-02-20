@@ -167,6 +167,21 @@ def auto_detect_model(client: OpenAI) -> str:
     return model_id
 
 
+def serialize_message(msg) -> dict:
+    """Convert a message (dict or OpenAI object) to a JSON-serializable dict."""
+    if isinstance(msg, dict):
+        return msg
+    return msg.model_dump(exclude_none=True)
+
+
+def save_repeat_log(repeat_dir: Path, messages: list):
+    """Save the full conversation transcript as messages.json."""
+    serialized = [serialize_message(m) for m in messages]
+    (repeat_dir / "messages.json").write_text(
+        json.dumps(serialized, indent=2, ensure_ascii=False)
+    )
+
+
 def run_repeat(
     client: OpenAI,
     model: str,
@@ -175,7 +190,12 @@ def run_repeat(
     max_turns: int,
     temperature: float,
     repeat_index: int,
+    repeat_dir: Path,
 ) -> RepeatResult:
+    repeat_dir.mkdir(parents=True, exist_ok=True)
+    submissions_dir = repeat_dir / "submissions"
+    submissions_dir.mkdir()
+
     messages = [{"role": "system", "content": system_message}]
     submissions = 0
     last_compiled_result: TestResult | None = None
@@ -227,7 +247,18 @@ def run_repeat(
                 continue
 
             submissions += 1
+            # Save submission source code
+            sub_dir = submissions_dir / str(submissions)
+            sub_dir.mkdir()
+            (sub_dir / "solution.cpp").write_text(source_code)
+
             result = handle_submit(source_code, test_sh)
+
+            # Save compiler and test output
+            (sub_dir / "compiler.txt").write_text(result.compiler_output)
+            if result.compiled:
+                (sub_dir / "tests.txt").write_text(result.test_output)
+
             tool_result_str = format_tool_result(result)
 
             status = "COMPILE_FAIL"
@@ -250,6 +281,9 @@ def run_repeat(
     elapsed = time.time() - start
     final_passed = last_compiled_result.passed if last_compiled_result else 0
     final_total = last_compiled_result.total if last_compiled_result else 0
+
+    # Save conversation transcript
+    save_repeat_log(repeat_dir, messages)
 
     return RepeatResult(
         repeat_index=repeat_index,
@@ -321,8 +355,14 @@ def main():
 
     model = args.model if args.model else auto_detect_model(client)
 
+    # Create run output directory
+    run_dir = Path(tempfile.mkdtemp(prefix="vb_"))
+    repeats_dir = run_dir / "repeats"
+    repeats_dir.mkdir()
+
     print(f"Running task '{args.task}' (prompt: {args.prompt}) with model '{model}'")
     print(f"Repeats: {args.n_repeats} | Max turns: {args.max_turns} | Temperature: {args.temperature}")
+    print(f"Output: {run_dir}")
     print("-" * 60)
 
     results = []
@@ -337,6 +377,7 @@ def main():
                 max_turns=args.max_turns,
                 temperature=args.temperature,
                 repeat_index=i,
+                repeat_dir=repeats_dir / str(i),
             )
             results.append(r)
     except KeyboardInterrupt:
@@ -344,6 +385,7 @@ def main():
 
     if results:
         print_summary(results, model, args.task, args.prompt)
+        print(f"\nOutput saved to: {run_dir}")
 
 
 if __name__ == "__main__":
