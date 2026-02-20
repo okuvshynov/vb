@@ -186,7 +186,7 @@ def run_repeat(
     system_message: str,
     test_sh: Path,
     max_turns: int,
-    temperature: float,
+    sampling_params: dict,
     repeat_index: int,
     repeat_dir: Path,
 ) -> RepeatResult:
@@ -206,7 +206,7 @@ def run_repeat(
                 messages=messages,
                 tools=[SUBMIT_TOOL],
                 tool_choice="auto",
-                temperature=temperature,
+                **sampling_params,
             )
         except Exception as e:
             print(f"  [repeat {repeat_index}] API error on turn {turn}: {e}", file=sys.stderr)
@@ -325,7 +325,7 @@ def main():
     parser.add_argument("--api-base", default="http://localhost:8080/v1", help="OpenAI-compatible endpoint")
     parser.add_argument("--api-key", default="no-key", help="API key")
     parser.add_argument("--model", default="", help="Model name (empty = auto-detect)")
-    parser.add_argument("--temperature", type=float, default=1.0, help="Sampling temperature")
+    parser.add_argument("--temperature", type=float, default=None, help="Sampling temperature (omit to use server default)")
     parser.add_argument("--max-turns", type=int, default=10, help="Max conversation turns per repeat")
     parser.add_argument("--prompt", default="prompt", help="Prompt variant (loads prompt-{name}.txt, or 'prompt' for prompt.txt)")
     args = parser.parse_args()
@@ -358,8 +358,14 @@ def main():
     repeats_dir = run_dir / "repeats"
     repeats_dir.mkdir()
 
+    # Build sampling params — only include explicitly set values
+    sampling_params = {}
+    if args.temperature is not None:
+        sampling_params["temperature"] = args.temperature
+
     print(f"Running task '{args.task}' (prompt: {args.prompt}) with model '{model}'")
-    print(f"Repeats: {args.n_repeats} | Max turns: {args.max_turns} | Temperature: {args.temperature}")
+    sampling_str = ", ".join(f"{k}={v}" for k, v in sampling_params.items()) or "server defaults"
+    print(f"Repeats: {args.n_repeats} | Max turns: {args.max_turns} | Sampling: {sampling_str}")
     print(f"Output: {run_dir}")
     print("-" * 60)
 
@@ -373,7 +379,7 @@ def main():
                 system_message=system_message,
                 test_sh=test_sh,
                 max_turns=args.max_turns,
-                temperature=args.temperature,
+                sampling_params=sampling_params,
                 repeat_index=i,
                 repeat_dir=repeats_dir / str(i),
             )

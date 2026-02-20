@@ -27,7 +27,7 @@ Both harnesses share the same CLI arguments:
 | `--api-base` | `http://localhost:8080/v1` | OpenAI-compatible endpoint |
 | `--api-key` | `"no-key"` | API key |
 | `--model` | auto-detect | Model name; empty = query `/v1/models` |
-| `--temperature` | `1.0` | Sampling temperature |
+| `--temperature` | server default | Sampling temperature (omit to let the server decide) |
 | `--max-turns` | `10` | Max conversation turns per repeat |
 | `--prompt` | `prompt` | Prompt variant name (see below) |
 
