@@ -2,6 +2,10 @@
 VALIDATOR="${1:-./validator}"
 PASS=0
 FAIL=0
+VALID_PASS=0
+VALID_FAIL=0
+INVALID_PASS=0
+INVALID_FAIL=0
 
 expect() {
   local expected="$1" label="$2"
@@ -10,9 +14,11 @@ expect() {
   if { [ "$expected" = "valid" ] && [ "$rc" -eq 0 ]; } ||
      { [ "$expected" = "invalid" ] && [ "$rc" -ne 0 ]; }; then
     PASS=$((PASS + 1))
+    [ "$expected" = "valid" ] && VALID_PASS=$((VALID_PASS + 1)) || INVALID_PASS=$((INVALID_PASS + 1))
   else
     echo "FAIL: $label (exit=$rc, expected $expected)"
     FAIL=$((FAIL + 1))
+    [ "$expected" = "valid" ] && VALID_FAIL=$((VALID_FAIL + 1)) || INVALID_FAIL=$((INVALID_FAIL + 1))
   fi
 }
 
@@ -22,9 +28,11 @@ expect_hex() {
   if { [ "$expected" = "valid" ] && [ "$rc" -eq 0 ]; } ||
      { [ "$expected" = "invalid" ] && [ "$rc" -ne 0 ]; }; then
     PASS=$((PASS + 1))
+    [ "$expected" = "valid" ] && VALID_PASS=$((VALID_PASS + 1)) || INVALID_PASS=$((INVALID_PASS + 1))
   else
     echo "FAIL: $label (exit=$rc, expected $expected)"
     FAIL=$((FAIL + 1))
+    [ "$expected" = "valid" ] && VALID_FAIL=$((VALID_FAIL + 1)) || INVALID_FAIL=$((INVALID_FAIL + 1))
   fi
 }
 
@@ -97,6 +105,7 @@ expect_hex valid "string: binary content (null bytes)" "333a000102"
 
 # ── Summary ──────────────────────────────────────────────
 total=$((PASS + FAIL))
+echo "MATRIX: TP=$VALID_PASS FN=$VALID_FAIL FP=$INVALID_FAIL TN=$INVALID_PASS"
 if [ "$FAIL" -eq 0 ]; then
   echo "ALL $total TESTS PASSED"
 else

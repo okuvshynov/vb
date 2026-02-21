@@ -16,12 +16,27 @@ from openai import OpenAI
 
 
 @dataclass
+class ConfusionMatrix:
+    tp: int = 0  # valid correctly accepted
+    fn: int = 0  # valid incorrectly rejected
+    fp: int = 0  # invalid incorrectly accepted
+    tn: int = 0  # invalid correctly rejected
+
+    @property
+    def passed(self) -> int:
+        return self.tp + self.tn
+
+    @property
+    def total(self) -> int:
+        return self.tp + self.fn + self.fp + self.tn
+
+
+@dataclass
 class TestResult:
     compiled: bool
     compiler_output: str
     test_output: str
-    passed: int
-    total: int
+    matrix: ConfusionMatrix
 
 
 @dataclass
@@ -29,8 +44,7 @@ class RepeatResult:
     repeat_index: int
     turns_used: int
     submissions: int
-    final_passed: int
-    final_total: int
+    final_matrix: ConfusionMatrix
     elapsed_seconds: float
 
 
@@ -80,8 +94,7 @@ def handle_submit(source_code: str, test_sh: Path) -> TestResult:
                 compiled=False,
                 compiler_output="Compilation timed out (30s limit).",
                 test_output="",
-                passed=0,
-                total=0,
+                matrix=ConfusionMatrix(),
             )
 
         if comp.returncode != 0:
@@ -89,8 +102,7 @@ def handle_submit(source_code: str, test_sh: Path) -> TestResult:
                 compiled=False,
                 compiler_output=comp.stderr,
                 test_output="",
-                passed=0,
-                total=0,
+                matrix=ConfusionMatrix(),
             )
 
         # Run test.sh from its original location with absolute path to binary
@@ -107,35 +119,30 @@ def handle_submit(source_code: str, test_sh: Path) -> TestResult:
                 compiled=True,
                 compiler_output=comp.stderr,
                 test_output="Test execution timed out (120s limit).",
-                passed=0,
-                total=0,
+                matrix=ConfusionMatrix(),
             )
 
         output = run.stdout + run.stderr
-        passed, total = parse_test_output(output)
+        matrix = parse_test_output(output)
 
         return TestResult(
             compiled=True,
             compiler_output=comp.stderr,
             test_output=output,
-            passed=passed,
-            total=total,
+            matrix=matrix,
         )
 
 
-def parse_test_output(output: str) -> tuple[int, int]:
-    m = re.search(r"ALL (\d+) TESTS PASSED", output)
+def parse_test_output(output: str) -> ConfusionMatrix:
+    m = re.search(r"MATRIX: TP=(\d+) FN=(\d+) FP=(\d+) TN=(\d+)", output)
     if m:
-        total = int(m.group(1))
-        return total, total
-
-    m = re.search(r"(\d+)/(\d+) TESTS FAILED", output)
-    if m:
-        failed = int(m.group(1))
-        total = int(m.group(2))
-        return total - failed, total
-
-    return 0, 0
+        return ConfusionMatrix(
+            tp=int(m.group(1)),
+            fn=int(m.group(2)),
+            fp=int(m.group(3)),
+            tn=int(m.group(4)),
+        )
+    return ConfusionMatrix()
 
 
 def format_tool_result(result: TestResult) -> str:
@@ -145,8 +152,9 @@ def format_tool_result(result: TestResult) -> str:
         parts.append(result.compiler_output)
         return "\n".join(parts)
 
-    parts.append(f"Compiled successfully. Test results: {result.passed}/{result.total} passed.")
-    if result.passed < result.total:
+    m = result.matrix
+    parts.append(f"Compiled successfully. Test results: {m.passed}/{m.total} passed.")
+    if m.passed < m.total:
         # Include FAIL lines so the model can fix bugs
         for line in result.test_output.splitlines():
             if line.startswith("FAIL:"):
@@ -262,7 +270,8 @@ def run_repeat(
             status = "COMPILE_FAIL"
             if result.compiled:
                 last_compiled_result = result
-                status = f"{result.passed}/{result.total}"
+                m = result.matrix
+                status = f"{m.passed}/{m.total} (TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn})"
 
             print(f"  [repeat {repeat_index}] turn {turn}, submission {submissions}: {status}")
 
@@ -273,12 +282,13 @@ def run_repeat(
             })
 
         # Early exit if all tests passed
-        if last_compiled_result and last_compiled_result.passed == last_compiled_result.total and last_compiled_result.total > 0:
-            break
+        if last_compiled_result:
+            m = last_compiled_result.matrix
+            if m.passed == m.total and m.total > 0:
+                break
 
     elapsed = time.time() - start
-    final_passed = last_compiled_result.passed if last_compiled_result else 0
-    final_total = last_compiled_result.total if last_compiled_result else 0
+    final_matrix = last_compiled_result.matrix if last_compiled_result else ConfusionMatrix()
 
     # Save conversation transcript
     save_repeat_log(repeat_dir, messages)
@@ -287,8 +297,7 @@ def run_repeat(
         repeat_index=repeat_index,
         turns_used=min(turn + 1, max_turns) if 'turn' in dir() else 0,
         submissions=submissions,
-        final_passed=final_passed,
-        final_total=final_total,
+        final_matrix=final_matrix,
         elapsed_seconds=round(elapsed, 1),
     )
 
@@ -299,21 +308,36 @@ def print_summary(results: list[RepeatResult], model: str, task: str, prompt: st
     print("=" * 60)
 
     for r in results:
-        score = f"{r.final_passed}/{r.final_total}" if r.final_total > 0 else "0/0"
-        status = "PASS" if r.final_passed == r.final_total and r.final_total > 0 else "FAIL"
+        m = r.final_matrix
+        score = f"{m.passed}/{m.total}" if m.total > 0 else "0/0"
+        status = "PASS" if m.passed == m.total and m.total > 0 else "FAIL"
         print(
             f"  repeat {r.repeat_index}: {score} ({status}) "
+            f"| TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn} "
             f"| {r.submissions} submissions | {r.turns_used} turns | {r.elapsed_seconds}s"
         )
 
-    scored = [r for r in results if r.final_total > 0]
+    scored = [r for r in results if r.final_matrix.total > 0]
     if scored:
-        scores = [r.final_passed / r.final_total for r in scored]
+        scores = [r.final_matrix.passed / r.final_matrix.total for r in scored]
         mean = sum(scores) / len(scores)
         all_pass = sum(1 for s in scores if s == 1.0)
         print(f"\nMean score: {mean:.2%}")
         print(f"Min: {min(scores):.2%} | Max: {max(scores):.2%}")
         print(f"All-pass rate: {all_pass}/{len(scored)} ({all_pass/len(scored):.0%})")
+
+        # Aggregate confusion matrix
+        agg = ConfusionMatrix(
+            tp=sum(r.final_matrix.tp for r in scored),
+            fn=sum(r.final_matrix.fn for r in scored),
+            fp=sum(r.final_matrix.fp for r in scored),
+            tn=sum(r.final_matrix.tn for r in scored),
+        )
+        n = len(scored)
+        print(f"\nAggregate confusion matrix (sum over {n} repeats):")
+        print(f"                  Predicted Valid  Predicted Invalid")
+        print(f"  Actually Valid   TP={agg.tp:<14d} FN={agg.fn}")
+        print(f"  Actually Invalid FP={agg.fp:<14d} TN={agg.tn}")
     else:
         print("\nNo valid submissions across all repeats.")
 
