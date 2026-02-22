@@ -43,7 +43,7 @@ python validation_bench.py --task bencode-cpp-v0 --prompt explicit-leading-zero 
 
 ### `bencode-cpp-v0`
 
-Implement a bencode message validator in C++17. The model reads input from stdin and exits 0 for valid / non-zero for invalid. Test suite: 55 cases covering strings, integers, lists, dictionaries, edge cases, and binary data.
+Implement a bencode message validator in C++17. The model reads input from stdin and exits 0 for valid / non-zero for invalid. Test suite: 71 cases covering strings, integers, lists, dictionaries, edge cases, and binary data.
 
 **Prompt variants** (use `--prompt <name>`):
 | Variant | File | Description |
@@ -60,7 +60,56 @@ Create a directory under `tasks/` with:
 - `tests.jsonl` — test cases, one JSON object per line
 
 Each line in `tests.jsonl` has the following fields:
+- `id` (string): stable case identifier (e.g., `s01`, `i14`, `d07`)
 - `input` (string): plain text input piped to the validator via stdin
-- `input_hex` (string): hex-encoded input — mutually exclusive with `input`
+- `input_hex` (string): hex-encoded input — mutually exclusive with `input`, used for binary data
 - `expected`: `"valid"` or `"invalid"`
 - `label`: human-readable test description
+
+## Reference validator
+
+`reference/` contains a reference bencode validator built on [libtorrent](https://github.com/arvidn/libtorrent)'s `bdecode()` — the canonical C++ bencode implementation. It verifies our test expectations against a battle-tested implementation.
+
+```bash
+cd reference
+python3 check_tests.py    # builds libtorrent + validator, runs all tests
+```
+
+**Prerequisites:** Boost (`brew install boost`), CMake, clang++. libtorrent source expected at `../3rd/libtorrent` (with `deps/try_signal` submodule initialized).
+
+**Current results:** 68/71 match, 3 known discrepancies:
+- `i08` (FN): libtorrent rejects integers exceeding int64 range — implementation limit, not spec violation
+- `i09` (FP): libtorrent misses negative zero (`i-0e`) — `has_soft_error()` bug
+- `i12` (FP): libtorrent misses negative leading zero (`i-03e`) — same bug
+
+## Developing test cases
+
+When adding new test cases to `tests.jsonl`:
+
+### 1. Identify gaps
+
+Find untested corner cases by:
+- **Reviewing LLM-generated solutions** that pass all existing tests. Look for bugs the tests don't catch (e.g., `getline` stripping newlines, comparing raw bencode keys instead of key bytes).
+- **Studying reference implementations** — libtorrent's `test_bdecode.cpp` has ~78 test scenarios. Cross-reference against our suite.
+- **Analyzing the spec** for ambiguities (trailing data, key ordering edge cases, integer boundaries).
+
+### 2. Add cases to tests.jsonl
+
+Assign an ID following the convention: `s` (string), `i` (integer), `l` (list), `d` (dict), `t` (top-level), followed by a two-digit number. Use `input_hex` for binary content (null bytes, newlines).
+
+```json
+{"id": "s14", "input_hex": "333a610a62", "expected": "valid", "label": "string: binary content (newline)"}
+```
+
+### 3. Verify against reference
+
+Run `reference/check_tests.py` and confirm new cases either match or fall into a known discrepancy. Any NEW discrepancy means either the test expectation is wrong or a new libtorrent gap was found — investigate before merging.
+
+### 4. Confirm bug-catching value
+
+If the test was inspired by a buggy solution, compile that solution and verify it actually fails on the new test:
+
+```bash
+clang++ -std=c++17 -O2 -o /tmp/buggy solution.cpp
+echo -n 'input' | /tmp/buggy && echo VALID || echo INVALID
+```
