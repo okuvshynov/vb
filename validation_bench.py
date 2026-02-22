@@ -46,14 +46,6 @@ class RepeatResult:
     elapsed_seconds: float
 
 
-SYSTEM_TEMPLATE = """\
-You are an expert C++ programmer. Implement the solution described below.
-Submit your complete C++ source code using the `submit` tool.
-You will receive compilation and test results. Fix and resubmit if needed.
-
-## Specification
-{spec}"""
-
 SUBMIT_TOOL = {
     "type": "function",
     "function": {
@@ -213,7 +205,7 @@ def save_repeat_log(repeat_dir: Path, messages: list):
 def run_repeat(
     client: OpenAI,
     model: str,
-    system_message: str,
+    user_prompt: str,
     tests: list[dict],
     max_turns: int,
     sampling_params: dict,
@@ -224,7 +216,7 @@ def run_repeat(
     submissions_dir = repeat_dir / "submissions"
     submissions_dir.mkdir()
 
-    messages = [{"role": "system", "content": system_message}]
+    messages = [{"role": "user", "content": user_prompt}]
     submissions = 0
     last_compiled_result: TestResult | None = None
     start = time.time()
@@ -392,8 +384,7 @@ def main():
             print(f"Error: missing file: {f}", file=sys.stderr)
             sys.exit(1)
 
-    spec = prompt_file.read_text()
-    system_message = SYSTEM_TEMPLATE.format(spec=spec)
+    user_prompt = prompt_file.read_text()
     tests = load_tests(tests_file)
 
     client = OpenAI(base_url=args.api_base, api_key=args.api_key)
@@ -423,7 +414,7 @@ def main():
             r = run_repeat(
                 client=client,
                 model=model,
-                system_message=system_message,
+                user_prompt=user_prompt,
                 tests=tests,
                 max_turns=args.max_turns,
                 sampling_params=sampling_params,

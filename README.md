@@ -56,7 +56,7 @@ Implement a bencode message validator in C++17. The model reads input from stdin
 ## Adding tasks
 
 Create a directory under `tasks/` with:
-- `prompt.txt` — default task specification (pure spec, no tool instructions)
+- `prompt.txt` — default task prompt (includes role instructions, tool usage, and spec)
 - `prompt-{variant}.txt` — optional alternative prompt variants
 - `tests.jsonl` — test cases, one JSON object per line
 
