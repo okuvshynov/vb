@@ -57,6 +57,10 @@ Implement a bencode message validator in C++17. The model reads input from stdin
 Create a directory under `tasks/` with:
 - `prompt.txt` — default task specification (pure spec, no tool instructions)
 - `prompt-{variant}.txt` — optional alternative prompt variants
-- `test.sh` — test script that takes the compiled binary path as `$1`
+- `tests.jsonl` — test cases, one JSON object per line
 
-Test script should print `ALL N TESTS PASSED` on success or `F/N TESTS FAILED` on failure.
+Each line in `tests.jsonl` has the following fields:
+- `input` (string): plain text input piped to the validator via stdin
+- `input_hex` (string): hex-encoded input — mutually exclusive with `input`
+- `expected`: `"valid"` or `"invalid"`
+- `label`: human-readable test description

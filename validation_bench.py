@@ -3,14 +3,11 @@
 
 import argparse
 import json
-import os
-import re
-import shutil
 import subprocess
 import sys
 import tempfile
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from openai import OpenAI
@@ -76,7 +73,59 @@ SUBMIT_TOOL = {
 }
 
 
-def handle_submit(source_code: str, test_sh: Path) -> TestResult:
+def load_tests(tests_file: Path) -> list[dict]:
+    """Load test cases from JSONL file."""
+    tests = []
+    with open(tests_file) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                tests.append(json.loads(line))
+    return tests
+
+
+def run_tests(binary: Path, tests: list[dict]) -> tuple[str, ConfusionMatrix]:
+    """Run all test cases against the binary, return (output_text, matrix)."""
+    matrix = ConfusionMatrix()
+    lines = []
+    for t in tests:
+        if "input_hex" in t:
+            input_data = bytes.fromhex(t["input_hex"])
+        else:
+            input_data = t["input"].encode()
+
+        expected = t["expected"]
+        label = t["label"]
+
+        try:
+            proc = subprocess.run(
+                [str(binary)], input=input_data,
+                capture_output=True, timeout=5,
+            )
+            rc = proc.returncode
+        except subprocess.TimeoutExpired:
+            rc = -1
+
+        passed = (expected == "valid" and rc == 0) or (expected == "invalid" and rc != 0)
+
+        if passed:
+            if expected == "valid":
+                matrix.tp += 1
+            else:
+                matrix.tn += 1
+        else:
+            if expected == "valid":
+                matrix.fn += 1
+            else:
+                matrix.fp += 1
+            lines.append(f"FAIL: {label} (exit={rc}, expected {expected})")
+
+    summary = f"{matrix.passed}/{matrix.total} passed"
+    lines.append(summary)
+    return "\n".join(lines), matrix
+
+
+def handle_submit(source_code: str, tests: list[dict]) -> TestResult:
     with tempfile.TemporaryDirectory() as tmpdir:
         src = Path(tmpdir) / "solution.cpp"
         src.write_text(source_code)
@@ -106,45 +155,15 @@ def handle_submit(source_code: str, test_sh: Path) -> TestResult:
                 matrix=ConfusionMatrix(),
             )
 
-        # Copy test.sh into tmpdir and run
-        shutil.copy(test_sh, Path(tmpdir) / "test.sh")
-        try:
-            run = subprocess.run(
-                ["bash", "test.sh", "./solution"],
-                cwd=tmpdir,
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-        except subprocess.TimeoutExpired:
-            return TestResult(
-                compiled=True,
-                compiler_output=comp.stderr,
-                test_output="Test execution timed out (60s limit).",
-                matrix=ConfusionMatrix(),
-            )
-
-        output = run.stdout + run.stderr
-        matrix = parse_test_output(output)
+        binary = Path(tmpdir) / "solution"
+        test_output, matrix = run_tests(binary, tests)
 
         return TestResult(
             compiled=True,
             compiler_output=comp.stderr,
-            test_output=output,
+            test_output=test_output,
             matrix=matrix,
         )
-
-
-def parse_test_output(output: str) -> ConfusionMatrix:
-    m = re.search(r"MATRIX: TP=(\d+) FN=(\d+) FP=(\d+) TN=(\d+)", output)
-    if m:
-        return ConfusionMatrix(
-            tp=int(m.group(1)),
-            fn=int(m.group(2)),
-            fp=int(m.group(3)),
-            tn=int(m.group(4)),
-        )
-    return ConfusionMatrix()
 
 
 def format_tool_result(result: TestResult) -> str:
@@ -194,7 +213,7 @@ def run_repeat(
     client: OpenAI,
     model: str,
     system_message: str,
-    test_sh: Path,
+    tests: list[dict],
     max_turns: int,
     sampling_params: dict,
     repeat_index: int,
@@ -260,7 +279,7 @@ def run_repeat(
             sub_dir.mkdir()
             (sub_dir / "solution.cpp").write_text(source_code)
 
-            result = handle_submit(source_code, test_sh)
+            result = handle_submit(source_code, tests)
 
             # Save compiler and test output
             (sub_dir / "compiler.txt").write_text(result.compiler_output)
@@ -366,14 +385,15 @@ def main():
         prompt_file = tasks_dir / "prompt.txt"
     else:
         prompt_file = tasks_dir / f"prompt-{args.prompt}.txt"
-    test_sh = tasks_dir / "test.sh"
-    for f in [prompt_file, test_sh]:
+    tests_file = tasks_dir / "tests.jsonl"
+    for f in [prompt_file, tests_file]:
         if not f.exists():
             print(f"Error: missing file: {f}", file=sys.stderr)
             sys.exit(1)
 
     spec = prompt_file.read_text()
     system_message = SYSTEM_TEMPLATE.format(spec=spec)
+    tests = load_tests(tests_file)
 
     client = OpenAI(base_url=args.api_base, api_key=args.api_key)
 
@@ -403,7 +423,7 @@ def main():
                 client=client,
                 model=model,
                 system_message=system_message,
-                test_sh=test_sh,
+                tests=tests,
                 max_turns=args.max_turns,
                 sampling_params=sampling_params,
                 repeat_index=i,
