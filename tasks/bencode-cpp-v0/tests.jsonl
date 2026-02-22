@@ -11,6 +11,7 @@
 {"id": "s11", "input": "999999999999:x", "expected": "invalid", "label": "string: length overflow"}
 {"id": "s12", "input": "100:ab", "expected": "invalid", "label": "string: length far exceeds data"}
 {"id": "s13", "input_hex": "333a000102", "expected": "valid", "label": "string: binary content (null bytes)"}
+{"id": "s14", "input_hex": "333a610a62", "expected": "valid", "label": "string: binary content (newline)"}
 {"id": "i01", "input": "i3e", "expected": "valid", "label": "int: positive"}
 {"id": "i02", "input": "i-3e", "expected": "valid", "label": "int: negative"}
 {"id": "i03", "input": "i0e", "expected": "valid", "label": "int: zero"}
@@ -57,6 +58,8 @@
 {"id": "d14", "input": "d1:ai1e1:be", "expected": "invalid", "label": "dict: key with missing value"}
 {"id": "d15", "input": "d2:aai1e1:ai2ee", "expected": "invalid", "label": "dict: longer key before shorter"}
 {"id": "d16", "input_hex": "64333a61006269316565", "expected": "valid", "label": "dict: null bytes in key"}
+{"id": "d17", "input": "d2:aa1:x1:b1:ye", "expected": "valid", "label": "dict: short key after long (aa < b)"}
+{"id": "d18", "input": "d1:b1:x2:aa1:ye", "expected": "invalid", "label": "dict: short key before long (b > aa)"}
 {"id": "t01", "input": "", "expected": "invalid", "label": "top: empty input"}
 {"id": "t02", "input": "4:spam4:eggs", "expected": "invalid", "label": "top: two values"}
 {"id": "t03", "input": "4:spamgarbage", "expected": "invalid", "label": "top: trailing garbage"}
