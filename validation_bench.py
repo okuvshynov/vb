@@ -95,6 +95,7 @@ def run_tests(binary: Path, tests: list[dict]) -> tuple[str, ConfusionMatrix]:
             input_data = t["input"].encode()
 
         expected = t["expected"]
+        tid = t.get("id", "?")
         label = t["label"]
 
         try:
@@ -118,7 +119,7 @@ def run_tests(binary: Path, tests: list[dict]) -> tuple[str, ConfusionMatrix]:
                 matrix.fn += 1
             else:
                 matrix.fp += 1
-            lines.append(f"FAIL: {label} (exit={rc}, expected {expected})")
+            lines.append(f"FAIL {tid}: {label} (exit={rc}, expected {expected})")
 
     summary = f"{matrix.passed}/{matrix.total} passed"
     lines.append(summary)

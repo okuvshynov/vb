@@ -1,55 +1,68 @@
-{"input": "4:spam", "expected": "valid", "label": "string: basic"}
-{"input": "0:", "expected": "valid", "label": "string: empty"}
-{"input": "1:a", "expected": "valid", "label": "string: single char"}
-{"input": "10:0123456789", "expected": "valid", "label": "string: 10 chars"}
-{"input": "4:spa", "expected": "invalid", "label": "string: truncated"}
-{"input": "4spam", "expected": "invalid", "label": "string: missing colon"}
-{"input": ":spam", "expected": "invalid", "label": "string: missing length"}
-{"input": "4:", "expected": "invalid", "label": "string: data too short"}
-{"input": "-1:a", "expected": "invalid", "label": "string: negative length"}
-{"input": "01:a", "expected": "invalid", "label": "string: leading zero length"}
-{"input": "i3e", "expected": "valid", "label": "int: positive"}
-{"input": "i-3e", "expected": "valid", "label": "int: negative"}
-{"input": "i0e", "expected": "valid", "label": "int: zero"}
-{"input": "i12345e", "expected": "valid", "label": "int: large positive"}
-{"input": "i-12345e", "expected": "valid", "label": "int: large negative"}
-{"input": "i99999999999999999999999999999999999999999999999e", "expected": "valid", "label": "int: very large"}
-{"input": "i-0e", "expected": "invalid", "label": "int: negative zero"}
-{"input": "i03e", "expected": "invalid", "label": "int: leading zero"}
-{"input": "i003e", "expected": "invalid", "label": "int: multiple leading zeros"}
-{"input": "i-03e", "expected": "invalid", "label": "int: negative leading zero"}
-{"input": "ie", "expected": "invalid", "label": "int: empty"}
-{"input": "i-e", "expected": "invalid", "label": "int: just minus"}
-{"input": "i3", "expected": "invalid", "label": "int: missing e"}
-{"input": "iae", "expected": "invalid", "label": "int: non-digit"}
-{"input": "i+3e", "expected": "invalid", "label": "int: plus sign"}
-{"input": "i 3e", "expected": "invalid", "label": "int: space"}
-{"input": "le", "expected": "valid", "label": "list: empty"}
-{"input": "l4:spam4:eggse", "expected": "valid", "label": "list: two strings"}
-{"input": "li1ei2ei3ee", "expected": "valid", "label": "list: three ints"}
-{"input": "ll4:spamee", "expected": "valid", "label": "list: nested"}
-{"input": "lllleeee", "expected": "valid", "label": "list: 4-deep nesting"}
-{"input": "l", "expected": "invalid", "label": "list: unclosed"}
-{"input": "l4:spam", "expected": "invalid", "label": "list: unclosed with content"}
-{"input": "lllleee", "expected": "invalid", "label": "list: mismatched nesting"}
-{"input": "de", "expected": "valid", "label": "dict: empty"}
-{"input": "d3:cow3:moo4:spam4:eggse", "expected": "valid", "label": "dict: basic"}
-{"input": "d4:spaml1:a1:bee", "expected": "valid", "label": "dict: list value"}
-{"input": "d1:a1:b1:c1:de", "expected": "valid", "label": "dict: sorted keys"}
-{"input": "d1:A1:x1:a1:ye", "expected": "valid", "label": "dict: byte-order sort"}
-{"input": "d4:spam4:eggs3:cow3:mooe", "expected": "invalid", "label": "dict: unsorted keys"}
-{"input": "d3:aaa1:b3:aaa1:ce", "expected": "invalid", "label": "dict: duplicate keys"}
-{"input": "d1:b1:x1:a1:ye", "expected": "invalid", "label": "dict: reverse sorted"}
-{"input": "di3e4:spame", "expected": "invalid", "label": "dict: non-string key"}
-{"input": "d", "expected": "invalid", "label": "dict: unclosed"}
-{"input": "d1:a1:x1:A1:ye", "expected": "invalid", "label": "dict: reverse byte-order"}
-{"input": "", "expected": "invalid", "label": "top: empty input"}
-{"input": "4:spam4:eggs", "expected": "invalid", "label": "top: two values"}
-{"input": "4:spamgarbage", "expected": "invalid", "label": "top: trailing garbage"}
-{"input": " 4:spam", "expected": "invalid", "label": "top: leading whitespace"}
-{"input": "4:spam ", "expected": "invalid", "label": "top: trailing whitespace"}
-{"input": "e", "expected": "invalid", "label": "top: bare e"}
-{"input": "l", "expected": "invalid", "label": "top: bare l"}
-{"input": "d", "expected": "invalid", "label": "top: bare d"}
-{"input": "i", "expected": "invalid", "label": "top: bare i"}
-{"input_hex": "333a000102", "expected": "valid", "label": "string: binary content (null bytes)"}
+{"id": "s01", "input": "4:spam", "expected": "valid", "label": "string: basic"}
+{"id": "s02", "input": "0:", "expected": "valid", "label": "string: empty"}
+{"id": "s03", "input": "1:a", "expected": "valid", "label": "string: single char"}
+{"id": "s04", "input": "10:0123456789", "expected": "valid", "label": "string: 10 chars"}
+{"id": "s05", "input": "4:spa", "expected": "invalid", "label": "string: truncated"}
+{"id": "s06", "input": "4spam", "expected": "invalid", "label": "string: missing colon"}
+{"id": "s07", "input": ":spam", "expected": "invalid", "label": "string: missing length"}
+{"id": "s08", "input": "4:", "expected": "invalid", "label": "string: data too short"}
+{"id": "s09", "input": "-1:a", "expected": "invalid", "label": "string: negative length"}
+{"id": "s10", "input": "01:a", "expected": "invalid", "label": "string: leading zero length"}
+{"id": "s11", "input": "999999999999:x", "expected": "invalid", "label": "string: length overflow"}
+{"id": "s12", "input": "100:ab", "expected": "invalid", "label": "string: length far exceeds data"}
+{"id": "s13", "input_hex": "333a000102", "expected": "valid", "label": "string: binary content (null bytes)"}
+{"id": "i01", "input": "i3e", "expected": "valid", "label": "int: positive"}
+{"id": "i02", "input": "i-3e", "expected": "valid", "label": "int: negative"}
+{"id": "i03", "input": "i0e", "expected": "valid", "label": "int: zero"}
+{"id": "i04", "input": "i12345e", "expected": "valid", "label": "int: large positive"}
+{"id": "i05", "input": "i-12345e", "expected": "valid", "label": "int: large negative"}
+{"id": "i06", "input": "i9223372036854775807e", "expected": "valid", "label": "int: int64 max"}
+{"id": "i07", "input": "i-9223372036854775808e", "expected": "valid", "label": "int: int64 min"}
+{"id": "i08", "input": "i99999999999999999999999999999999999999999999999e", "expected": "valid", "label": "int: very large (exceeds int64)"}
+{"id": "i09", "input": "i-0e", "expected": "invalid", "label": "int: negative zero"}
+{"id": "i10", "input": "i03e", "expected": "invalid", "label": "int: leading zero"}
+{"id": "i11", "input": "i003e", "expected": "invalid", "label": "int: multiple leading zeros"}
+{"id": "i12", "input": "i-03e", "expected": "invalid", "label": "int: negative leading zero"}
+{"id": "i13", "input": "ie", "expected": "invalid", "label": "int: empty"}
+{"id": "i14", "input": "i-e", "expected": "invalid", "label": "int: just minus"}
+{"id": "i15", "input": "i3", "expected": "invalid", "label": "int: missing e"}
+{"id": "i16", "input": "iae", "expected": "invalid", "label": "int: non-digit"}
+{"id": "i17", "input": "i+3e", "expected": "invalid", "label": "int: plus sign"}
+{"id": "i18", "input": "i 3e", "expected": "invalid", "label": "int: space"}
+{"id": "i19", "input": "i35-2e", "expected": "invalid", "label": "int: interior minus"}
+{"id": "i20", "input": "i12x4e", "expected": "invalid", "label": "int: invalid char mid-digits"}
+{"id": "l01", "input": "le", "expected": "valid", "label": "list: empty"}
+{"id": "l02", "input": "l4:spam4:eggse", "expected": "valid", "label": "list: two strings"}
+{"id": "l03", "input": "li1ei2ei3ee", "expected": "valid", "label": "list: three ints"}
+{"id": "l04", "input": "ll4:spamee", "expected": "valid", "label": "list: nested"}
+{"id": "l05", "input": "lllleeee", "expected": "valid", "label": "list: 4-deep nesting"}
+{"id": "l06", "input": "li1e4:spamlei3ee", "expected": "valid", "label": "list: mixed types"}
+{"id": "l07", "input": "l", "expected": "invalid", "label": "list: unclosed"}
+{"id": "l08", "input": "l4:spam", "expected": "invalid", "label": "list: unclosed with content"}
+{"id": "l09", "input": "lllleee", "expected": "invalid", "label": "list: mismatched nesting"}
+{"id": "l10", "input": "lli03eee", "expected": "invalid", "label": "list: nested leading zero int"}
+{"id": "d01", "input": "de", "expected": "valid", "label": "dict: empty"}
+{"id": "d02", "input": "d3:cow3:moo4:spam4:eggse", "expected": "valid", "label": "dict: basic"}
+{"id": "d03", "input": "d4:spaml1:a1:bee", "expected": "valid", "label": "dict: list value"}
+{"id": "d04", "input": "d1:a1:b1:c1:de", "expected": "valid", "label": "dict: sorted keys"}
+{"id": "d05", "input": "d1:A1:x1:a1:ye", "expected": "valid", "label": "dict: byte-order sort"}
+{"id": "d06", "input": "d1:ad1:bi1eee", "expected": "valid", "label": "dict: nested dict value"}
+{"id": "d07", "input": "d0:1:ae", "expected": "valid", "label": "dict: empty string key"}
+{"id": "d08", "input": "d4:spam4:eggs3:cow3:mooe", "expected": "invalid", "label": "dict: unsorted keys"}
+{"id": "d09", "input": "d3:aaa1:b3:aaa1:ce", "expected": "invalid", "label": "dict: duplicate keys"}
+{"id": "d10", "input": "d1:b1:x1:a1:ye", "expected": "invalid", "label": "dict: reverse sorted"}
+{"id": "d11", "input": "di3e4:spame", "expected": "invalid", "label": "dict: non-string key"}
+{"id": "d12", "input": "d", "expected": "invalid", "label": "dict: unclosed"}
+{"id": "d13", "input": "d1:a1:x1:A1:ye", "expected": "invalid", "label": "dict: reverse byte-order"}
+{"id": "d14", "input": "d1:ai1e1:be", "expected": "invalid", "label": "dict: key with missing value"}
+{"id": "d15", "input": "d2:aai1e1:ai2ee", "expected": "invalid", "label": "dict: longer key before shorter"}
+{"id": "d16", "input_hex": "64333a61006269316565", "expected": "valid", "label": "dict: null bytes in key"}
+{"id": "t01", "input": "", "expected": "invalid", "label": "top: empty input"}
+{"id": "t02", "input": "4:spam4:eggs", "expected": "invalid", "label": "top: two values"}
+{"id": "t03", "input": "4:spamgarbage", "expected": "invalid", "label": "top: trailing garbage"}
+{"id": "t04", "input": " 4:spam", "expected": "invalid", "label": "top: leading whitespace"}
+{"id": "t05", "input": "4:spam ", "expected": "invalid", "label": "top: trailing whitespace"}
+{"id": "t06", "input": "e", "expected": "invalid", "label": "top: bare e"}
+{"id": "t07", "input": "l", "expected": "invalid", "label": "top: bare l"}
+{"id": "t08", "input": "d", "expected": "invalid", "label": "top: bare d"}
+{"id": "t09", "input": "i", "expected": "invalid", "label": "top: bare i"}

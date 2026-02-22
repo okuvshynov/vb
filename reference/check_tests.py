@@ -50,6 +50,7 @@ def run_tests(tests):
     discrepancies = []
 
     for t in tests:
+        tid = t.get("id", "?")
         label = t["label"]
         expected = t["expected"]
         data = t["input_bytes"]
@@ -73,7 +74,7 @@ def run_tests(tests):
                 fp += 1
             else:
                 fn += 1
-            discrepancies.append((label, data, expected, actual))
+            discrepancies.append((tid, label, data, expected, actual))
 
     total = tp + tn + fp + fn
     passed = tp + tn
@@ -82,9 +83,9 @@ def run_tests(tests):
 
     if discrepancies:
         print(f"\n{len(discrepancies)} discrepancy(ies):")
-        for label, data, expected, actual in discrepancies:
+        for tid, label, data, expected, actual in discrepancies:
             display = data.hex() if not data.isascii() else data.decode("ascii", errors="replace")
-            print(f"  [{label}] input={display!r} expected={expected} actual={actual}")
+            print(f"  {tid}: [{label}] input={display!r} expected={expected} actual={actual}")
     else:
         print("\nAll tests match.")
 
