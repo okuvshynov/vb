@@ -51,6 +51,7 @@ Implement a bencode message validator in C++17. The model reads input from stdin
 | `prompt` (default) | `prompt.txt` | Original bencode spec; no mention of leading zeros on string lengths |
 | `bijection` | `prompt-bijection.txt` | Adds canonical encoding / unique bijection requirement; model must infer leading-zero implications |
 | `explicit-leading-zero` | `prompt-explicit-leading-zero.txt` | Explicitly states string lengths must not have leading zeros |
+| `strict` | `prompt-strict.txt` | Binary encoding, canonical form, exactly-one-value, raw byte strings — all gaps coverable by deduction |
 
 ## Adding tasks
 
