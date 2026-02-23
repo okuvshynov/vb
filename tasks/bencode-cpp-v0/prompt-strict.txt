@@ -4,7 +4,8 @@ You will receive compilation and test results. Fix and resubmit if needed.
 
 ## Specification
 
-Implement a validator for bencode messages in C++14 or C++17 using only standard library.
+Implement a validator for bencode messages in C++17 using only the standard library.
+Compiler command: `clang++ -std=c++17 -O2`
 
 Your validator must accept a bencode message as stdin.
 If it is valid, you need to exit with zero exit code.
