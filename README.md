@@ -45,6 +45,10 @@ python validation_bench.py --task bencode-cpp-v0 --prompt explicit-leading-zero 
 
 Implement a bencode message validator in C++17. The model reads input from stdin and exits 0 for valid / non-zero for invalid. Test suite: 71 cases covering strings, integers, lists, dictionaries, edge cases, and binary data.
 
+### `minbencode-cpp-v0`
+
+Implement a "minified bencode" validator in C++17 — a subset of bencode supporting only **strings and lists** (no integers, no dictionaries). The model reads input from stdin and exits 0 for valid / non-zero for invalid. Test suite: 33 cases covering strings, lists, top-level structure, binary data, and rejection of unsupported types.
+
 **Prompt variants** (use `--prompt <name>`):
 | Variant | File | Description |
 |---|---|---|
