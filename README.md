@@ -49,6 +49,10 @@ Implement a bencode message validator in C++17. The model reads input from stdin
 
 Implement a "minified bencode" validator in C++17 — a subset of bencode supporting only **strings and lists** (no integers, no dictionaries). The model reads input from stdin and exits 0 for valid / non-zero for invalid. Test suite: 33 cases covering strings, lists, top-level structure, binary data, and rejection of unsupported types.
 
+### `minbencode-c-v0`
+
+Same spec and test suite as `minbencode-cpp-v0`, but targeting C17 instead of C++17. Compiled with `clang -std=c17 -O2`.
+
 **Prompt variants** (use `--prompt <name>`):
 | Variant | File | Description |
 |---|---|---|

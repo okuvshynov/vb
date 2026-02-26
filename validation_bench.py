@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -50,13 +51,13 @@ SUBMIT_TOOL = {
     "type": "function",
     "function": {
         "name": "submit",
-        "description": "Submit C++ source code for compilation and testing.",
+        "description": "Submit source code for compilation and testing.",
         "parameters": {
             "type": "object",
             "properties": {
                 "source_code": {
                     "type": "string",
-                    "description": "Complete C++ source code to compile and test.",
+                    "description": "Complete source code to compile and test.",
                 }
             },
             "required": ["source_code"],
@@ -118,15 +119,16 @@ def run_tests(binary: Path, tests: list[dict]) -> tuple[str, ConfusionMatrix]:
     return "\n".join(lines), matrix
 
 
-def handle_submit(source_code: str, tests: list[dict]) -> TestResult:
+def handle_submit(source_code: str, tests: list[dict], compile_cmd: str, src_ext: str) -> TestResult:
     with tempfile.TemporaryDirectory() as tmpdir:
-        src = Path(tmpdir) / "solution.cpp"
+        src_name = f"solution{src_ext}"
+        src = Path(tmpdir) / src_name
         src.write_text(source_code)
 
         # Compile
         try:
             comp = subprocess.run(
-                ["clang++", "-std=c++17", "-O2", "-o", "solution", "solution.cpp"],
+                shlex.split(compile_cmd) + ["-o", "solution", src_name],
                 cwd=tmpdir,
                 capture_output=True,
                 text=True,
@@ -211,6 +213,8 @@ def run_repeat(
     sampling_params: dict,
     repeat_index: int,
     repeat_dir: Path,
+    compile_cmd: str,
+    src_ext: str,
 ) -> RepeatResult:
     repeat_dir.mkdir(parents=True, exist_ok=True)
     submissions_dir = repeat_dir / "submissions"
@@ -270,9 +274,9 @@ def run_repeat(
             # Save submission source code
             sub_dir = submissions_dir / str(submissions)
             sub_dir.mkdir()
-            (sub_dir / "solution.cpp").write_text(source_code)
+            (sub_dir / f"solution{src_ext}").write_text(source_code)
 
-            result = handle_submit(source_code, tests)
+            result = handle_submit(source_code, tests, compile_cmd, src_ext)
 
             # Save compiler and test output
             (sub_dir / "compiler.txt").write_text(result.compiler_output)
@@ -384,7 +388,17 @@ def main():
             print(f"Error: missing file: {f}", file=sys.stderr)
             sys.exit(1)
 
+    compile_file = tasks_dir / "compile"
+    if compile_file.exists():
+        compile_cmd = compile_file.read_text().strip()
+    else:
+        compile_cmd = "clang++ -std=c++17 -O2"
+
+    compiler_binary = shlex.split(compile_cmd)[0]
+    src_ext = ".cpp" if "++" in compiler_binary else ".c"
+
     user_prompt = prompt_file.read_text()
+    user_prompt = user_prompt.replace("{compile_cmd}", compile_cmd)
     tests = load_tests(tests_file)
 
     client = OpenAI(base_url=args.api_base, api_key=args.api_key)
@@ -420,6 +434,8 @@ def main():
                 sampling_params=sampling_params,
                 repeat_index=i,
                 repeat_dir=repeats_dir / str(i),
+                compile_cmd=compile_cmd,
+                src_ext=src_ext,
             )
             results.append(r)
     except KeyboardInterrupt:
