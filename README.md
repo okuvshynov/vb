@@ -65,6 +65,10 @@ Isomorphic to `minbencode-c-v0` but with different syntax: `#` instead of `:` as
 | `explicit-leading-zero` | `prompt-explicit-leading-zero.txt` | Explicitly states string lengths must not have leading zeros |
 | `strict` | `prompt-strict.txt` | Binary encoding, canonical form, exactly-one-value, raw byte strings — all gaps coverable by deduction |
 
+### `miniformat-c-v1`
+
+Integers + sequences variant of the miniformat family. Integers use `n`/`$` delimiters with optional minus sign; sequences use `s`/`;`. The prompt describes the syntax but relies on the "unique canonical representation" preamble to implicitly prohibit leading zeros and negative zero — models must deduce these canonicality constraints. Test suite: 43 cases covering integer validity/canonicality, sequences, top-level structure, and rejection of foreign formats.
+
 ### `der-int-c-v0`
 
 Implement a validator for DER-encoded ASN.1 INTEGER values in C17. The model reads raw bytes from stdin and exits 0 for valid / non-zero for invalid. Test suite: 37 cases covering two's complement boundaries, sign-bit padding, minimality violations, length encoding, and structural errors.
