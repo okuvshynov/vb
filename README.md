@@ -67,7 +67,7 @@ Isomorphic to `minbencode-c-v0` but with different syntax: `#` instead of `:` as
 
 ### `der-int-c-v0`
 
-Implement a validator for DER-encoded ASN.1 INTEGER values in C17. The model reads raw bytes from stdin and exits 0 for valid / non-zero for invalid. Test suite: 36 cases covering two's complement boundaries, sign-bit padding, minimality violations, length encoding, and structural errors.
+Implement a validator for DER-encoded ASN.1 INTEGER values in C17. The model reads raw bytes from stdin and exits 0 for valid / non-zero for invalid. Test suite: 37 cases covering two's complement boundaries, sign-bit padding, minimality violations, length encoding, and structural errors.
 
 **Prompt variants** (use `--prompt <name>`):
 | Variant | File | Description |
@@ -75,6 +75,7 @@ Implement a validator for DER-encoded ASN.1 INTEGER values in C17. The model rea
 | `prompt` (default) | `prompt.txt` | Terse X.690 minimality wording; model must deduce padding implications |
 | `examples` | `prompt-examples.txt` | Adds concrete encoding examples |
 | `explicit` | `prompt-explicit.txt` | Full explanation of sign-bit padding with positive and negative examples |
+| `terse-length` | `prompt-terse-length.txt` | Implicit length minimality: describes format only, unified "fewest bytes" rule for both length and value |
 
 ## Adding tasks
 

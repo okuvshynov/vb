@@ -26,6 +26,7 @@
 {"id": "l02", "input_hex": "02810100", "expected": "invalid", "label": "length: unnecessary long form"}
 {"id": "l03", "input_hex": "0280", "expected": "invalid", "label": "length: indefinite form"}
 {"id": "l04", "input_hex": "0282000100", "expected": "invalid", "label": "length: long form leading zero"}
+{"id": "l05", "input_hex": "028200800100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "expected": "invalid", "label": "length: 2-byte long form for 128 (1 byte suffices)"}
 {"id": "t01", "input": "", "expected": "invalid", "label": "top: empty input"}
 {"id": "t02", "input_hex": "020100020101", "expected": "invalid", "label": "top: trailing valid INTEGER"}
 {"id": "t03", "input_hex": "020100ff", "expected": "invalid", "label": "top: trailing byte"}
