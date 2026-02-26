@@ -1,0 +1,33 @@
+{"id": "s01", "input": "4#spam", "expected": "valid", "label": "string: basic"}
+{"id": "s02", "input": "0#", "expected": "valid", "label": "string: empty"}
+{"id": "s03", "input": "1#a", "expected": "valid", "label": "string: single char"}
+{"id": "s04", "input": "10#0123456789", "expected": "valid", "label": "string: 10 chars"}
+{"id": "s05", "input": "4#spa", "expected": "invalid", "label": "string: truncated"}
+{"id": "s06", "input": "4spam", "expected": "invalid", "label": "string: missing hash"}
+{"id": "s07", "input": "#spam", "expected": "invalid", "label": "string: missing length"}
+{"id": "s08", "input": "4#", "expected": "invalid", "label": "string: data too short"}
+{"id": "s09", "input": "-1#a", "expected": "invalid", "label": "string: negative length"}
+{"id": "s10", "input": "01#a", "expected": "invalid", "label": "string: leading zero length"}
+{"id": "s11", "input": "999999999999#x", "expected": "invalid", "label": "string: length overflow"}
+{"id": "s12", "input": "100#ab", "expected": "invalid", "label": "string: length far exceeds data"}
+{"id": "s13", "input_hex": "3323000102", "expected": "valid", "label": "string: binary content (null bytes)"}
+{"id": "s14", "input_hex": "3323610a62", "expected": "valid", "label": "string: binary content (newline)"}
+{"id": "l01", "input": "s;", "expected": "valid", "label": "sequence: empty"}
+{"id": "l02", "input": "s4#spam4#eggs;", "expected": "valid", "label": "sequence: two strings"}
+{"id": "l04", "input": "ss4#spam;;", "expected": "valid", "label": "sequence: nested"}
+{"id": "l05", "input": "ssss;;;;", "expected": "valid", "label": "sequence: 4-deep nesting"}
+{"id": "l07", "input": "s", "expected": "invalid", "label": "sequence: unclosed"}
+{"id": "l08", "input": "s4#spam", "expected": "invalid", "label": "sequence: unclosed with content"}
+{"id": "l09", "input": "ssss;;;", "expected": "invalid", "label": "sequence: mismatched nesting"}
+{"id": "t01", "input": "", "expected": "invalid", "label": "top: empty input"}
+{"id": "t02", "input": "4#spam4#eggs", "expected": "invalid", "label": "top: two values"}
+{"id": "t03", "input": "4#spamgarbage", "expected": "invalid", "label": "top: trailing garbage"}
+{"id": "t04", "input": " 4#spam", "expected": "invalid", "label": "top: leading whitespace"}
+{"id": "t05", "input": "4#spam ", "expected": "invalid", "label": "top: trailing whitespace"}
+{"id": "t06", "input": ";", "expected": "invalid", "label": "top: bare ;"}
+{"id": "t07", "input": "s", "expected": "invalid", "label": "top: bare s"}
+{"id": "t08", "input": "d", "expected": "invalid", "label": "top: bare d"}
+{"id": "t09", "input": "i", "expected": "invalid", "label": "top: bare i"}
+{"id": "x01", "input": "i3;", "expected": "invalid", "label": "reject: unrecognized type at top level"}
+{"id": "x02", "input": "d;", "expected": "invalid", "label": "reject: unrecognized type at top level (d)"}
+{"id": "x03", "input": "si3;;", "expected": "invalid", "label": "reject: unrecognized type inside sequence"}

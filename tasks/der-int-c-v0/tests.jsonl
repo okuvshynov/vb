@@ -1,0 +1,36 @@
+{"id": "v01", "input_hex": "020100", "expected": "valid", "label": "value: zero"}
+{"id": "v02", "input_hex": "020101", "expected": "valid", "label": "value: one"}
+{"id": "v03", "input_hex": "02017f", "expected": "valid", "label": "value: max 1-byte positive"}
+{"id": "v04", "input_hex": "020180", "expected": "valid", "label": "value: min 1-byte negative"}
+{"id": "v05", "input_hex": "0201ff", "expected": "valid", "label": "value: negative one"}
+{"id": "v06", "input_hex": "02020080", "expected": "valid", "label": "value: 128 (0x00 pad required)"}
+{"id": "v07", "input_hex": "020200ff", "expected": "valid", "label": "value: 255 (0x00 pad required)"}
+{"id": "v08", "input_hex": "02020100", "expected": "valid", "label": "value: 256 (no pad needed)"}
+{"id": "v09", "input_hex": "02027fff", "expected": "valid", "label": "value: max 2-byte positive"}
+{"id": "v10", "input_hex": "02028000", "expected": "valid", "label": "value: min 2-byte negative"}
+{"id": "v11", "input_hex": "0202ff7f", "expected": "valid", "label": "value: -129 (0xFF pad required)"}
+{"id": "v12", "input_hex": "0202ff00", "expected": "valid", "label": "value: -256"}
+{"id": "v13", "input_hex": "0203008000", "expected": "valid", "label": "value: 32768 (3-byte, 0x00 pad)"}
+{"id": "v14", "input_hex": "020300ffff", "expected": "valid", "label": "value: 65535 (3-byte, 0x00 pad)"}
+{"id": "v15", "input_hex": "02037fffff", "expected": "valid", "label": "value: max 3-byte positive"}
+{"id": "v16", "input_hex": "0203800000", "expected": "valid", "label": "value: min 3-byte negative"}
+{"id": "v17", "input_hex": "0203ff7fff", "expected": "valid", "label": "value: -32769 (3-byte, 0xFF pad)"}
+{"id": "m01", "input_hex": "02020001", "expected": "invalid", "label": "minimality: redundant 0x00 before 0x01"}
+{"id": "m02", "input_hex": "0202007f", "expected": "invalid", "label": "minimality: redundant 0x00 before 0x7F"}
+{"id": "m03", "input_hex": "02020000", "expected": "invalid", "label": "minimality: redundant 0x00 (zero)"}
+{"id": "m04", "input_hex": "0202ffff", "expected": "invalid", "label": "minimality: redundant 0xFF before 0xFF"}
+{"id": "m05", "input_hex": "0202ff80", "expected": "invalid", "label": "minimality: redundant 0xFF before 0x80"}
+{"id": "m06", "input_hex": "0203000001", "expected": "invalid", "label": "minimality: double redundant 0x00"}
+{"id": "m07", "input_hex": "0203fffffe", "expected": "invalid", "label": "minimality: double redundant 0xFF"}
+{"id": "l01", "input_hex": "0200", "expected": "invalid", "label": "length: zero (empty content)"}
+{"id": "l02", "input_hex": "02810100", "expected": "invalid", "label": "length: unnecessary long form"}
+{"id": "l03", "input_hex": "0280", "expected": "invalid", "label": "length: indefinite form"}
+{"id": "l04", "input_hex": "0282000100", "expected": "invalid", "label": "length: long form leading zero"}
+{"id": "t01", "input": "", "expected": "invalid", "label": "top: empty input"}
+{"id": "t02", "input_hex": "020100020101", "expected": "invalid", "label": "top: trailing valid INTEGER"}
+{"id": "t03", "input_hex": "020100ff", "expected": "invalid", "label": "top: trailing byte"}
+{"id": "t04", "input_hex": "030100", "expected": "invalid", "label": "top: wrong tag"}
+{"id": "t05", "input_hex": "220100", "expected": "invalid", "label": "top: constructed form"}
+{"id": "t06", "input_hex": "02", "expected": "invalid", "label": "top: truncated after tag"}
+{"id": "t07", "input_hex": "0201", "expected": "invalid", "label": "top: truncated value (0 of 1)"}
+{"id": "t08", "input_hex": "020200", "expected": "invalid", "label": "top: truncated value (1 of 2)"}

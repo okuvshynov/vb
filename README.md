@@ -53,6 +53,10 @@ Implement a "minified bencode" validator in C++17 — a subset of bencode suppor
 
 Same spec and test suite as `minbencode-cpp-v0`, but targeting C17 instead of C++17. Compiled with `clang -std=c17 -O2`.
 
+### `miniformat-c-v0`
+
+Isomorphic to `minbencode-c-v0` but with different syntax: `#` instead of `:` as string separator, `s`/`;` instead of `l`/`e` for sequences, and "sequence" terminology instead of "list". Tests whether models solve the actual parsing problem vs pattern-matching a known format (bencode). Same 33-test structure, compiled with `clang -std=c17 -O2`.
+
 **Prompt variants** (use `--prompt <name>`):
 | Variant | File | Description |
 |---|---|---|
@@ -60,6 +64,17 @@ Same spec and test suite as `minbencode-cpp-v0`, but targeting C17 instead of C+
 | `bijection` | `prompt-bijection.txt` | Adds canonical encoding / unique bijection requirement; model must infer leading-zero implications |
 | `explicit-leading-zero` | `prompt-explicit-leading-zero.txt` | Explicitly states string lengths must not have leading zeros |
 | `strict` | `prompt-strict.txt` | Binary encoding, canonical form, exactly-one-value, raw byte strings — all gaps coverable by deduction |
+
+### `der-int-c-v0`
+
+Implement a validator for DER-encoded ASN.1 INTEGER values in C17. The model reads raw bytes from stdin and exits 0 for valid / non-zero for invalid. Test suite: 36 cases covering two's complement boundaries, sign-bit padding, minimality violations, length encoding, and structural errors.
+
+**Prompt variants** (use `--prompt <name>`):
+| Variant | File | Description |
+|---|---|---|
+| `prompt` (default) | `prompt.txt` | Terse X.690 minimality wording; model must deduce padding implications |
+| `examples` | `prompt-examples.txt` | Adds concrete encoding examples |
+| `explicit` | `prompt-explicit.txt` | Full explanation of sign-bit padding with positive and negative examples |
 
 ## Adding tasks
 
