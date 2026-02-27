@@ -77,12 +77,14 @@ def load_tests(tests_file: Path) -> list[dict]:
     return tests
 
 
-def run_tests(binary: Path, tests: list[dict]) -> tuple[str, ConfusionMatrix]:
+def run_tests(binary: Path, tests: list[dict], task_dir: Path | None = None) -> tuple[str, ConfusionMatrix]:
     """Run all test cases against the binary, return (output_text, matrix)."""
     matrix = ConfusionMatrix()
     lines = []
     for t in tests:
-        if "input_hex" in t:
+        if "input_file" in t:
+            input_data = (task_dir / t["input_file"]).read_bytes()
+        elif "input_hex" in t:
             input_data = bytes.fromhex(t["input_hex"])
         else:
             input_data = t["input"].encode()
@@ -119,7 +121,7 @@ def run_tests(binary: Path, tests: list[dict]) -> tuple[str, ConfusionMatrix]:
     return "\n".join(lines), matrix
 
 
-def handle_submit(source_code: str, tests: list[dict], compile_cmd: str, src_ext: str) -> TestResult:
+def handle_submit(source_code: str, tests: list[dict], compile_cmd: str, src_ext: str, task_dir: Path | None = None) -> TestResult:
     with tempfile.TemporaryDirectory() as tmpdir:
         src_name = f"solution{src_ext}"
         src = Path(tmpdir) / src_name
@@ -151,7 +153,7 @@ def handle_submit(source_code: str, tests: list[dict], compile_cmd: str, src_ext
             )
 
         binary = Path(tmpdir) / "solution"
-        test_output, matrix = run_tests(binary, tests)
+        test_output, matrix = run_tests(binary, tests, task_dir)
 
         return TestResult(
             compiled=True,
@@ -215,6 +217,7 @@ def run_repeat(
     repeat_dir: Path,
     compile_cmd: str,
     src_ext: str,
+    task_dir: Path | None = None,
 ) -> RepeatResult:
     repeat_dir.mkdir(parents=True, exist_ok=True)
     submissions_dir = repeat_dir / "submissions"
@@ -276,7 +279,7 @@ def run_repeat(
             sub_dir.mkdir()
             (sub_dir / f"solution{src_ext}").write_text(source_code)
 
-            result = handle_submit(source_code, tests, compile_cmd, src_ext)
+            result = handle_submit(source_code, tests, compile_cmd, src_ext, task_dir)
 
             # Save compiler and test output
             (sub_dir / "compiler.txt").write_text(result.compiler_output)
@@ -436,6 +439,7 @@ def main():
                 repeat_dir=repeats_dir / str(i),
                 compile_cmd=compile_cmd,
                 src_ext=src_ext,
+                task_dir=tasks_dir,
             )
             results.append(r)
     except KeyboardInterrupt:

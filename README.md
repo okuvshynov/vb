@@ -73,6 +73,14 @@ Integers + sequences variant of the miniformat family. Integers use `n`/`$` deli
 
 Full miniformat: strings + integers + sequences. Combines v0 (strings + sequences) and v1 (integers + sequences) into a single format with three value types. The prompt describes all three types and relies on "unique canonical representation" to implicitly prohibit leading zeros on both string lengths and integer values, plus negative zero. Test suite: 67 cases covering strings, integers, mixed-type sequences, cross-type top-level errors, and rejection of foreign formats.
 
+### `toml-cpp-v0`
+
+TOML v1.1.0 file validation in C++17. The prompt embeds the full TOML specification (~1066 lines). Test data: 745 cases (262 valid, 483 invalid) sourced from [toml-test](https://github.com/toml-lang/toml-test) (MIT licensed). Tests use `input_file` to reference `.toml` files under `tests/valid/` and `tests/invalid/` rather than inline content.
+
+### `toml-cpp-v1`
+
+TOML v1.1.0 subset — no datetime types. Same as `toml-cpp-v0` but with all four datetime types (offset date-time, local date-time, local date, local time) removed from both the spec and test suite. Reduces prompt by ~100 lines and test suite to 652 cases (239 valid, 413 invalid). Datetime validation (calendar rules, timezone offsets, RFC 3339 parsing) is the most complex feature to implement; removing it makes the task more tractable for single-shot code generation.
+
 ### `der-int-c-v0`
 
 Implement a validator for DER-encoded ASN.1 INTEGER values in C17. The model reads raw bytes from stdin and exits 0 for valid / non-zero for invalid. Test suite: 37 cases covering two's complement boundaries, sign-bit padding, minimality violations, length encoding, and structural errors.
@@ -96,6 +104,7 @@ Each line in `tests.jsonl` has the following fields:
 - `id` (string): stable case identifier (e.g., `s01`, `i14`, `d07`)
 - `input` (string): plain text input piped to the validator via stdin
 - `input_hex` (string): hex-encoded input — mutually exclusive with `input`, used for binary data
+- `input_file` (string): path to input file relative to task directory — mutually exclusive with `input`/`input_hex`, used for large or structured test data (e.g., TOML files)
 - `expected`: `"valid"` or `"invalid"`
 - `label`: human-readable test description
 
