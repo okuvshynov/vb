@@ -69,6 +69,10 @@ Isomorphic to `minbencode-c-v0` but with different syntax: `#` instead of `:` as
 
 Integers + sequences variant of the miniformat family. Integers use `n`/`$` delimiters with optional minus sign; sequences use `s`/`;`. The prompt describes the syntax but relies on the "unique canonical representation" preamble to implicitly prohibit leading zeros and negative zero — models must deduce these canonicality constraints. Test suite: 43 cases covering integer validity/canonicality, sequences, top-level structure, and rejection of foreign formats.
 
+### `miniformat-c-v2`
+
+Full miniformat: strings + integers + sequences. Combines v0 (strings + sequences) and v1 (integers + sequences) into a single format with three value types. The prompt describes all three types and relies on "unique canonical representation" to implicitly prohibit leading zeros on both string lengths and integer values, plus negative zero. Test suite: 67 cases covering strings, integers, mixed-type sequences, cross-type top-level errors, and rejection of foreign formats.
+
 ### `der-int-c-v0`
 
 Implement a validator for DER-encoded ASN.1 INTEGER values in C17. The model reads raw bytes from stdin and exits 0 for valid / non-zero for invalid. Test suite: 37 cases covering two's complement boundaries, sign-bit padding, minimality violations, length encoding, and structural errors.

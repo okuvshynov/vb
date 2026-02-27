@@ -1,0 +1,67 @@
+{"id": "s01", "input": "4#spam", "expected": "valid", "label": "string: basic"}
+{"id": "s02", "input": "0#", "expected": "valid", "label": "string: empty"}
+{"id": "s03", "input": "1#a", "expected": "valid", "label": "string: single char"}
+{"id": "s04", "input": "10#0123456789", "expected": "valid", "label": "string: 10 chars"}
+{"id": "s05", "input": "4#spa", "expected": "invalid", "label": "string: truncated"}
+{"id": "s06", "input": "4spam", "expected": "invalid", "label": "string: missing hash"}
+{"id": "s07", "input": "#spam", "expected": "invalid", "label": "string: missing length"}
+{"id": "s08", "input": "4#", "expected": "invalid", "label": "string: data too short"}
+{"id": "s09", "input": "-1#a", "expected": "invalid", "label": "string: negative length"}
+{"id": "s10", "input": "01#a", "expected": "invalid", "label": "string: leading zero length"}
+{"id": "s11", "input": "999999999999#x", "expected": "invalid", "label": "string: length overflow"}
+{"id": "s12", "input": "100#ab", "expected": "invalid", "label": "string: length far exceeds data"}
+{"id": "s13", "input_hex": "3323000102", "expected": "valid", "label": "string: binary content (null bytes)"}
+{"id": "s14", "input_hex": "3323610a62", "expected": "valid", "label": "string: binary content (newline)"}
+{"id": "i01", "input": "n0$", "expected": "valid", "label": "integer: zero"}
+{"id": "i02", "input": "n1$", "expected": "valid", "label": "integer: positive one"}
+{"id": "i03", "input": "n-1$", "expected": "valid", "label": "integer: negative one"}
+{"id": "i04", "input": "n42$", "expected": "valid", "label": "integer: multi-digit"}
+{"id": "i05", "input": "n-42$", "expected": "valid", "label": "integer: multi-digit negative"}
+{"id": "i06", "input": "n127$", "expected": "valid", "label": "integer: byte boundary"}
+{"id": "i07", "input": "n-128$", "expected": "valid", "label": "integer: negative byte boundary"}
+{"id": "i08", "input": "n9999999999$", "expected": "valid", "label": "integer: exceeds 32-bit"}
+{"id": "i09", "input": "n-9999999999$", "expected": "valid", "label": "integer: large negative"}
+{"id": "i10", "input": "n-0$", "expected": "invalid", "label": "integer: negative zero"}
+{"id": "i11", "input": "n00$", "expected": "invalid", "label": "integer: leading zero"}
+{"id": "i12", "input": "n01$", "expected": "invalid", "label": "integer: leading zero on positive"}
+{"id": "i13", "input": "n-01$", "expected": "invalid", "label": "integer: leading zero after minus"}
+{"id": "i14", "input": "n-00$", "expected": "invalid", "label": "integer: negative zero with leading zero"}
+{"id": "i15", "input": "n$", "expected": "invalid", "label": "integer: empty (no digits)"}
+{"id": "i16", "input": "n-$", "expected": "invalid", "label": "integer: minus with no digits"}
+{"id": "i17", "input": "n42", "expected": "invalid", "label": "integer: missing terminator"}
+{"id": "i18", "input": "n--1$", "expected": "invalid", "label": "integer: double minus"}
+{"id": "i19", "input": "n+1$", "expected": "invalid", "label": "integer: explicit plus sign"}
+{"id": "i20", "input": "n1.5$", "expected": "invalid", "label": "integer: decimal point"}
+{"id": "i21", "input": "n12e4$", "expected": "invalid", "label": "integer: non-digit in value"}
+{"id": "i22", "input": "n1-2$", "expected": "invalid", "label": "integer: interior minus"}
+{"id": "l01", "input": "s;", "expected": "valid", "label": "sequence: empty"}
+{"id": "l02", "input": "s4#spam4#eggs;", "expected": "valid", "label": "sequence: two strings"}
+{"id": "l03", "input": "sn1$n2$;", "expected": "valid", "label": "sequence: two integers"}
+{"id": "l04", "input": "sn0$n-1$n42$;", "expected": "valid", "label": "sequence: mixed integer values"}
+{"id": "l05", "input": "sn1$4#spam;", "expected": "valid", "label": "sequence: mixed types"}
+{"id": "l06", "input": "s4#spamn42$;", "expected": "valid", "label": "sequence: string then integer"}
+{"id": "l07", "input": "ss4#spam;;", "expected": "valid", "label": "sequence: nested with string"}
+{"id": "l08", "input": "ssn1$;;", "expected": "valid", "label": "sequence: nested with integer"}
+{"id": "l09", "input": "sssss;;;;;", "expected": "valid", "label": "sequence: 5-deep nesting"}
+{"id": "l10", "input": "ssn1$2#hi;n3$;", "expected": "valid", "label": "sequence: nested mixed types"}
+{"id": "l11", "input": "s", "expected": "invalid", "label": "sequence: unclosed"}
+{"id": "l12", "input": "s4#spam", "expected": "invalid", "label": "sequence: unclosed with string"}
+{"id": "l13", "input": "sn1$", "expected": "invalid", "label": "sequence: unclosed with integer"}
+{"id": "l14", "input": "ssss;;;", "expected": "invalid", "label": "sequence: mismatched nesting"}
+{"id": "l15", "input": "sn01$;", "expected": "invalid", "label": "sequence: integer canonicality error inside"}
+{"id": "l16", "input": "s01#a;", "expected": "invalid", "label": "sequence: string canonicality error inside"}
+{"id": "t01", "input": "", "expected": "invalid", "label": "top: empty input"}
+{"id": "t02", "input": "n1$n2$", "expected": "invalid", "label": "top: two integers"}
+{"id": "t03", "input": "4#spam4#eggs", "expected": "invalid", "label": "top: two strings"}
+{"id": "t04", "input": "n1$4#spam", "expected": "invalid", "label": "top: two values, mixed types"}
+{"id": "t05", "input": "n1$garbage", "expected": "invalid", "label": "top: trailing garbage after integer"}
+{"id": "t06", "input": "4#spamgarbage", "expected": "invalid", "label": "top: trailing garbage after string"}
+{"id": "t07", "input": " n1$", "expected": "invalid", "label": "top: leading whitespace"}
+{"id": "t08", "input": "n1$ ", "expected": "invalid", "label": "top: trailing whitespace"}
+{"id": "t09", "input": "$", "expected": "invalid", "label": "top: bare $"}
+{"id": "t10", "input": "#", "expected": "invalid", "label": "top: bare #"}
+{"id": "t11", "input": ";", "expected": "invalid", "label": "top: bare semicolon"}
+{"id": "t12", "input": "n", "expected": "invalid", "label": "top: bare n"}
+{"id": "x01", "input": "i42e", "expected": "invalid", "label": "reject: bencode integer at top level"}
+{"id": "x02", "input": "d;", "expected": "invalid", "label": "reject: dict-like prefix at top level"}
+{"id": "x03", "input": "sn1$i42e;", "expected": "invalid", "label": "reject: bencode integer inside sequence"}
