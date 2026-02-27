@@ -81,6 +81,10 @@ TOML v1.1.0 file validation in C++17. The prompt embeds the full TOML specificat
 
 TOML v1.1.0 subset — no datetime types. Same as `toml-cpp-v0` but with all four datetime types (offset date-time, local date-time, local date, local time) removed from both the spec and test suite. Reduces prompt by ~100 lines and test suite to 652 cases (239 valid, 413 invalid). Datetime validation (calendar rules, timezone offsets, RFC 3339 parsing) is the most complex feature to implement; removing it makes the task more tractable for single-shot code generation.
 
+### `toml-cpp-v2`
+
+TOML v1.1.0 subset — no datetime types, no inline tables. Builds on `toml-cpp-v1` by also removing inline table syntax (`{k=v}`), its spec section (73 lines), and all test files containing inline table values. Each test file is an unmodified copy from the original toml-test suite — files that mix inline tables with other features are excluded entirely rather than edited. Test suite: 571 cases (201 valid, 370 invalid), 893-line prompt.
+
 ### `der-int-c-v0`
 
 Implement a validator for DER-encoded ASN.1 INTEGER values in C17. The model reads raw bytes from stdin and exits 0 for valid / non-zero for invalid. Test suite: 37 cases covering two's complement boundaries, sign-bit padding, minimality violations, length encoding, and structural errors.
