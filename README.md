@@ -29,6 +29,7 @@ CLI arguments:
 | `--model` | auto-detect | Model name; empty = query `/v1/models` |
 | `--temperature` | server default | Sampling temperature (omit to let the server decide) |
 | `--max-turns` | `10` | Max conversation turns per repeat |
+| `--timeout` | `600` | API request timeout in seconds |
 | `--prompt` | `prompt` | Prompt variant name (see below) |
 
 ### Bencode

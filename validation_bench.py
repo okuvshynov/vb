@@ -373,6 +373,7 @@ def main():
     parser.add_argument("--temperature", type=float, default=None, help="Sampling temperature (omit to use server default)")
     parser.add_argument("--max-turns", type=int, default=10, help="Max conversation turns per repeat")
     parser.add_argument("--prompt", default="prompt", help="Prompt variant (loads prompt-{name}.txt, or 'prompt' for prompt.txt)")
+    parser.add_argument("--timeout", type=float, default=600, help="API request timeout in seconds (default: 600)")
     args = parser.parse_args()
 
     # Resolve task directory
@@ -404,7 +405,7 @@ def main():
     user_prompt = user_prompt.replace("{compile_cmd}", compile_cmd)
     tests = load_tests(tests_file)
 
-    client = OpenAI(base_url=args.api_base, api_key=args.api_key)
+    client = OpenAI(base_url=args.api_base, api_key=args.api_key, timeout=args.timeout)
 
     model = args.model if args.model else auto_detect_model(client)
 
