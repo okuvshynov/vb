@@ -89,6 +89,10 @@ TOML v1.1.0 subset — no datetime types, no inline tables. Builds on `toml-cpp-
 
 TOML v1.1.0 subset — no datetime types, no inline tables, no array of tables. Builds on `toml-cpp-v2` by also removing the Array of Tables syntax (`[[...]]`), its spec section (~130 lines), and all 36 test files using AoT headers. Each test file is an unmodified copy from the original toml-test suite — files using the removed feature are excluded entirely rather than edited. Test suite: 535 cases (184 valid, 351 invalid), 750-line prompt.
 
+### `toml-cpp-v4`
+
+TOML v1.1.0 subset — no datetime types, no inline tables, no array of tables, no floats. Builds on `toml-cpp-v3` by also removing the Float type (IEEE 754 parsing, special values inf/nan, exponent notation), its spec section (63 lines), and all 61 test files using float values. Each test file is an unmodified copy from the original toml-test suite — files using the removed feature are excluded entirely rather than edited. Test suite: 474 cases (166 valid, 308 invalid), 685-line prompt.
+
 ### `der-int-c-v0`
 
 Implement a validator for DER-encoded ASN.1 INTEGER values in C17. The model reads raw bytes from stdin and exits 0 for valid / non-zero for invalid. Test suite: 37 cases covering two's complement boundaries, sign-bit padding, minimality violations, length encoding, and structural errors.
