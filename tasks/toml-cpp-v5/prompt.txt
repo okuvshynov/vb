@@ -1,0 +1,585 @@
+You are an expert C++ programmer. Implement the solution described below.
+Submit your complete C++ source code using the `submit` tool.
+You will receive compilation and test results. Fix and resubmit if needed.
+
+## Specification
+
+Implement a validator for TOML files in C++17 using only the standard library.
+Compiler command: `{compile_cmd}`
+
+Your validator must read a TOML file from stdin.
+If it is valid, exit with zero exit code.
+If it is invalid, exit with non-zero exit code.
+
+The input is a TOML v1.1.0 document. The full specification follows.
+
+---
+
+![TOML Logo](logos/toml-200.png)
+
+# TOML
+
+Tom's Obvious, Minimal Language.
+
+By Tom Preston-Werner, Pradyun Gedam, et al.
+
+## Objectives
+
+TOML aims to be a minimal configuration file format that's easy to read due to
+obvious semantics. TOML is designed to map unambiguously to a hash table. TOML
+should be easy to parse into data structures in a wide variety of languages.
+
+## Table of contents
+
+- [Preliminaries](#user-content-preliminaries)
+- [Comment](#user-content-comment)
+- [Key/Value Pair](#user-content-keyvalue-pair)
+- [Keys](#user-content-keys)
+- [String](#user-content-string)
+- [Integer](#user-content-integer)
+- [Boolean](#user-content-boolean)
+- [Array](#user-content-array)
+- [Table](#user-content-table)
+- [Filename Extension](#user-content-filename-extension)
+- [MIME Type](#user-content-mime-type)
+- [ABNF Grammar](#user-content-abnf-grammar)
+
+## Preliminaries
+
+- TOML is case-sensitive.
+- Whitespace means tab (U+0009) or space (U+0020).
+- Newline means LF (U+000A) or CRLF (U+000D U+000A).
+- A TOML file must be a valid UTF-8 encoded Unicode document.
+
+  Specifically this means that a file _as a whole_ must form a
+  [well-formed code-unit sequence](https://unicode.org/glossary/#well_formed_code_unit_sequence).
+  Otherwise, it must be rejected (preferably) or have ill-formed byte sequences
+  replaced with U+FFFD, as per the Unicode specification.
+
+## Comment
+
+A hash symbol marks the rest of the line as a comment, except when inside a
+string.
+
+```toml
+# This is a full-line comment
+key = "value"  # This is a comment at the end of a line
+another = "# This is not a comment"
+```
+
+Control characters other than tab (U+0000 to U+0008, U+000A to U+001F, U+007F)
+are not permitted in comments.
+
+Comments should be used to communicate between the human readers of a file.
+Parsers must not modify keys or values, based on the presence (or contents) of a
+comment.
+
+## Key/Value Pair
+
+The primary building block of a TOML document is the key/value pair.
+
+Keys are on the left of the equals sign and values are on the right. Whitespace
+is ignored around key names and values. The key, equals sign, and value must be
+on the same line (though some values can be broken over multiple lines).
+
+```toml
+key = "value"
+```
+
+Values must have one of the following types.
+
+- [String](#user-content-string)
+- [Integer](#user-content-integer)
+- [Boolean](#user-content-boolean)
+- [Array](#user-content-array)
+
+Unspecified values are invalid.
+
+```toml
+key = # INVALID
+```
+
+There must be a newline (or EOF) after a key/value pair.
+
+```
+first = "Tom" last = "Preston-Werner" # INVALID
+```
+
+## Keys
+
+A key may be either bare, quoted, or dotted.
+
+**Bare keys** may only contain ASCII letters, ASCII digits, underscores, and
+dashes (`A-Za-z0-9_-`). Note that bare keys are allowed to be composed of only
+ASCII digits, e.g. `1234`, but are always interpreted as strings.
+
+&#x2139;&#xfe0f; The exact ranges of allowed code points can be found in the
+[ABNF grammar file][abnf].
+
+```toml
+key = "value"
+bare_key = "value"
+bare-key = "value"
+1234 = "value"
+```
+
+**Quoted keys** follow the exact same rules as either basic strings or literal
+strings and allow you to use a much broader set of key names. Best practice is
+to use bare keys except when absolutely necessary.
+
+```toml
+"127.0.0.1" = "value"
+"character encoding" = "value"
+"ʎǝʞ" = "value"
+'key2' = "value"
+'quoted "value"' = "value"
+```
+
+A bare key must be non-empty, but an empty quoted key is allowed (though
+discouraged).
+
+```toml
+= "no key name"           # INVALID
+"" = "blank"              # VALID but discouraged
+'' = 'blank'              # VALID but discouraged
+```
+
+**Dotted keys** are a sequence of bare or quoted keys joined with a dot. This
+allows for grouping similar properties together:
+
+```toml
+name = "Orange"
+physical.color = "orange"
+physical.shape = "round"
+site."google.com" = true
+```
+
+In JSON land, that would give you the following structure:
+
+```json
+{
+  "name": "Orange",
+  "physical": {
+    "color": "orange",
+    "shape": "round"
+  },
+  "site": {
+    "google.com": true
+  }
+}
+```
+
+For details regarding the tables that dotted keys define, refer to the
+[Table](#user-content-table) section below.
+
+Whitespace around dot-separated parts is ignored. However, best practice is to
+not use any extraneous whitespace.
+
+```toml
+fruit.name = "banana"       # this is best practice
+fruit. color = "yellow"     # same as fruit.color
+fruit . flavor = "banana"   # same as fruit.flavor
+```
+
+Indentation is treated as whitespace and ignored.
+
+Defining a key multiple times is invalid.
+
+```
+# DO NOT DO THIS
+name = "Tom"
+name = "Pradyun"
+```
+
+Note that bare keys and quoted keys are equivalent:
+
+```
+# THIS WILL NOT WORK
+spelling = "favorite"
+"spelling" = "favourite"
+```
+
+As long as a key hasn't been directly defined, you may still write to it and to
+names within it.
+
+```toml
+# This makes the key "fruit" into a table.
+fruit.apple.smooth = true
+
+# So then you can add to the table "fruit" like so:
+fruit.orange = 2
+```
+
+```
+# THE FOLLOWING IS INVALID
+
+# This defines the value of fruit.apple to be an integer.
+fruit.apple = 1
+
+# But then this treats fruit.apple like it's a table.
+# You can't turn an integer into a table.
+fruit.apple.smooth = true
+```
+
+Defining dotted keys out-of-order is discouraged.
+
+```toml
+# VALID BUT DISCOURAGED
+
+apple.type = "fruit"
+orange.type = "fruit"
+
+apple.skin = "thin"
+orange.skin = "thick"
+
+apple.color = "red"
+orange.color = "orange"
+```
+
+```toml
+# RECOMMENDED
+
+apple.type = "fruit"
+apple.skin = "thin"
+apple.color = "red"
+
+orange.type = "fruit"
+orange.skin = "thick"
+orange.color = "orange"
+```
+
+Since bare keys can be composed of only ASCII integers, it is possible to write
+dotted keys that look like floats but are 2-part dotted keys. Don't do this
+unless you have a good reason to (you probably don't).
+
+```toml
+3.14159 = "pi"
+```
+
+The above TOML maps to the following JSON.
+
+```json
+{ "3": { "14159": "pi" } }
+```
+
+## String
+
+There are two ways to express strings: basic and literal. All strings must
+contain only Unicode characters.
+
+**Basic strings** are surrounded by quotation marks (`"`). Any Unicode character
+may be used except those that must be escaped: quotation mark, backslash, and
+the control characters other than tab (U+0000 to U+0008, U+000A to U+001F,
+U+007F).
+
+```toml
+str = "I'm a string. \"You can quote me\". Name\tJos\xE9\nLocation\tSF."
+```
+
+For convenience, some popular characters have a compact escape sequence.
+
+```
+\b         - backspace       (U+0008)
+\t         - tab             (U+0009)
+\n         - linefeed        (U+000A)
+\f         - form feed       (U+000C)
+\r         - carriage return (U+000D)
+\e         - escape          (U+001B)
+\"         - quote           (U+0022)
+\\         - backslash       (U+005C)
+\xHH       - unicode         (U+00HH)
+\uHHHH     - unicode         (U+HHHH)
+\UHHHHHHHH - unicode         (U+HHHHHHHH)
+```
+
+Any Unicode character may be escaped with the `\xHH`, `\uHHHH`, or `\UHHHHHHHH`
+forms. The escape codes must be Unicode
+[scalar values](https://unicode.org/glossary/#unicode_scalar_value).
+
+Keep in mind that all TOML strings are sequences of Unicode characters, _not_
+byte sequences. For binary data, avoid using these escape codes. Instead,
+external binary-to-text encoding strategies, like hexadecimal sequences or
+[Base64](https://www.base64decode.org/), are recommended for converting between
+bytes and strings.
+
+All other escape sequences not listed above are reserved; if they are used, TOML
+should produce an error.
+
+If you're a frequent specifier of Windows paths or regular expressions, then
+having to escape backslashes quickly becomes tedious and error-prone. To help,
+TOML supports literal strings which do not allow escaping at all.
+
+**Literal strings** are surrounded by single quotes. Like basic strings, they
+must appear on a single line:
+
+```toml
+# What you see is what you get.
+winpath  = 'C:\Users\nodejs\templates'
+winpath2 = '\\ServerX\admin$\system32\'
+quoted   = 'Tom "Dubs" Preston-Werner'
+regex    = '<\i\c*\s*>'
+```
+
+Since there is no escaping, there is no way to write a single quote inside a
+literal string enclosed by single quotes.
+
+Control characters other than tab are not permitted in a literal string.
+
+## Integer
+
+Integers are whole numbers. Positive numbers may be prefixed with a plus sign.
+Negative numbers are prefixed with a minus sign.
+
+```toml
+int1 = +99
+int2 = 42
+int3 = 0
+int4 = -17
+```
+
+For large numbers, you may use underscores between digits to enhance
+readability. Each underscore must be surrounded by at least one digit on each
+side.
+
+```toml
+int5 = 1_000
+int6 = 5_349_221
+int7 = 53_49_221  # Indian number system grouping
+int8 = 1_2_3_4_5  # VALID but discouraged
+```
+
+Leading zeros are not allowed. Integer values `-0` and `+0` are valid and
+identical to an unprefixed zero.
+
+Non-negative integer values may also be expressed in hexadecimal, octal, or
+binary. In these formats, leading `+` is not allowed and leading zeros are
+allowed (after the prefix). Hex values are case-insensitive. Underscores are
+allowed between digits (but not between the prefix and the value).
+
+```toml
+# hexadecimal with prefix `0x`
+hex1 = 0xDEADBEEF
+hex2 = 0xdeadbeef
+hex3 = 0xdead_beef
+
+# octal with prefix `0o`
+oct1 = 0o01234567
+oct2 = 0o755 # useful for Unix file permissions
+
+# binary with prefix `0b`
+bin1 = 0b11010110
+```
+
+Arbitrary 64-bit signed integers (from −2^63 to 2^63−1) should be accepted and
+handled losslessly. If an integer cannot be represented losslessly, an error
+must be thrown.
+
+## Boolean
+
+Booleans are just the tokens you're used to. Always lowercase.
+
+```toml
+bool1 = true
+bool2 = false
+```
+
+## Array
+
+Arrays are ordered values surrounded by square brackets. Whitespace is ignored.
+Elements are separated by commas. Arrays can contain values of the same data
+types as allowed in key/value pairs. Values of different types may be mixed.
+
+```toml
+integers = [ 1, 2, 3 ]
+colors = [ "red", "yellow", "green" ]
+nested_arrays_of_ints = [ [ 1, 2 ], [3, 4, 5] ]
+nested_mixed_array = [ [ 1, 2 ], ["a", "b", "c"] ]
+string_array = [ "all", 'strings', """are the same""", '''type''' ]
+
+# Mixed-type arrays are allowed
+numbers = [ 0.1, 0.2, 0.5, 1, 2, 5 ]
+contributors = [
+  "Foo Bar <foo@example.com>",
+  { name = "Baz Qux", email = "bazqux@example.com", url = "https://example.com/bazqux" }
+]
+```
+
+Arrays can span multiple lines. A terminating comma (also called a trailing
+comma) is permitted after the last value of the array. Any number of newlines
+and comments may precede values, commas, and the closing bracket. Indentation
+between array values and commas is treated as whitespace and ignored.
+
+```toml
+integers2 = [
+  1, 2, 3
+]
+
+integers3 = [
+  1,
+  2, # this is ok
+]
+```
+
+## Table
+
+Tables (also known as hash tables or dictionaries) are collections of key/value
+pairs. They are defined by headers, with square brackets on a line by
+themselves. You can tell headers apart from arrays because arrays are only ever
+values.
+
+```toml
+[table]
+```
+
+Under that, and until the next header or EOF, are the key/values of that table.
+Key/value pairs within tables are not guaranteed to be in any specific order.
+
+```toml
+[table-1]
+key1 = "some string"
+key2 = 123
+
+[table-2]
+key1 = "another string"
+key2 = 456
+```
+
+Naming rules for tables are the same as for keys (see definition of
+[Keys](#user-content-keys) above).
+
+```toml
+[dog."tater.man"]
+type.name = "pug"
+```
+
+In JSON land, that would give you the following structure:
+
+```json
+{ "dog": { "tater.man": { "type": { "name": "pug" } } } }
+```
+
+Whitespace around the key is ignored. However, best practice is to not use any
+extraneous whitespace.
+
+```toml
+[a.b.c]            # this is best practice
+[ d.e.f ]          # same as [d.e.f]
+[ g .  h  . i ]    # same as [g.h.i]
+[ j . "ʞ" . 'l' ]  # same as [j."ʞ".'l']
+```
+
+Indentation is treated as whitespace and ignored.
+
+You don't need to specify all the super-tables if you don't want to. TOML knows
+how to do it for you.
+
+```toml
+# [x] you
+# [x.y] don't
+# [x.y.z] need these
+[x.y.z.w] # for this to work
+
+[x] # defining a super-table afterward is ok
+```
+
+Empty tables are allowed and simply have no key/value pairs within them.
+
+Like keys, you cannot define a table more than once. Doing so is invalid.
+
+```
+# DO NOT DO THIS
+
+[fruit]
+apple = "red"
+
+[fruit]
+orange = "orange"
+```
+
+```
+# DO NOT DO THIS EITHER
+
+[fruit]
+apple = "red"
+
+[fruit.apple]
+texture = "smooth"
+```
+
+Defining tables out-of-order is discouraged.
+
+```toml
+# VALID BUT DISCOURAGED
+[fruit.apple]
+[animal]
+[fruit.orange]
+```
+
+```toml
+# RECOMMENDED
+[fruit.apple]
+[fruit.orange]
+[animal]
+```
+
+The top-level table, also called the root table, starts at the beginning of the
+document and ends just before the first table header (or EOF). Unlike other
+tables, it is nameless and cannot be relocated.
+
+```toml
+# Top-level table begins.
+name = "Fido"
+breed = "pug"
+
+# Top-level table ends.
+[owner]
+name = "Regina Dogman"
+member_since = 1999-08-04
+```
+
+Dotted keys create and define a table for each key part before the last one. Any
+such table must have all its key/value pairs defined under the current `[table]`
+header, or in the root table if defined before all headers.
+
+```toml
+fruit.apple.color = "red"
+# Defines a table named fruit
+# Defines a table named fruit.apple
+
+fruit.apple.taste.sweet = true
+# Defines a table named fruit.apple.taste
+# fruit and fruit.apple were already created
+```
+
+Since tables cannot be defined more than once, redefining such tables using a
+`[table]` header is not allowed. Likewise, using dotted keys to redefine tables
+already defined in `[table]` form is not allowed. The `[table]` form can,
+however, be used to define sub-tables within tables defined via dotted keys.
+
+```toml
+[fruit]
+apple.color = "red"
+apple.taste.sweet = true
+
+# [fruit.apple]  # INVALID
+# [fruit.apple.taste]  # INVALID
+
+[fruit.apple.texture]  # you can add sub-tables
+smooth = true
+```
+
+## Filename Extension
+
+TOML files should use the extension `.toml`.
+
+## MIME Type
+
+When transferring TOML files over the internet, the appropriate MIME type is
+`application/toml`.
+
+## ABNF Grammar
+
+A formal description of TOML's syntax is available, as a separate [ABNF
+file][abnf].
+
+[abnf]: ./toml.abnf
