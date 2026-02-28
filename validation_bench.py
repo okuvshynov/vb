@@ -8,10 +8,17 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
+import urllib.request
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
-from openai import OpenAI
+import litellm
+
+# Suppress Pydantic serialization warnings from LiteLLM's response types
+# not exactly matching OpenAI's schemas (harmless type mismatches).
+warnings.filterwarnings("ignore", message="Pydantic serializer warnings")
 
 
 @dataclass
@@ -180,9 +187,17 @@ def format_tool_result(result: TestResult) -> str:
     return "\n".join(parts)
 
 
-def auto_detect_model(client: OpenAI) -> str:
-    models = client.models.list()
-    model_ids = [m.id for m in models.data]
+def auto_detect_model(api_base: str, api_key: str) -> str:
+    """Auto-detect model from a local OpenAI-compatible server via /models endpoint."""
+    url = api_base.rstrip("/") + "/models"
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {api_key}"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+    except (urllib.error.URLError, OSError) as e:
+        print(f"Error: cannot reach {url}: {e}", file=sys.stderr)
+        sys.exit(1)
+    model_ids = [m["id"] for m in data.get("data", [])]
     if not model_ids:
         print("Error: no models available at the endpoint.", file=sys.stderr)
         sys.exit(1)
@@ -192,7 +207,7 @@ def auto_detect_model(client: OpenAI) -> str:
 
 
 def serialize_message(msg) -> dict:
-    """Convert a message (dict or OpenAI object) to a JSON-serializable dict."""
+    """Convert a message (dict or LiteLLM/OpenAI object) to a JSON-serializable dict."""
     if isinstance(msg, dict):
         return msg
     return msg.model_dump(exclude_none=True)
@@ -207,7 +222,6 @@ def save_repeat_log(repeat_dir: Path, messages: list):
 
 
 def run_repeat(
-    client: OpenAI,
     model: str,
     user_prompt: str,
     tests: list[dict],
@@ -218,6 +232,9 @@ def run_repeat(
     compile_cmd: str,
     src_ext: str,
     task_dir: Path | None = None,
+    api_base: str | None = None,
+    api_key: str | None = None,
+    timeout: float = 600,
 ) -> RepeatResult:
     repeat_dir.mkdir(parents=True, exist_ok=True)
     submissions_dir = repeat_dir / "submissions"
@@ -230,11 +247,14 @@ def run_repeat(
 
     for turn in range(max_turns):
         try:
-            response = client.chat.completions.create(
+            response = litellm.completion(
                 model=model,
                 messages=messages,
                 tools=[SUBMIT_TOOL],
                 tool_choice="auto",
+                api_base=api_base,
+                api_key=api_key,
+                timeout=timeout,
                 **sampling_params,
             )
         except Exception as e:
@@ -243,9 +263,14 @@ def run_repeat(
 
         choice = response.choices[0]
         assistant_msg = choice.message
+        finish_reason = choice.finish_reason
 
-        # Append assistant message
-        messages.append(assistant_msg)
+        # Convert to dict immediately to avoid Pydantic serialization warnings
+        # on subsequent litellm.completion() calls and during save_repeat_log().
+        messages.append(serialize_message(assistant_msg))
+
+        if finish_reason == "length":
+            print(f"  [repeat {repeat_index}] turn {turn}: response truncated (max_tokens too low)", file=sys.stderr)
 
         if not assistant_msg.tool_calls:
             # Model stopped without calling a tool
@@ -367,10 +392,11 @@ def main():
     parser = argparse.ArgumentParser(description="AI Coding Benchmark Harness")
     parser.add_argument("--task", required=True, help="Task name (directory under tasks/)")
     parser.add_argument("--n-repeats", type=int, default=1, help="Number of independent runs")
-    parser.add_argument("--api-base", default="http://localhost:8080/v1", help="OpenAI-compatible endpoint")
-    parser.add_argument("--api-key", default="no-key", help="API key")
-    parser.add_argument("--model", default="", help="Model name (empty = auto-detect)")
+    parser.add_argument("--api-base", default="http://localhost:8080/v1", help="API base URL (for local/custom endpoints)")
+    parser.add_argument("--api-key", default=None, help="API key (or set OPENAI_API_KEY / ANTHROPIC_API_KEY env var)")
+    parser.add_argument("--model", default="", help="Model name in LiteLLM format: anthropic/claude-sonnet-4-20250514, openai/gpt-4o, or bare name for local servers (empty = auto-detect from local server)")
     parser.add_argument("--temperature", type=float, default=None, help="Sampling temperature (omit to use server default)")
+    parser.add_argument("--max-tokens", type=int, default=16384, help="Max tokens per response (default: 16384)")
     parser.add_argument("--max-turns", type=int, default=10, help="Max conversation turns per repeat")
     parser.add_argument("--prompt", default="prompt", help="Prompt variant (loads prompt-{name}.txt, or 'prompt' for prompt.txt)")
     parser.add_argument("--timeout", type=float, default=600, help="API request timeout in seconds (default: 600)")
@@ -405,17 +431,31 @@ def main():
     user_prompt = user_prompt.replace("{compile_cmd}", compile_cmd)
     tests = load_tests(tests_file)
 
-    client = OpenAI(base_url=args.api_base, api_key=args.api_key, timeout=args.timeout)
+    api_base = args.api_base
+    api_key = args.api_key
 
-    model = args.model if args.model else auto_detect_model(client)
+    if args.model:
+        model = args.model
+        if "/" in model:
+            # Cloud provider (e.g. "anthropic/claude-sonnet-4-20250514", "openai/gpt-4o"):
+            # LiteLLM routes automatically, api_base not needed.
+            api_base = None
+        else:
+            # Bare model name (e.g. "qwen2.5-coder-32b") means local server:
+            # prefix with "openai/" so LiteLLM uses the OpenAI-compatible path.
+            model = f"openai/{model}"
+    else:
+        # Auto-detect from local server and prefix with "openai/".
+        bare_model = auto_detect_model(api_base, api_key or "no-key")
+        model = f"openai/{bare_model}"
 
     # Create run output directory
     run_dir = Path(tempfile.mkdtemp(prefix="vb_"))
     repeats_dir = run_dir / "repeats"
     repeats_dir.mkdir()
 
-    # Build sampling params — only include explicitly set values
-    sampling_params = {}
+    # Build sampling params
+    sampling_params = {"max_tokens": args.max_tokens}
     if args.temperature is not None:
         sampling_params["temperature"] = args.temperature
 
@@ -430,7 +470,6 @@ def main():
         for i in range(args.n_repeats):
             print(f"\n--- Repeat {i} ---")
             r = run_repeat(
-                client=client,
                 model=model,
                 user_prompt=user_prompt,
                 tests=tests,
@@ -441,6 +480,9 @@ def main():
                 compile_cmd=compile_cmd,
                 src_ext=src_ext,
                 task_dir=tasks_dir,
+                api_base=api_base,
+                api_key=api_key,
+                timeout=args.timeout,
             )
             results.append(r)
     except KeyboardInterrupt:
