@@ -184,7 +184,7 @@ def format_tool_result(result: TestResult) -> str:
     if m.passed < m.total:
         # Include FAIL lines so the model can fix bugs
         for line in result.test_output.splitlines():
-            if line.startswith("FAIL:"):
+            if line.startswith("FAIL "):
                 parts.append(line)
     return "\n".join(parts)
 
