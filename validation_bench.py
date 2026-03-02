@@ -48,8 +48,8 @@ class TestResult:
 
 
 @dataclass
-class RepeatResult:
-    repeat_index: int
+class AttemptResult:
+    attempt_index: int
     turns_used: int
     submissions: int
     final_matrix: ConfusionMatrix
@@ -215,31 +215,31 @@ def serialize_message(msg) -> dict:
     return msg.model_dump(exclude_none=True)
 
 
-def save_repeat_log(repeat_dir: Path, messages: list):
+def save_attempt_log(attempt_dir: Path, messages: list):
     """Save the full conversation transcript as messages.json."""
     serialized = [serialize_message(m) for m in messages]
-    (repeat_dir / "messages.json").write_text(
+    (attempt_dir / "messages.json").write_text(
         json.dumps(serialized, indent=2, ensure_ascii=False)
     )
 
 
-def run_repeat(
+def run_attempt(
     model: str,
     user_prompt: str,
     tests: list[dict],
     max_turns: int,
     sampling_params: dict,
-    repeat_index: int,
-    repeat_dir: Path,
+    attempt_index: int,
+    attempt_dir: Path,
     compile_cmd: str,
     src_ext: str,
     task_dir: Path | None = None,
     api_base: str | None = None,
     api_key: str | None = None,
     timeout: float = 600,
-) -> RepeatResult:
-    repeat_dir.mkdir(parents=True, exist_ok=True)
-    submissions_dir = repeat_dir / "submissions"
+) -> AttemptResult:
+    attempt_dir.mkdir(parents=True, exist_ok=True)
+    submissions_dir = attempt_dir / "submissions"
     submissions_dir.mkdir()
 
     messages = [{"role": "user", "content": user_prompt}]
@@ -260,7 +260,7 @@ def run_repeat(
                 **sampling_params,
             )
         except Exception as e:
-            print(f"  [repeat {repeat_index}] API error on turn {turn}: {e}", file=sys.stderr)
+            print(f"  [attempt {attempt_index}] API error on turn {turn}: {e}", file=sys.stderr)
             break
 
         choice = response.choices[0]
@@ -268,11 +268,11 @@ def run_repeat(
         finish_reason = choice.finish_reason
 
         # Convert to dict immediately to avoid Pydantic serialization warnings
-        # on subsequent litellm.completion() calls and during save_repeat_log().
+        # on subsequent litellm.completion() calls and during save_attempt_log().
         messages.append(serialize_message(assistant_msg))
 
         if finish_reason == "length":
-            print(f"  [repeat {repeat_index}] turn {turn}: response truncated (max_tokens too low)", file=sys.stderr)
+            print(f"  [attempt {attempt_index}] turn {turn}: response truncated (max_tokens too low)", file=sys.stderr)
 
         if not assistant_msg.tool_calls:
             # Model stopped without calling a tool
@@ -321,7 +321,7 @@ def run_repeat(
                 m = result.matrix
                 status = f"{m.passed}/{m.total} (TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn})"
 
-            print(f"  [repeat {repeat_index}] turn {turn}, submission {submissions}: {status}")
+            print(f"  [attempt {attempt_index}] turn {turn}, submission {submissions}: {status}")
 
             messages.append({
                 "role": "tool",
@@ -339,10 +339,10 @@ def run_repeat(
     final_matrix = last_compiled_result.matrix if last_compiled_result else ConfusionMatrix()
 
     # Save conversation transcript
-    save_repeat_log(repeat_dir, messages)
+    save_attempt_log(attempt_dir, messages)
 
-    return RepeatResult(
-        repeat_index=repeat_index,
+    return AttemptResult(
+        attempt_index=attempt_index,
         turns_used=min(turn + 1, max_turns) if 'turn' in dir() else 0,
         submissions=submissions,
         final_matrix=final_matrix,
@@ -350,9 +350,9 @@ def run_repeat(
     )
 
 
-def print_summary(results: list[RepeatResult], model: str, task: str, prompt: str):
+def print_summary(results: list[AttemptResult], model: str, task: str, prompt: str):
     print("\n" + "=" * 60)
-    print(f"Task: {task} | Prompt: {prompt} | Model: {model} | Repeats: {len(results)}")
+    print(f"Task: {task} | Prompt: {prompt} | Model: {model} | Attempts: {len(results)}")
     print("=" * 60)
 
     for r in results:
@@ -360,7 +360,7 @@ def print_summary(results: list[RepeatResult], model: str, task: str, prompt: st
         score = f"{m.passed}/{m.total}" if m.total > 0 else "0/0"
         status = "PASS" if m.passed == m.total and m.total > 0 else "FAIL"
         print(
-            f"  repeat {r.repeat_index}: {score} ({status}) "
+            f"  attempt {r.attempt_index}: {score} ({status}) "
             f"| TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn} "
             f"| {r.submissions} submissions | {r.turns_used} turns | {r.elapsed_seconds}s"
         )
@@ -382,25 +382,25 @@ def print_summary(results: list[RepeatResult], model: str, task: str, prompt: st
             tn=sum(r.final_matrix.tn for r in scored),
         )
         n = len(scored)
-        print(f"\nAggregate confusion matrix (sum over {n} repeats):")
+        print(f"\nAggregate confusion matrix (sum over {n} attempts):")
         print(f"                  Predicted Valid  Predicted Invalid")
         print(f"  Actually Valid   TP={agg.tp:<14d} FN={agg.fn}")
         print(f"  Actually Invalid FP={agg.fp:<14d} TN={agg.tn}")
     else:
-        print("\nNo valid submissions across all repeats.")
+        print("\nNo valid submissions across all attempts.")
 
 
 def main():
     parser = argparse.ArgumentParser(description="AI Coding Benchmark Harness")
     parser.add_argument("--task", required=True, help="Task name (directory under tasks/)")
-    parser.add_argument("--n-repeats", type=int, default=1, help="Number of independent runs")
+    parser.add_argument("--n-attempts", type=int, default=1, help="Number of independent attempts")
     parser.add_argument("--api-base", default="http://localhost:8080/v1", help="API base URL (for local/custom endpoints)")
     parser.add_argument("--api-key", default=None, help="API key (or set OPENAI_API_KEY / ANTHROPIC_API_KEY env var)")
     parser.add_argument("--model", default="", help="Model name in LiteLLM format: anthropic/claude-sonnet-4-20250514, openai/gpt-4o, or bare name for local servers (empty = auto-detect from local server)")
     parser.add_argument("--temperature", type=float, default=None, help="Sampling temperature (omit to use server default)")
     parser.add_argument("--reasoning-effort", choices=["low", "medium", "high"], default=None, help="Reasoning effort for reasoning models (low/medium/high)")
     parser.add_argument("--max-tokens", type=int, default=32768, help="Max tokens per response (default: 32768)")
-    parser.add_argument("--max-turns", type=int, default=10, help="Max conversation turns per repeat")
+    parser.add_argument("--max-turns", type=int, default=10, help="Max conversation turns per attempt")
     parser.add_argument("--prompt", default="prompt", help="Prompt variant (loads prompt-{name}.txt, or 'prompt' for prompt.txt)")
     parser.add_argument("--timeout", type=float, default=600, help="API request timeout in seconds (default: 600)")
     args = parser.parse_args()
@@ -454,8 +454,8 @@ def main():
 
     # Create run output directory
     run_dir = Path(tempfile.mkdtemp(prefix="vb_"))
-    repeats_dir = run_dir / "repeats"
-    repeats_dir.mkdir()
+    attempts_dir = run_dir / "attempts"
+    attempts_dir.mkdir()
 
     # Build sampling params
     sampling_params = {"max_tokens": args.max_tokens}
@@ -466,22 +466,22 @@ def main():
 
     print(f"Running task '{args.task}' (prompt: {args.prompt}) with model '{model}'")
     sampling_str = ", ".join(f"{k}={v}" for k, v in sampling_params.items()) or "server defaults"
-    print(f"Repeats: {args.n_repeats} | Max turns: {args.max_turns} | Sampling: {sampling_str}")
+    print(f"Attempts: {args.n_attempts} | Max turns: {args.max_turns} | Sampling: {sampling_str}")
     print(f"Output: {run_dir}")
     print("-" * 60)
 
     results = []
     try:
-        for i in range(args.n_repeats):
-            print(f"\n--- Repeat {i} ---")
-            r = run_repeat(
+        for i in range(args.n_attempts):
+            print(f"\n--- Attempt {i} ---")
+            r = run_attempt(
                 model=model,
                 user_prompt=user_prompt,
                 tests=tests,
                 max_turns=args.max_turns,
                 sampling_params=sampling_params,
-                repeat_index=i,
-                repeat_dir=repeats_dir / str(i),
+                attempt_index=i,
+                attempt_dir=attempts_dir / str(i),
                 compile_cmd=compile_cmd,
                 src_ext=src_ext,
                 task_dir=tasks_dir,
