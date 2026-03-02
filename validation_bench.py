@@ -16,6 +16,8 @@ from pathlib import Path
 
 import litellm
 
+litellm.drop_params = True
+
 # Suppress Pydantic serialization warnings from LiteLLM's response types
 # not exactly matching OpenAI's schemas (harmless type mismatches).
 warnings.filterwarnings("ignore", message="Pydantic serializer warnings")
@@ -396,7 +398,8 @@ def main():
     parser.add_argument("--api-key", default=None, help="API key (or set OPENAI_API_KEY / ANTHROPIC_API_KEY env var)")
     parser.add_argument("--model", default="", help="Model name in LiteLLM format: anthropic/claude-sonnet-4-20250514, openai/gpt-4o, or bare name for local servers (empty = auto-detect from local server)")
     parser.add_argument("--temperature", type=float, default=None, help="Sampling temperature (omit to use server default)")
-    parser.add_argument("--max-tokens", type=int, default=16384, help="Max tokens per response (default: 16384)")
+    parser.add_argument("--reasoning-effort", choices=["low", "medium", "high"], default=None, help="Reasoning effort for reasoning models (low/medium/high)")
+    parser.add_argument("--max-tokens", type=int, default=32768, help="Max tokens per response (default: 32768)")
     parser.add_argument("--max-turns", type=int, default=10, help="Max conversation turns per repeat")
     parser.add_argument("--prompt", default="prompt", help="Prompt variant (loads prompt-{name}.txt, or 'prompt' for prompt.txt)")
     parser.add_argument("--timeout", type=float, default=600, help="API request timeout in seconds (default: 600)")
@@ -458,6 +461,8 @@ def main():
     sampling_params = {"max_tokens": args.max_tokens}
     if args.temperature is not None:
         sampling_params["temperature"] = args.temperature
+    if args.reasoning_effort is not None:
+        sampling_params["reasoning_effort"] = args.reasoning_effort
 
     print(f"Running task '{args.task}' (prompt: {args.prompt}) with model '{model}'")
     sampling_str = ", ".join(f"{k}={v}" for k, v in sampling_params.items()) or "server defaults"
