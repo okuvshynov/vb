@@ -253,7 +253,7 @@ def run_attempt(
                 model=model,
                 messages=messages,
                 tools=[SUBMIT_TOOL],
-                tool_choice="auto",
+                tool_choice="required",
                 api_base=api_base,
                 api_key=api_key,
                 timeout=timeout,
