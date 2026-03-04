@@ -350,16 +350,18 @@ def run_attempt(
     )
 
 
-def print_summary(results: list[AttemptResult], model: str, task: str, prompt: str):
-    print("\n" + "=" * 60)
-    print(f"Task: {task} | Prompt: {prompt} | Model: {model} | Attempts: {len(results)}")
-    print("=" * 60)
+def print_summary(results: list[AttemptResult], model: str, task: str, prompt: str) -> str:
+    lines = []
+    lines.append("")
+    lines.append("=" * 60)
+    lines.append(f"Task: {task} | Prompt: {prompt} | Model: {model} | Attempts: {len(results)}")
+    lines.append("=" * 60)
 
     for r in results:
         m = r.final_matrix
         score = f"{m.passed}/{m.total}" if m.total > 0 else "0/0"
         status = "PASS" if m.passed == m.total and m.total > 0 else "FAIL"
-        print(
+        lines.append(
             f"  attempt {r.attempt_index}: {score} ({status}) "
             f"| TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn} "
             f"| {r.submissions} submissions | {r.turns_used} turns | {r.elapsed_seconds}s"
@@ -370,9 +372,9 @@ def print_summary(results: list[AttemptResult], model: str, task: str, prompt: s
         scores = [r.final_matrix.passed / r.final_matrix.total for r in scored]
         mean = sum(scores) / len(scores)
         all_pass = sum(1 for s in scores if s == 1.0)
-        print(f"\nMean score: {mean:.2%}")
-        print(f"Min: {min(scores):.2%} | Max: {max(scores):.2%}")
-        print(f"All-pass rate: {all_pass}/{len(scored)} ({all_pass/len(scored):.0%})")
+        lines.append(f"\nMean score: {mean:.2%}")
+        lines.append(f"Min: {min(scores):.2%} | Max: {max(scores):.2%}")
+        lines.append(f"All-pass rate: {all_pass}/{len(scored)} ({all_pass/len(scored):.0%})")
 
         # Aggregate confusion matrix
         agg = ConfusionMatrix(
@@ -382,12 +384,16 @@ def print_summary(results: list[AttemptResult], model: str, task: str, prompt: s
             tn=sum(r.final_matrix.tn for r in scored),
         )
         n = len(scored)
-        print(f"\nAggregate confusion matrix (sum over {n} attempts):")
-        print(f"                  Predicted Valid  Predicted Invalid")
-        print(f"  Actually Valid   TP={agg.tp:<14d} FN={agg.fn}")
-        print(f"  Actually Invalid FP={agg.fp:<14d} TN={agg.tn}")
+        lines.append(f"\nAggregate confusion matrix (sum over {n} attempts):")
+        lines.append(f"                  Predicted Valid  Predicted Invalid")
+        lines.append(f"  Actually Valid   TP={agg.tp:<14d} FN={agg.fn}")
+        lines.append(f"  Actually Invalid FP={agg.fp:<14d} TN={agg.tn}")
     else:
-        print("\nNo valid submissions across all attempts.")
+        lines.append("\nNo valid submissions across all attempts.")
+
+    summary = "\n".join(lines)
+    print(summary)
+    return summary
 
 
 def main():
@@ -494,7 +500,16 @@ def main():
         print("\n\nInterrupted! Showing results collected so far.")
 
     if results:
-        print_summary(results, model, args.task, args.prompt)
+        summary = print_summary(results, model, args.task, args.prompt)
+        (run_dir / "summary.txt").write_text(summary.lstrip("\n") + "\n")
+        (run_dir / "meta.json").write_text(json.dumps({
+            "model": model,
+            "task": args.task,
+            "prompt": args.prompt,
+            "n_attempts": args.n_attempts,
+            "max_turns": args.max_turns,
+            "sampling_params": sampling_params,
+        }, indent=2) + "\n")
         print(f"\nOutput saved to: {run_dir}")
 
 

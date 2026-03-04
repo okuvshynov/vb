@@ -1,0 +1,69 @@
+----------------------------------------------------------------------------------------
+Model             | Attempts |        First-turn |         Best-of-5 |       Best-of-all
+----------------------------------------------------------------------------------------
+Qwen3.5-122B      |       10 |         253.3/745 |         440.4/745 |         440.4/745
+Claude Opus 4.6   |       10 |         561.9/745 |         727.8/745 |         727.8/745
+Claude Sonnet 4.6 |       10 |         496.5/745 |         720.3/745 |         720.3/745
+Devstral 2.0      |       10 |         382.4/745 |         477.0/745 |         477.0/745
+GLM-5             |       10 |         188.0/745 |         533.5/745 |         533.5/745
+----------------------------------------------------------------------------------------
+
+  Qwen3.5-122B:
+    attempt 0: first=473/745  best5=483/745  bestAll=483/745
+    attempt 1: first=0/745  best5=0/745  bestAll=0/745
+    attempt 2: first=0/745  best5=484/745  bestAll=484/745
+    attempt 3: first=531/745  best5=531/745  bestAll=531/745
+    attempt 4: first=499/745  best5=577/745  bestAll=577/745
+    attempt 5: first=0/745  best5=528/745  bestAll=528/745
+    attempt 6: first=561/745  best5=572/745  bestAll=572/745
+    attempt 7: first=469/745  best5=488/745  bestAll=488/745
+    attempt 8: first=0/745  best5=479/745  bestAll=479/745
+    attempt 9: first=0/745  best5=262/745  bestAll=262/745
+
+  Claude Opus 4.6:
+    attempt 0: first=714/745  best5=723/745  bestAll=723/745
+    attempt 1: first=713/745  best5=723/745  bestAll=723/745
+    attempt 2: first=0/745  best5=731/745  bestAll=731/745
+    attempt 3: first=694/745  best5=735/745  bestAll=735/745
+    attempt 4: first=713/745  best5=720/745  bestAll=720/745
+    attempt 5: first=0/745  best5=723/745  bestAll=723/745
+    attempt 6: first=720/745  best5=735/745  bestAll=735/745
+    attempt 7: first=715/745  best5=733/745  bestAll=733/745
+    attempt 8: first=673/745  best5=720/745  bestAll=720/745
+    attempt 9: first=677/745  best5=735/745  bestAll=735/745
+
+  Claude Sonnet 4.6:
+    attempt 0: first=713/745  best5=716/745  bestAll=716/745
+    attempt 1: first=724/745  best5=732/745  bestAll=732/745
+    attempt 2: first=710/745  best5=730/745  bestAll=730/745
+    attempt 3: first=715/745  best5=724/745  bestAll=724/745
+    attempt 4: first=678/745  best5=703/745  bestAll=703/745
+    attempt 5: first=708/745  best5=719/745  bestAll=719/745
+    attempt 6: first=0/745  best5=720/745  bestAll=720/745
+    attempt 7: first=717/745  best5=721/745  bestAll=721/745
+    attempt 8: first=0/745  best5=722/745  bestAll=722/745
+    attempt 9: first=0/745  best5=716/745  bestAll=716/745
+
+  Devstral 2.0:
+    attempt 0: first=493/745  best5=493/745  bestAll=493/745
+    attempt 1: first=477/745  best5=477/745  bestAll=477/745
+    attempt 2: first=465/745  best5=465/745  bestAll=465/745
+    attempt 3: first=0/745  best5=468/745  bestAll=468/745
+    attempt 4: first=466/745  best5=466/745  bestAll=466/745
+    attempt 5: first=495/745  best5=502/745  bestAll=502/745
+    attempt 6: first=462/745  best5=462/745  bestAll=462/745
+    attempt 7: first=491/745  best5=491/745  bestAll=491/745
+    attempt 8: first=475/745  best5=475/745  bestAll=475/745
+    attempt 9: first=0/745  best5=471/745  bestAll=471/745
+
+  GLM-5:
+    attempt 0: first=0/745  best5=645/745  bestAll=645/745
+    attempt 1: first=645/745  best5=697/745  bestAll=697/745
+    attempt 2: first=0/745  best5=0/745  bestAll=0/745
+    attempt 3: first=0/745  best5=646/745  bestAll=646/745
+    attempt 4: first=0/745  best5=703/745  bestAll=703/745
+    attempt 5: first=0/745  best5=0/745  bestAll=0/745
+    attempt 6: first=0/745  best5=643/745  bestAll=643/745
+    attempt 7: first=0/745  best5=655/745  bestAll=655/745
+    attempt 8: first=628/745  best5=667/745  bestAll=667/745
+    attempt 9: first=607/745  best5=679/745  bestAll=679/745
