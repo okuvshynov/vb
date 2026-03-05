@@ -1,0 +1,22 @@
+============================================================
+Task: toml-cpp-v0 | Prompt: prompt | Model: moonshot/kimi-k2.5 | Attempts: 10
+============================================================
+  attempt 0: 597/745 (FAIL) | TP=189 FN=73 FP=75 TN=408 | 5 submissions | 5 turns | 1329.6s
+  attempt 1: 587/745 (FAIL) | TP=241 FN=21 FP=137 TN=346 | 5 submissions | 5 turns | 795.0s
+  attempt 2: 623/745 (FAIL) | TP=165 FN=97 FP=25 TN=458 | 5 submissions | 5 turns | 918.5s
+  attempt 3: 622/745 (FAIL) | TP=221 FN=41 FP=82 TN=401 | 5 submissions | 5 turns | 844.8s
+  attempt 4: 598/745 (FAIL) | TP=219 FN=43 FP=104 TN=379 | 5 submissions | 5 turns | 885.9s
+  attempt 5: 602/745 (FAIL) | TP=213 FN=49 FP=94 TN=389 | 5 submissions | 5 turns | 733.1s
+  attempt 6: 600/745 (FAIL) | TP=201 FN=61 FP=84 TN=399 | 5 submissions | 5 turns | 1070.8s
+  attempt 7: 605/745 (FAIL) | TP=228 FN=34 FP=106 TN=377 | 5 submissions | 5 turns | 853.8s
+  attempt 8: 650/745 (FAIL) | TP=190 FN=72 FP=23 TN=460 | 5 submissions | 5 turns | 1101.8s
+  attempt 9: 566/745 (FAIL) | TP=220 FN=42 FP=137 TN=346 | 5 submissions | 5 turns | 758.5s
+
+Mean score: 81.21%
+Min: 75.97% | Max: 87.25%
+All-pass rate: 0/10 (0%)
+
+Aggregate confusion matrix (sum over 10 attempts):
+                  Predicted Valid  Predicted Invalid
+  Actually Valid   TP=2087           FN=533
+  Actually Invalid FP=867            TN=3963
