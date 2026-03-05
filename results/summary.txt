@@ -6,6 +6,7 @@ Qwen3.5-122B Q3    |       10 |         179.4/745 |         524.2/745 |         
 Qwen3.5-122B Q8    |       10 |         253.3/745 |         440.4/745 |         440.4/745
 Claude Opus 4.6    |       10 |         561.9/745 |         727.8/745 |         727.8/745
 Claude Sonnet 4.6  |       10 |         496.5/745 |         720.3/745 |         720.3/745
+Claude Sonnet 4.0  |       10 |         442.5/745 |         635.2/745 |         635.2/745
 Devstral 2.0       |       10 |         382.4/745 |         477.0/745 |         477.0/745
 GLM-5              |       10 |         188.0/745 |         533.5/745 |         533.5/745
 GPT Codex 5.2 Low  |       10 |           0.0/745 |         720.0/745 |         720.0/745
@@ -72,6 +73,18 @@ Kimi K2.5          |       10 |         378.8/745 |         606.5/745 |         
     attempt 7: first=717/745  best5=721/745  bestAll=721/745
     attempt 8: first=0/745  best5=722/745  bestAll=722/745
     attempt 9: first=0/745  best5=716/745  bestAll=716/745
+
+  Claude Sonnet 4.0:
+    attempt 0: first=558/745  best5=678/745  bestAll=678/745
+    attempt 1: first=571/745  best5=630/745  bestAll=630/745
+    attempt 2: first=523/745  best5=557/745  bestAll=557/745
+    attempt 3: first=595/745  best5=664/745  bestAll=664/745
+    attempt 4: first=548/745  best5=620/745  bestAll=620/745
+    attempt 5: first=0/745  best5=641/745  bestAll=641/745
+    attempt 6: first=539/745  best5=620/745  bestAll=620/745
+    attempt 7: first=0/745  best5=671/745  bestAll=671/745
+    attempt 8: first=511/745  best5=610/745  bestAll=610/745
+    attempt 9: first=580/745  best5=661/745  bestAll=661/745
 
   Devstral 2.0:
     attempt 0: first=493/745  best5=493/745  bestAll=493/745
