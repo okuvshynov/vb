@@ -1,0 +1,11 @@
+{
+  "model": "openai/gpt-5.3-codex",
+  "task": "toml-cpp-v0",
+  "prompt": "prompt",
+  "n_attempts": 10,
+  "max_turns": 5,
+  "sampling_params": {
+    "max_tokens": 32768,
+    "reasoning_effort": "low"
+  }
+}

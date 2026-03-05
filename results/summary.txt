@@ -1,14 +1,16 @@
 ----------------------------------------------------------------------------------------
 Model             | Attempts |        First-turn |         Best-of-5 |       Best-of-all
 ----------------------------------------------------------------------------------------
-Qwen3.5-122B      |       10 |         253.3/745 |         440.4/745 |         440.4/745
+Qwen3.5-122B Q8   |       10 |         253.3/745 |         440.4/745 |         440.4/745
+Qwen3.5-122B Q2   |       10 |         278.9/745 |         462.5/745 |         462.5/745
 Claude Opus 4.6   |       10 |         561.9/745 |         727.8/745 |         727.8/745
 Claude Sonnet 4.6 |       10 |         496.5/745 |         720.3/745 |         720.3/745
 Devstral 2.0      |       10 |         382.4/745 |         477.0/745 |         477.0/745
 GLM-5             |       10 |         188.0/745 |         533.5/745 |         533.5/745
+GPT Codex 5.2     |       10 |           0.0/745 |         720.0/745 |         720.0/745
 ----------------------------------------------------------------------------------------
 
-  Qwen3.5-122B:
+  Qwen3.5-122B Q8:
     attempt 0: first=473/745  best5=483/745  bestAll=483/745
     attempt 1: first=0/745  best5=0/745  bestAll=0/745
     attempt 2: first=0/745  best5=484/745  bestAll=484/745
@@ -19,6 +21,18 @@ GLM-5             |       10 |         188.0/745 |         533.5/745 |         5
     attempt 7: first=469/745  best5=488/745  bestAll=488/745
     attempt 8: first=0/745  best5=479/745  bestAll=479/745
     attempt 9: first=0/745  best5=262/745  bestAll=262/745
+
+  Qwen3.5-122B Q2:
+    attempt 0: first=0/745  best5=495/745  bestAll=495/745
+    attempt 1: first=484/745  best5=484/745  bestAll=484/745
+    attempt 2: first=483/745  best5=485/745  bestAll=485/745
+    attempt 3: first=486/745  best5=517/745  bestAll=517/745
+    attempt 4: first=0/745  best5=0/745  bestAll=0/745
+    attempt 5: first=298/745  best5=499/745  bestAll=499/745
+    attempt 6: first=0/745  best5=549/745  bestAll=549/745
+    attempt 7: first=551/745  best5=551/745  bestAll=551/745
+    attempt 8: first=0/745  best5=558/745  bestAll=558/745
+    attempt 9: first=487/745  best5=487/745  bestAll=487/745
 
   Claude Opus 4.6:
     attempt 0: first=714/745  best5=723/745  bestAll=723/745
@@ -67,3 +81,15 @@ GLM-5             |       10 |         188.0/745 |         533.5/745 |         5
     attempt 7: first=0/745  best5=655/745  bestAll=655/745
     attempt 8: first=628/745  best5=667/745  bestAll=667/745
     attempt 9: first=607/745  best5=679/745  bestAll=679/745
+
+  GPT Codex 5.2:
+    attempt 0: first=0/745  best5=726/745  bestAll=726/745
+    attempt 1: first=0/745  best5=721/745  bestAll=721/745
+    attempt 2: first=0/745  best5=721/745  bestAll=721/745
+    attempt 3: first=0/745  best5=704/745  bestAll=704/745
+    attempt 4: first=0/745  best5=720/745  bestAll=720/745
+    attempt 5: first=0/745  best5=733/745  bestAll=733/745
+    attempt 6: first=0/745  best5=713/745  bestAll=713/745
+    attempt 7: first=0/745  best5=714/745  bestAll=714/745
+    attempt 8: first=0/745  best5=722/745  bestAll=722/745
+    attempt 9: first=0/745  best5=726/745  bestAll=726/745

@@ -1,0 +1,22 @@
+============================================================
+Task: toml-cpp-v0 | Prompt: prompt | Model: openai/Qwen3.5-122B-A10B-UD-Q2_K_XL.gguf | Attempts: 10
+============================================================
+  attempt 0: 494/745 (FAIL) | TP=68 FN=194 FP=57 TN=426 | 5 submissions | 5 turns | 1549.0s
+  attempt 1: 481/745 (FAIL) | TP=44 FN=218 FP=46 TN=437 | 4 submissions | 5 turns | 1758.0s
+  attempt 2: 381/745 (FAIL) | TP=251 FN=11 FP=353 TN=130 | 5 submissions | 5 turns | 1262.3s
+  attempt 3: 517/745 (FAIL) | TP=130 FN=132 FP=96 TN=387 | 5 submissions | 5 turns | 1371.0s
+  attempt 4: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 5 submissions | 5 turns | 1659.2s
+  attempt 5: 442/745 (FAIL) | TP=177 FN=85 FP=218 TN=265 | 5 submissions | 5 turns | 1459.7s
+  attempt 6: 518/745 (FAIL) | TP=114 FN=148 FP=79 TN=404 | 5 submissions | 5 turns | 2175.1s
+  attempt 7: 547/745 (FAIL) | TP=132 FN=130 FP=68 TN=415 | 5 submissions | 5 turns | 1283.3s
+  attempt 8: 524/745 (FAIL) | TP=102 FN=160 FP=61 TN=422 | 5 submissions | 5 turns | 2054.4s
+  attempt 9: 262/745 (FAIL) | TP=262 FN=0 FP=483 TN=0 | 5 submissions | 5 turns | 1320.8s
+
+Mean score: 62.13%
+Min: 35.17% | Max: 73.42%
+All-pass rate: 0/9 (0%)
+
+Aggregate confusion matrix (sum over 9 attempts):
+                  Predicted Valid  Predicted Invalid
+  Actually Valid   TP=1280           FN=1078
+  Actually Invalid FP=1461           TN=2886
