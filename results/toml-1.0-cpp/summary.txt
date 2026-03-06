@@ -1,13 +1,22 @@
-----------------------------------------------------------------------------------------------
-Model                   | Attempts |        First-turn |         Best-of-5 |       Best-of-all
-----------------------------------------------------------------------------------------------
-mistral/devstral-latest |       10 |         312.7/678 |         355.9/678 |         355.9/678
-zai/glm-5               |       10 |         175.0/678 |         621.6/678 |         621.6/678
-openai/gpt-5.3-codex    |        7 |           0.0/678 |         669.3/678 |         669.3/678
-moonshot/kimi-k2.5      |       10 |         327.2/678 |         589.8/678 |         589.8/678
-----------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
+Model                | Attempts |        First-turn |         Best-of-5 |       Best-of-all
+-------------------------------------------------------------------------------------------
+Claude Sonnet 4.0    |        5 |         485.2/678 |         566.2/678 |         566.2/678
+Devstral             |       10 |         312.7/678 |         355.9/678 |         355.9/678
+GLM-5                |       10 |         175.0/678 |         621.6/678 |         621.6/678
+GPT Codex 5.3 (high) |        5 |         134.2/678 |         677.6/678 |         677.6/678
+GPT Codex 5.3 (low)  |        7 |           0.0/678 |         669.3/678 |         669.3/678
+Kimi K2.5            |       10 |         327.2/678 |         589.8/678 |         589.8/678
+-------------------------------------------------------------------------------------------
 
-  mistral/devstral-latest:
+  Claude Sonnet 4.0:
+    attempt 0: first=411/678  best5=518/678  bestAll=518/678
+    attempt 1: first=451/678  best5=589/678  bestAll=589/678
+    attempt 2: first=514/678  best5=538/678  bestAll=538/678
+    attempt 3: first=533/678  best5=627/678  bestAll=627/678
+    attempt 4: first=517/678  best5=559/678  bestAll=559/678
+
+  Devstral:
     attempt 0: first=314/678  best5=314/678  bestAll=314/678
     attempt 1: first=369/678  best5=369/678  bestAll=369/678
     attempt 2: first=0/678  best5=427/678  bestAll=427/678
@@ -19,7 +28,7 @@ moonshot/kimi-k2.5      |       10 |         327.2/678 |         589.8/678 |    
     attempt 8: first=308/678  best5=308/678  bestAll=308/678
     attempt 9: first=389/678  best5=393/678  bestAll=393/678
 
-  zai/glm-5:
+  GLM-5:
     attempt 0: first=0/678  best5=637/678  bestAll=637/678
     attempt 1: first=577/678  best5=627/678  bestAll=627/678
     attempt 2: first=0/678  best5=655/678  bestAll=655/678
@@ -31,7 +40,14 @@ moonshot/kimi-k2.5      |       10 |         327.2/678 |         589.8/678 |    
     attempt 8: first=626/678  best5=644/678  bestAll=644/678
     attempt 9: first=0/678  best5=566/678  bestAll=566/678
 
-  openai/gpt-5.3-codex:
+  GPT Codex 5.3 (high):
+    attempt 0: first=671/678  best5=678/678  bestAll=678/678
+    attempt 1: first=0/678  best5=678/678  bestAll=678/678
+    attempt 2: first=0/678  best5=678/678  bestAll=678/678
+    attempt 3: first=0/678  best5=677/678  bestAll=677/678
+    attempt 4: first=0/678  best5=677/678  bestAll=677/678
+
+  GPT Codex 5.3 (low):
     attempt 0: first=0/678  best5=669/678  bestAll=669/678
     attempt 1: first=0/678  best5=650/678  bestAll=650/678
     attempt 2: first=0/678  best5=674/678  bestAll=674/678
@@ -40,7 +56,7 @@ moonshot/kimi-k2.5      |       10 |         327.2/678 |         589.8/678 |    
     attempt 5: first=0/678  best5=665/678  bestAll=665/678
     attempt 6: first=0/678  best5=674/678  bestAll=674/678
 
-  moonshot/kimi-k2.5:
+  Kimi K2.5:
     attempt 0: first=541/678  best5=583/678  bestAll=583/678
     attempt 1: first=545/678  best5=590/678  bestAll=590/678
     attempt 2: first=0/678  best5=579/678  bestAll=579/678

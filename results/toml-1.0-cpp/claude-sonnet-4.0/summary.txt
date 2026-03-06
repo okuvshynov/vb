@@ -1,0 +1,17 @@
+============================================================
+Task: toml-1.0-cpp | Prompt: prompt | Model: anthropic/claude-sonnet-4-0 | Attempts: 5
+============================================================
+  attempt 0: 248/678 (FAIL) | TP=165 FN=40 FP=390 TN=83 | 5 submissions | 5 turns | 278.4s
+  attempt 1: 589/678 (FAIL) | TP=157 FN=48 FP=41 TN=432 | 5 submissions | 5 turns | 513.7s
+  attempt 2: 534/678 (FAIL) | TP=108 FN=97 FP=47 TN=426 | 5 submissions | 5 turns | 372.6s
+  attempt 3: 205/678 (FAIL) | TP=205 FN=0 FP=473 TN=0 | 5 submissions | 5 turns | 383.3s
+  attempt 4: 559/678 (FAIL) | TP=165 FN=40 FP=79 TN=394 | 5 submissions | 5 turns | 373.4s
+
+Mean score: 62.98%
+Min: 30.24% | Max: 86.87%
+All-pass rate: 0/5 (0%)
+
+Aggregate confusion matrix (sum over 5 attempts):
+                  Predicted Valid  Predicted Invalid
+  Actually Valid   TP=800            FN=225
+  Actually Invalid FP=1030           TN=1335
