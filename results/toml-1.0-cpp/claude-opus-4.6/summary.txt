@@ -1,0 +1,17 @@
+============================================================
+Task: toml-1.0-cpp | Prompt: prompt | Model: anthropic/claude-opus-4-6 | Attempts: 5
+============================================================
+  attempt 0: 673/678 (FAIL) | TP=204 FN=1 FP=4 TN=469 | 5 submissions | 5 turns | 635.7s
+  attempt 1: 672/678 (FAIL) | TP=205 FN=0 FP=6 TN=467 | 5 submissions | 5 turns | 667.7s
+  attempt 2: 668/678 (FAIL) | TP=205 FN=0 FP=10 TN=463 | 1 submissions | 2 turns | 198.9s
+  attempt 3: 678/678 (PASS) | TP=205 FN=0 FP=0 TN=473 | 5 submissions | 5 turns | 693.6s
+  attempt 4: 677/678 (FAIL) | TP=205 FN=0 FP=1 TN=472 | 5 submissions | 5 turns | 713.7s
+
+Mean score: 99.35%
+Min: 98.53% | Max: 100.00%
+All-pass rate: 1/5 (20%)
+
+Aggregate confusion matrix (sum over 5 attempts):
+                  Predicted Valid  Predicted Invalid
+  Actually Valid   TP=1024           FN=1
+  Actually Invalid FP=21             TN=2344
