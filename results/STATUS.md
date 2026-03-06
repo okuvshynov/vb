@@ -13,7 +13,7 @@ Target: 10 attempts per model per task.
 | GLM-5                | 10/10        | 6/10         |
 | GPT Codex 5.3 (high) | 5/10        | --           |
 | GPT Codex 5.3 (low)  | 7/10        | --           |
-| Kimi K2.5            | 10/10        | --           |
+| Kimi K2.5            | 10/10        | 10/10        |
 | Qwen3.5-122B Q8      | 10/10        | --           |
 
 **Legend:** `N/10` = N attempts completed, `--` = not started
