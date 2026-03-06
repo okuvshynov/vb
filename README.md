@@ -74,25 +74,17 @@ Integers + sequences variant of the miniformat family. Integers use `n`/`$` deli
 
 Full miniformat: strings + integers + sequences. Combines v0 (strings + sequences) and v1 (integers + sequences) into a single format with three value types. The prompt describes all three types and relies on "unique canonical representation" to implicitly prohibit leading zeros on both string lengths and integer values, plus negative zero. Test suite: 67 cases covering strings, integers, mixed-type sequences, cross-type top-level errors, and rejection of foreign formats.
 
-### `toml-cpp-v0`
+### `toml-1.0-cpp`
 
-TOML v1.1.0 file validation in C++17. The prompt embeds the full TOML specification (~1066 lines). Test data: 745 cases (262 valid, 483 invalid) sourced from [toml-test](https://github.com/toml-lang/toml-test) (MIT licensed). Tests use `input_file` to reference `.toml` files under `tests/valid/` and `tests/invalid/` rather than inline content.
+TOML v1.0.0 file validation in C++17. The prompt embeds the full TOML 1.0 specification with version-appropriate rules: no `\e` or `\xHH` escape sequences, seconds required in datetime values, and inline tables restricted to single lines without trailing commas. Test data: 678 cases (205 valid, 473 invalid) sourced from [toml-test](https://github.com/toml-lang/toml-test) `files-toml-1.0.0` (MIT licensed). Validated against Python's `tomllib` with 678/678 match (0 discrepancies).
 
-### `toml-cpp-v1`
+### `toml-1.1-cpp`
 
-TOML v1.1.0 subset — no datetime types. Same as `toml-cpp-v0` but with all four datetime types (offset date-time, local date-time, local date, local time) removed from both the spec and test suite. Reduces prompt by ~100 lines and test suite to 652 cases (239 valid, 413 invalid). Datetime validation (calendar rules, timezone offsets, RFC 3339 parsing) is the most complex feature to implement; removing it makes the task more tractable for single-shot code generation.
+TOML v1.1.0 file validation in C++17. Same prompt as `toml-cpp-v0` (already targets 1.1). Test data: 680 cases (214 valid, 466 invalid) sourced from [toml-test](https://github.com/toml-lang/toml-test) `files-toml-1.1.0` — no contradictions between valid/invalid expectations. Tests use `input_file` to reference `.toml` files under `tests/valid/` and `tests/invalid/`.
 
-### `toml-cpp-v2`
+### `toml-cpp-v0` (legacy)
 
-TOML v1.1.0 subset — no datetime types, no inline tables. Builds on `toml-cpp-v1` by also removing inline table syntax (`{k=v}`), its spec section (73 lines), and all test files containing inline table values. Each test file is an unmodified copy from the original toml-test suite — files that mix inline tables with other features are excluded entirely rather than edited. Test suite: 571 cases (201 valid, 370 invalid), 893-line prompt.
-
-### `toml-cpp-v3`
-
-TOML v1.1.0 subset — no datetime types, no inline tables, no array of tables. Builds on `toml-cpp-v2` by also removing the Array of Tables syntax (`[[...]]`), its spec section (~130 lines), and all 36 test files using AoT headers. Each test file is an unmodified copy from the original toml-test suite — files using the removed feature are excluded entirely rather than edited. Test suite: 535 cases (184 valid, 351 invalid), 750-line prompt.
-
-### `toml-cpp-v4`
-
-TOML v1.1.0 subset — no datetime types, no inline tables, no array of tables, no floats. Builds on `toml-cpp-v3` by also removing the Float type (IEEE 754 parsing, special values inf/nan, exponent notation), its spec section (63 lines), and all 61 test files using float values. Each test file is an unmodified copy from the original toml-test suite — files using the removed feature are excluded entirely rather than edited. Test suite: 474 cases (166 valid, 308 invalid), 685-line prompt.
+Original TOML task using the union of all toml-test files (745 cases). Kept for historical result references. Superseded by `toml-1.0-cpp` and `toml-1.1-cpp` which use the clean per-version file lists and have no contradictions.
 
 ### `der-int-c-v0`
 
