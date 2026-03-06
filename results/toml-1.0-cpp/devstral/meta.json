@@ -1,0 +1,10 @@
+{
+  "model": "mistral/devstral-latest",
+  "task": "toml-1.0-cpp",
+  "prompt": "prompt",
+  "n_attempts": 10,
+  "max_turns": 5,
+  "sampling_params": {
+    "max_tokens": 32768
+  }
+}

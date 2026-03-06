@@ -1,0 +1,53 @@
+----------------------------------------------------------------------------------------------
+Model                   | Attempts |        First-turn |         Best-of-5 |       Best-of-all
+----------------------------------------------------------------------------------------------
+mistral/devstral-latest |       10 |         312.7/678 |         355.9/678 |         355.9/678
+zai/glm-5               |       10 |         175.0/678 |         621.6/678 |         621.6/678
+openai/gpt-5.3-codex    |        7 |           0.0/678 |         669.3/678 |         669.3/678
+moonshot/kimi-k2.5      |       10 |         327.2/678 |         589.8/678 |         589.8/678
+----------------------------------------------------------------------------------------------
+
+  mistral/devstral-latest:
+    attempt 0: first=314/678  best5=314/678  bestAll=314/678
+    attempt 1: first=369/678  best5=369/678  bestAll=369/678
+    attempt 2: first=0/678  best5=427/678  bestAll=427/678
+    attempt 3: first=446/678  best5=447/678  bestAll=447/678
+    attempt 4: first=466/678  best5=466/678  bestAll=466/678
+    attempt 5: first=0/678  best5=0/678  bestAll=0/678
+    attempt 6: first=409/678  best5=409/678  bestAll=409/678
+    attempt 7: first=426/678  best5=426/678  bestAll=426/678
+    attempt 8: first=308/678  best5=308/678  bestAll=308/678
+    attempt 9: first=389/678  best5=393/678  bestAll=393/678
+
+  zai/glm-5:
+    attempt 0: first=0/678  best5=637/678  bestAll=637/678
+    attempt 1: first=577/678  best5=627/678  bestAll=627/678
+    attempt 2: first=0/678  best5=655/678  bestAll=655/678
+    attempt 3: first=0/678  best5=586/678  bestAll=586/678
+    attempt 4: first=0/678  best5=626/678  bestAll=626/678
+    attempt 5: first=0/678  best5=628/678  bestAll=628/678
+    attempt 6: first=0/678  best5=625/678  bestAll=625/678
+    attempt 7: first=547/678  best5=622/678  bestAll=622/678
+    attempt 8: first=626/678  best5=644/678  bestAll=644/678
+    attempt 9: first=0/678  best5=566/678  bestAll=566/678
+
+  openai/gpt-5.3-codex:
+    attempt 0: first=0/678  best5=669/678  bestAll=669/678
+    attempt 1: first=0/678  best5=650/678  bestAll=650/678
+    attempt 2: first=0/678  best5=674/678  bestAll=674/678
+    attempt 3: first=0/678  best5=677/678  bestAll=677/678
+    attempt 4: first=0/678  best5=676/678  bestAll=676/678
+    attempt 5: first=0/678  best5=665/678  bestAll=665/678
+    attempt 6: first=0/678  best5=674/678  bestAll=674/678
+
+  moonshot/kimi-k2.5:
+    attempt 0: first=541/678  best5=583/678  bestAll=583/678
+    attempt 1: first=545/678  best5=590/678  bestAll=590/678
+    attempt 2: first=0/678  best5=579/678  bestAll=579/678
+    attempt 3: first=0/678  best5=581/678  bestAll=581/678
+    attempt 4: first=574/678  best5=625/678  bestAll=625/678
+    attempt 5: first=516/678  best5=632/678  bestAll=632/678
+    attempt 6: first=564/678  best5=615/678  bestAll=615/678
+    attempt 7: first=0/678  best5=589/678  bestAll=589/678
+    attempt 8: first=532/678  best5=532/678  bestAll=532/678
+    attempt 9: first=0/678  best5=572/678  bestAll=572/678
