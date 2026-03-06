@@ -8,6 +8,7 @@ GLM-5                |       10 |         175.0/678 |         621.6/678 |       
 GPT Codex 5.3 (high) |        5 |         134.2/678 |         677.6/678 |         677.6/678
 GPT Codex 5.3 (low)  |        7 |           0.0/678 |         669.3/678 |         669.3/678
 Kimi K2.5            |       10 |         327.2/678 |         589.8/678 |         589.8/678
+Qwen3.5-122B Q8      |       10 |         296.1/678 |         527.5/678 |         527.5/678
 -------------------------------------------------------------------------------------------
 
   Claude Opus 4.6:
@@ -75,3 +76,15 @@ Kimi K2.5            |       10 |         327.2/678 |         589.8/678 |       
     attempt 7: first=0/678  best5=589/678  bestAll=589/678
     attempt 8: first=532/678  best5=532/678  bestAll=532/678
     attempt 9: first=0/678  best5=572/678  bestAll=572/678
+
+  Qwen3.5-122B Q8:
+    attempt 0: first=479/678  best5=509/678  bestAll=509/678
+    attempt 1: first=525/678  best5=532/678  bestAll=532/678
+    attempt 2: first=0/678  best5=518/678  bestAll=518/678
+    attempt 3: first=0/678  best5=506/678  bestAll=506/678
+    attempt 4: first=508/678  best5=536/678  bestAll=536/678
+    attempt 5: first=474/678  best5=533/678  bestAll=533/678
+    attempt 6: first=0/678  best5=541/678  bestAll=541/678
+    attempt 7: first=516/678  best5=561/678  bestAll=561/678
+    attempt 8: first=0/678  best5=562/678  bestAll=562/678
+    attempt 9: first=459/678  best5=477/678  bestAll=477/678

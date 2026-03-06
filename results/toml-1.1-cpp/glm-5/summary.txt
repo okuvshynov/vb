@@ -1,0 +1,20 @@
+============================================================
+Task: toml-1.1-cpp | Prompt: prompt | Model: zai/glm-5 | Attempts: 6
+============================================================
+  attempt 0: 544/680 (FAIL) | TP=132 FN=82 FP=54 TN=412 | 5 submissions | 5 turns | 641.5s
+  attempt 1: 585/680 (FAIL) | TP=194 FN=20 FP=75 TN=391 | 1 submissions | 2 turns | 366.1s
+  attempt 2: 624/680 (FAIL) | TP=205 FN=9 FP=47 TN=419 | 5 submissions | 5 turns | 859.8s
+  attempt 3: 598/680 (FAIL) | TP=170 FN=44 FP=38 TN=428 | 3 submissions | 4 turns | 629.2s
+  attempt 4: 607/680 (FAIL) | TP=173 FN=41 FP=32 TN=434 | 3 submissions | 4 turns | 789.2s
+  attempt 5: 631/680 (FAIL) | TP=186 FN=28 FP=21 TN=445 | 5 submissions | 5 turns | 737.1s
+
+Mean score: 87.97%
+Min: 80.00% | Max: 92.79%
+All-pass rate: 0/6 (0%)
+
+Aggregate confusion matrix (sum over 6 attempts):
+                  Predicted Valid  Predicted Invalid
+  Actually Valid   TP=1060           FN=224
+  Actually Invalid FP=267            TN=2529
+
+NOTE: Only 6 of 10 planned attempts completed (4 failed due to connection errors).
