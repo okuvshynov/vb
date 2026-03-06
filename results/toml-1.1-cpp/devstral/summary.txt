@@ -1,0 +1,22 @@
+============================================================
+Task: toml-1.1-cpp | Prompt: prompt | Model: mistral/devstral-latest | Attempts: 10
+============================================================
+  attempt 0: 402/680 (FAIL) | TP=110 FN=104 FP=174 TN=292 | 5 submissions | 5 turns | 140.7s
+  attempt 1: 419/680 (FAIL) | TP=125 FN=89 FP=172 TN=294 | 5 submissions | 5 turns | 96.3s
+  attempt 2: 422/680 (FAIL) | TP=68 FN=146 FP=112 TN=354 | 4 submissions | 5 turns | 80.5s
+  attempt 3: 447/680 (FAIL) | TP=57 FN=157 FP=76 TN=390 | 5 submissions | 5 turns | 71.6s
+  attempt 4: 459/680 (FAIL) | TP=27 FN=187 FP=34 TN=432 | 5 submissions | 5 turns | 117.8s
+  attempt 5: 238/680 (FAIL) | TP=184 FN=30 FP=412 TN=54 | 5 submissions | 5 turns | 93.4s
+  attempt 6: 374/680 (FAIL) | TP=110 FN=104 FP=202 TN=264 | 5 submissions | 5 turns | 92.9s
+  attempt 7: 344/680 (FAIL) | TP=88 FN=126 FP=210 TN=256 | 5 submissions | 5 turns | 91.3s
+  attempt 8: 354/680 (FAIL) | TP=105 FN=109 FP=217 TN=249 | 5 submissions | 5 turns | 336.8s
+  attempt 9: 452/680 (FAIL) | TP=79 FN=135 FP=93 TN=373 | 4 submissions | 5 turns | 70.1s
+
+Mean score: 57.51%
+Min: 35.00% | Max: 67.50%
+All-pass rate: 0/10 (0%)
+
+Aggregate confusion matrix (sum over 10 attempts):
+                  Predicted Valid  Predicted Invalid
+  Actually Valid   TP=953            FN=1187
+  Actually Invalid FP=1702           TN=2958
