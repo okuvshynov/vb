@@ -6,7 +6,7 @@ Target: 10 attempts per model per task.
 
 | Model                | toml-1.0-cpp | toml-1.1-cpp |
 |----------------------|--------------|--------------|
-| Claude Opus 4.6      | 5/10         | --           |
+| Claude Opus 4.6      | 5/10         | 5/10         |
 | Claude Sonnet 4.0    | 5/10         | --           |
 | Claude Sonnet 4.6    | --           | --           |
 | Devstral             | 10/10        | 10/10        |
