@@ -2,7 +2,7 @@
   "model": "zai/glm-5",
   "task": "toml-1.1-cpp",
   "prompt": "prompt",
-  "n_attempts": 6,
+  "n_attempts": 15,
   "max_turns": 5,
   "sampling_params": {
     "max_tokens": 32768
