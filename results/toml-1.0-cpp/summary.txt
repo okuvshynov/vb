@@ -8,6 +8,7 @@ GLM-5                |       10 |         175.0/678 |         621.6/678 |       
 GPT Codex 5.3 (high) |        5 |         134.2/678 |         677.6/678 |         677.6/678
 GPT Codex 5.3 (low)  |        7 |           0.0/678 |         669.3/678 |         669.3/678
 Kimi K2.5            |       10 |         327.2/678 |         589.8/678 |         589.8/678
+MiniMax M2.5         |        9 |         153.8/678 |         490.0/678 |         490.0/678
 Qwen3.5-122B Q8      |       10 |         296.1/678 |         527.5/678 |         527.5/678
 -------------------------------------------------------------------------------------------
 
@@ -76,6 +77,17 @@ Qwen3.5-122B Q8      |       10 |         296.1/678 |         527.5/678 |       
     attempt 7: first=0/678  best5=589/678  bestAll=589/678
     attempt 8: first=532/678  best5=532/678  bestAll=532/678
     attempt 9: first=0/678  best5=572/678  bestAll=572/678
+
+  MiniMax M2.5:
+    attempt 0: first=0/678  best5=480/678  bestAll=480/678
+    attempt 1: first=0/678  best5=459/678  bestAll=459/678
+    attempt 2: first=433/678  best5=482/678  bestAll=482/678
+    attempt 3: first=0/678  best5=492/678  bestAll=492/678
+    attempt 4: first=474/678  best5=521/678  bestAll=521/678
+    attempt 5: first=477/678  best5=554/678  bestAll=554/678
+    attempt 6: first=0/678  best5=453/678  bestAll=453/678
+    attempt 7: first=0/678  best5=478/678  bestAll=478/678
+    attempt 8: first=0/678  best5=491/678  bestAll=491/678
 
   Qwen3.5-122B Q8:
     attempt 0: first=479/678  best5=509/678  bestAll=509/678

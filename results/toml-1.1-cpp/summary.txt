@@ -8,6 +8,7 @@ GPT Codex 5.3 (high) |        5 |         632.2/680 |         679.8/680 |       
 GPT Codex 5.3 (low)  |        3 |           0.0/680 |         668.3/680 |         668.3/680
 Kimi K2.5            |       20 |         330.9/680 |         601.9/680 |         601.9/680
 MiniMax M2.5         |        9 |         159.3/680 |         498.0/680 |         498.0/680
+Qwen3.5-122B Q8      |        9 |         277.6/680 |         511.8/680 |         511.8/680
 -------------------------------------------------------------------------------------------
 
   Claude Opus 4.6:
@@ -90,3 +91,14 @@ MiniMax M2.5         |        9 |         159.3/680 |         498.0/680 |       
     attempt 6: first=500/680  best5=501/680  bestAll=501/680
     attempt 7: first=0/680  best5=482/680  bestAll=482/680
     attempt 8: first=0/680  best5=478/680  bestAll=478/680
+
+  Qwen3.5-122B Q8:
+    attempt 0: first=499/680  best5=499/680  bestAll=499/680
+    attempt 1: first=0/680  best5=496/680  bestAll=496/680
+    attempt 2: first=0/680  best5=498/680  bestAll=498/680
+    attempt 3: first=0/680  best5=482/680  bestAll=482/680
+    attempt 4: first=499/680  best5=499/680  bestAll=499/680
+    attempt 5: first=481/680  best5=516/680  bestAll=516/680
+    attempt 6: first=0/680  best5=533/680  bestAll=533/680
+    attempt 7: first=520/680  best5=577/680  bestAll=577/680
+    attempt 8: first=499/680  best5=506/680  bestAll=506/680
