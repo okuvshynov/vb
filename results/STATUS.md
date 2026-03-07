@@ -12,8 +12,9 @@ Target: 10 attempts per model per task.
 | Devstral             | 10/10        | 10/10        |
 | GLM-5                | 10/10        | 6/10         |
 | GPT Codex 5.3 (high) | 5/10        | --           |
-| GPT Codex 5.3 (low)  | 7/10        | --           |
+| GPT Codex 5.3 (low)  | 7/10        | 3/10         |
 | Kimi K2.5            | 10/10        | 10/10        |
+| MiniMax M2.5         | --           | 9/10         |
 | Qwen3.5-122B Q8      | 10/10        | --           |
 
 **Legend:** `N/10` = N attempts completed, `--` = not started
