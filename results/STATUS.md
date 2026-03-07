@@ -7,12 +7,12 @@ Target: 10 attempts per model per task.
 | Model                | toml-1.0-cpp | toml-1.1-cpp |
 |----------------------|--------------|--------------|
 | Claude Opus 4.6      | 5/10         | 5/10         |
-| Claude Sonnet 4.0    | 5/10         | --           |
+| Claude Sonnet 4.0    | 5/10         | 5/10         |
 | Claude Sonnet 4.6    | --           | --           |
 | Devstral             | 10/10        | 10/10        |
 | GLM-5                | 10/10        | 15/10        |
 | GPT Codex 5.3 (high) | 5/10        | 5/10         |
-| GPT Codex 5.3 (low)  | 7/10        | 3/10         |
+| GPT Codex 5.3 (low)  | 7/10        | 5/10         |
 | Kimi K2.5            | 10/10        | 20/10        |
 | MiniMax M2.5         | 9/10         | 9/10         |
 | Qwen3.5-122B Q8      | 10/10        | 9/10         |

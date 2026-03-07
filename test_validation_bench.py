@@ -5,9 +5,10 @@ from validation_bench import derive_slug
 
 
 @pytest.mark.parametrize("model, effort, expected", [
-    # Anthropic models — date-versioned to friendly names
+    # Anthropic models — various ID formats to friendly names
     ("anthropic/claude-opus-4-6", None, "claude-opus-4.6"),
     ("anthropic/claude-sonnet-4-20250514", None, "claude-sonnet-4.0"),
+    ("anthropic/claude-sonnet-4-0", None, "claude-sonnet-4.0"),
     # Cloud providers — strip provider prefix, lowercase
     ("minimax/MiniMax-M2.5", None, "minimax-m2.5"),
     ("zai/glm-5", None, "glm-5"),

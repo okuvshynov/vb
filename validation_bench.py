@@ -237,8 +237,9 @@ def derive_slug(model: str, reasoning_effort: str | None = None) -> str:
     # Strip "-latest" suffix
     name = re.sub(r'-latest$', '', name)
 
-    # Map known Claude date-versioned names to friendly versions
+    # Map Claude model IDs to friendly versions
     name = re.sub(r'^claude-(.*)-4-20250514$', r'claude-\1-4.0', name)
+    name = re.sub(r'^claude-(.*)-4-0$', r'claude-\1-4.0', name)
     name = re.sub(r'^claude-(.*)-4-6$', r'claude-\1-4.6', name)
 
     # Append reasoning effort if present

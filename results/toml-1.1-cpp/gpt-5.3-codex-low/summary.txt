@@ -1,0 +1,14 @@
+============================================================
+Task: toml-1.1-cpp | Prompt: prompt | Model: openai/gpt-5.3-codex | Attempts: 2
+============================================================
+  attempt 3: 675/680 (FAIL) | TP=211 FN=3 FP=2 TN=464 | 5 submissions | 5 turns | 529.4s
+  attempt 4: 677/680 (FAIL) | TP=211 FN=3 FP=0 TN=466 | 5 submissions | 5 turns | 671.5s
+
+Mean score: 99.41%
+Min: 99.26% | Max: 99.56%
+All-pass rate: 0/2 (0%)
+
+Aggregate confusion matrix (sum over 2 attempts):
+                  Predicted Valid  Predicted Invalid
+  Actually Valid   TP=422            FN=6
+  Actually Invalid FP=2              TN=930
