@@ -11,7 +11,7 @@ Target: 10 attempts per model per task.
 | Claude Sonnet 4.6    | --           | --           |
 | Devstral             | 10/10        | 10/10        |
 | GLM-5                | 10/10        | 6/10         |
-| GPT Codex 5.3 (high) | 5/10        | --           |
+| GPT Codex 5.3 (high) | 5/10        | 5/10         |
 | GPT Codex 5.3 (low)  | 7/10        | 3/10         |
 | Kimi K2.5            | 10/10        | 10/10        |
 | MiniMax M2.5         | --           | 9/10         |
