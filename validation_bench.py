@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import re
 import shlex
 import subprocess
 import sys
@@ -208,6 +209,53 @@ def auto_detect_model(api_base: str, api_key: str) -> str:
     return model_id
 
 
+def derive_slug(model: str, reasoning_effort: str | None = None) -> str:
+    """Derive a filesystem-friendly slug from a LiteLLM model name.
+
+    Examples:
+        anthropic/claude-opus-4-6        -> claude-opus-4.6
+        anthropic/claude-sonnet-4-20250514 -> claude-sonnet-4.0
+        minimax/MiniMax-M2.5             -> minimax-m2.5
+        openai/gpt-5.3-codex             -> gpt-5.3-codex
+        openai/gpt-5.3-codex + high      -> gpt-5.3-codex-high
+        zai/glm-5                        -> glm-5
+        moonshot/kimi-k2.5               -> kimi-k2.5
+        mistral/devstral-latest          -> devstral
+    """
+    # Strip provider prefix
+    if "/" in model:
+        name = model.split("/", 1)[1]
+    else:
+        name = model
+
+    # Strip GGUF filenames to base model name
+    name = re.sub(r'-UD-.*\.gguf$', '', name, flags=re.IGNORECASE)
+    name = re.sub(r'\.gguf$', '', name, flags=re.IGNORECASE)
+
+    name = name.lower()
+
+    # Strip "-latest" suffix
+    name = re.sub(r'-latest$', '', name)
+
+    # Map known Claude date-versioned names to friendly versions
+    name = re.sub(r'^claude-(.*)-4-20250514$', r'claude-\1-4.0', name)
+    name = re.sub(r'^claude-(.*)-4-6$', r'claude-\1-4.6', name)
+
+    # Append reasoning effort if present
+    if reasoning_effort:
+        name = f"{name}-{reasoning_effort}"
+
+    return name
+
+
+def next_attempt_index(attempts_dir: Path) -> int:
+    """Find the next available attempt index in an existing attempts directory."""
+    if not attempts_dir.is_dir():
+        return 0
+    existing = [int(d.name) for d in attempts_dir.iterdir() if d.is_dir() and d.name.isdigit()]
+    return max(existing) + 1 if existing else 0
+
+
 def serialize_message(msg) -> dict:
     """Convert a message (dict or LiteLLM/OpenAI object) to a JSON-serializable dict."""
     if isinstance(msg, dict):
@@ -409,6 +457,8 @@ def main():
     parser.add_argument("--max-turns", type=int, default=10, help="Max conversation turns per attempt")
     parser.add_argument("--prompt", default="prompt", help="Prompt variant (loads prompt-{name}.txt, or 'prompt' for prompt.txt)")
     parser.add_argument("--timeout", type=float, default=600, help="API request timeout in seconds (default: 600)")
+    parser.add_argument("--slug", default=None, help="Model slug for results directory (default: auto-derived from model name)")
+    parser.add_argument("--results-dir", default="results", help="Base results directory (default: results/)")
     args = parser.parse_args()
 
     # Resolve task directory
@@ -458,11 +508,6 @@ def main():
         bare_model = auto_detect_model(api_base, api_key or "no-key")
         model = f"openai/{bare_model}"
 
-    # Create run output directory
-    run_dir = Path(tempfile.mkdtemp(prefix="vb_"))
-    attempts_dir = run_dir / "attempts"
-    attempts_dir.mkdir()
-
     # Build sampling params
     sampling_params = {"max_tokens": args.max_tokens}
     if args.temperature is not None:
@@ -470,24 +515,37 @@ def main():
     if args.reasoning_effort is not None:
         sampling_params["reasoning_effort"] = args.reasoning_effort
 
+    # Resolve output directory
+    slug = args.slug or derive_slug(model, args.reasoning_effort)
+    results_base = Path(__file__).parent / args.results_dir
+    run_dir = results_base / args.task / slug
+    attempts_dir = run_dir / "attempts"
+    attempts_dir.mkdir(parents=True, exist_ok=True)
+
+    # Check for existing attempts (append mode)
+    start_index = next_attempt_index(attempts_dir)
+    if start_index > 0:
+        print(f"Appending to existing run ({start_index} attempts already present)")
+
     print(f"Running task '{args.task}' (prompt: {args.prompt}) with model '{model}'")
     sampling_str = ", ".join(f"{k}={v}" for k, v in sampling_params.items()) or "server defaults"
-    print(f"Attempts: {args.n_attempts} | Max turns: {args.max_turns} | Sampling: {sampling_str}")
+    print(f"Attempts: {args.n_attempts} (indices {start_index}–{start_index + args.n_attempts - 1}) | Max turns: {args.max_turns} | Sampling: {sampling_str}")
     print(f"Output: {run_dir}")
     print("-" * 60)
 
     results = []
     try:
         for i in range(args.n_attempts):
-            print(f"\n--- Attempt {i} ---")
+            attempt_index = start_index + i
+            print(f"\n--- Attempt {attempt_index} ---")
             r = run_attempt(
                 model=model,
                 user_prompt=user_prompt,
                 tests=tests,
                 max_turns=args.max_turns,
                 sampling_params=sampling_params,
-                attempt_index=i,
-                attempt_dir=attempts_dir / str(i),
+                attempt_index=attempt_index,
+                attempt_dir=attempts_dir / str(attempt_index),
                 compile_cmd=compile_cmd,
                 src_ext=src_ext,
                 task_dir=tasks_dir,
@@ -500,13 +558,14 @@ def main():
         print("\n\nInterrupted! Showing results collected so far.")
 
     if results:
+        total_attempts = start_index + len(results)
         summary = print_summary(results, model, args.task, args.prompt)
         (run_dir / "summary.txt").write_text(summary.lstrip("\n") + "\n")
         (run_dir / "meta.json").write_text(json.dumps({
             "model": model,
             "task": args.task,
             "prompt": args.prompt,
-            "n_attempts": args.n_attempts,
+            "n_attempts": total_attempts,
             "max_turns": args.max_turns,
             "sampling_params": sampling_params,
         }, indent=2) + "\n")
