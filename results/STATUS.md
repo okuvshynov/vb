@@ -9,14 +9,14 @@ Target: 10 attempts per model per task.
 | Claude Opus 4.6      | 5/10         | 5/10         | --                |
 | Claude Sonnet 4.0    | 10/10        | 5/10         | --                |
 | Claude Sonnet 4.6    | --           | --           | --                |
-| Devstral             | 10/10        | 10/10        | --                |
-| GLM-5                | 10/10        | 15/10        | 5/10              |
+| Devstral             | 9/10         | 10/10        | --                |
+| GLM-5                | 10/10        | 15/10        | 4/10              |
 | GPT Codex 5.3 (high) | 5/10        | 5/10         | --                |
 | GPT Codex 5.3 (low)  | 7/10        | 5/10         | --                |
-| Kimi K2.5            | 10/10        | 20/10        | 5/10              |
+| Kimi K2.5            | 10/10        | 20/10        | 2/10              |
 | MiniMax M2.5         | 9/10         | 9/10         | --                |
 | Qwen3.5-122B Q2      | --           | 10/10        | --                |
-| Qwen3.5-122B Q8      | 10/10        | 9/10         | 5/10              |
+| Qwen3.5-122B Q8      | 10/10        | 9/10         | 3/10              |
 
 **Legend:** `N/10` = N attempts completed, `--` = not started
 

@@ -1,16 +1,15 @@
 ============================================================
-Task: toml-1.1-cpp | Prompt: prompt | Model: minimax/MiniMax-M2.5 | Attempts: 10
+Task: toml-1.1-cpp | Prompt: prompt | Model: minimax/MiniMax-M2.5 | Attempts: 9
 ============================================================
   attempt 0: 506/680 (FAIL) | TP=145 FN=69 FP=105 TN=361 | 5 submissions | 5 turns | 1444.7s
   attempt 1: 546/680 (FAIL) | TP=133 FN=81 FP=53 TN=413 | 5 submissions | 5 turns | 780.9s
   attempt 2: 502/680 (FAIL) | TP=134 FN=80 FP=98 TN=368 | 4 submissions | 5 turns | 827.3s
-  attempt 3: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 0 submissions | 1 turns | 60.0s
-  attempt 4: 484/680 (FAIL) | TP=122 FN=92 FP=104 TN=362 | 5 submissions | 5 turns | 802.1s
-  attempt 5: 414/680 (FAIL) | TP=69 FN=145 FP=121 TN=345 | 5 submissions | 5 turns | 548.8s
-  attempt 6: 214/680 (FAIL) | TP=214 FN=0 FP=466 TN=0 | 5 submissions | 5 turns | 628.8s
-  attempt 7: 480/680 (FAIL) | TP=104 FN=110 FP=90 TN=376 | 5 submissions | 5 turns | 701.3s
-  attempt 8: 481/680 (FAIL) | TP=126 FN=88 FP=111 TN=355 | 5 submissions | 5 turns | 766.5s
-  attempt 9: 478/680 (FAIL) | TP=77 FN=137 FP=65 TN=401 | 5 submissions | 5 turns | 745.4s
+  attempt 3: 484/680 (FAIL) | TP=122 FN=92 FP=104 TN=362 | 5 submissions | 5 turns | 802.1s
+  attempt 4: 414/680 (FAIL) | TP=69 FN=145 FP=121 TN=345 | 5 submissions | 5 turns | 548.8s
+  attempt 5: 214/680 (FAIL) | TP=214 FN=0 FP=466 TN=0 | 5 submissions | 5 turns | 628.8s
+  attempt 6: 480/680 (FAIL) | TP=104 FN=110 FP=90 TN=376 | 5 submissions | 5 turns | 701.3s
+  attempt 7: 481/680 (FAIL) | TP=126 FN=88 FP=111 TN=355 | 5 submissions | 5 turns | 766.5s
+  attempt 8: 478/680 (FAIL) | TP=77 FN=137 FP=65 TN=401 | 5 submissions | 5 turns | 745.4s
 
 Mean score: 67.08%
 Min: 31.47% | Max: 80.29%

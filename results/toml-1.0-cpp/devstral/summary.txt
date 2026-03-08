@@ -1,16 +1,15 @@
 ============================================================
-Task: toml-1.0-cpp | Prompt: prompt | Model: mistral/devstral-latest | Attempts: 10
+Task: toml-1.0-cpp | Prompt: prompt | Model: mistral/devstral-latest | Attempts: 9
 ============================================================
   attempt 0: 314/678 (FAIL) | TP=122 FN=83 FP=281 TN=192 | 5 submissions | 5 turns | 60.6s
   attempt 1: 369/678 (FAIL) | TP=62 FN=143 FP=166 TN=307 | 5 submissions | 5 turns | 2405.3s
   attempt 2: 427/678 (FAIL) | TP=83 FN=122 FP=129 TN=344 | 5 submissions | 5 turns | 79.3s
   attempt 3: 447/678 (FAIL) | TP=32 FN=173 FP=58 TN=415 | 5 submissions | 5 turns | 79.8s
   attempt 4: 466/678 (FAIL) | TP=17 FN=188 FP=24 TN=449 | 5 submissions | 5 turns | 54.4s
-  attempt 5: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 5 submissions | 5 turns | 118.3s
-  attempt 6: 409/678 (FAIL) | TP=44 FN=161 FP=108 TN=365 | 5 submissions | 5 turns | 84.8s
-  attempt 7: 425/678 (FAIL) | TP=107 FN=98 FP=155 TN=318 | 5 submissions | 5 turns | 77.7s
-  attempt 8: 308/678 (FAIL) | TP=137 FN=68 FP=302 TN=171 | 5 submissions | 5 turns | 68.4s
-  attempt 9: 393/678 (FAIL) | TP=74 FN=131 FP=154 TN=319 | 5 submissions | 5 turns | 76.6s
+  attempt 5: 409/678 (FAIL) | TP=44 FN=161 FP=108 TN=365 | 5 submissions | 5 turns | 84.8s
+  attempt 6: 425/678 (FAIL) | TP=107 FN=98 FP=155 TN=318 | 5 submissions | 5 turns | 77.7s
+  attempt 7: 308/678 (FAIL) | TP=137 FN=68 FP=302 TN=171 | 5 submissions | 5 turns | 68.4s
+  attempt 8: 393/678 (FAIL) | TP=74 FN=131 FP=154 TN=319 | 5 submissions | 5 turns | 76.6s
 
 Mean score: 58.31%
 Min: 45.43% | Max: 68.73%
