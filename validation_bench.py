@@ -355,6 +355,9 @@ def run_attempt(
                 api_base=api_base,
                 api_key=api_key,
                 timeout=timeout,
+                cache_control_injection_points=[
+                    {"location": "message", "index": 0},
+                ],
                 **sampling_params,
             )
         except Exception as e:
