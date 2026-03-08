@@ -1,0 +1,39 @@
+--------------------------------------------------------------------------------------
+Model           | Attempts |        First-turn |         Best-of-5 |       Best-of-all
+--------------------------------------------------------------------------------------
+GLM-5           |        5 |        507.0/1490 |       1073.0/1490 |       1073.0/1490
+Kimi K2.5       |       11 |        210.4/1490 |        238.6/1490 |        238.6/1490
+Qwen3.5-122B Q8 |       10 |        115.3/1490 |        335.3/1490 |        335.3/1490
+--------------------------------------------------------------------------------------
+
+  GLM-5:
+    attempt 0: first=1223/1490  best5=1349/1490  bestAll=1349/1490
+    attempt 1: first=1312/1490  best5=1395/1490  bestAll=1395/1490
+    attempt 2: first=0/1490  best5=1320/1490  bestAll=1320/1490
+    attempt 3: first=0/1490  best5=1301/1490  bestAll=1301/1490
+    attempt 4: first=0/1490  best5=0/1490  bestAll=0/1490
+
+  Kimi K2.5:
+    attempt 0: first=1224/1490  best5=1358/1490  bestAll=1358/1490
+    attempt 1: first=1090/1490  best5=1267/1490  bestAll=1267/1490
+    attempt 2: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 3: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 4: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 5: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 6: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 7: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 8: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 9: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 10: first=0/1490  best5=0/1490  bestAll=0/1490
+
+  Qwen3.5-122B Q8:
+    attempt 0: first=0/1490  best5=1080/1490  bestAll=1080/1490
+    attempt 1: first=1153/1490  best5=1163/1490  bestAll=1163/1490
+    attempt 2: first=0/1490  best5=1110/1490  bestAll=1110/1490
+    attempt 3: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 4: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 5: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 6: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 7: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 8: first=0/1490  best5=0/1490  bestAll=0/1490
+    attempt 9: first=0/1490  best5=0/1490  bestAll=0/1490

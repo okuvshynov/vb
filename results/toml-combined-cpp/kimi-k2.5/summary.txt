@@ -1,0 +1,32 @@
+============================================================
+Task: toml-combined-cpp | Prompt: prompt | Model: moonshot/kimi-k2.5 | Attempts: 10
+============================================================
+  attempt 0: 1346/1490 (FAIL) | TP=442 FN=86 FP=58 TN=904 | 5 submissions | 5 turns | 1063.4s
+  attempt 1: 1267/1490 (FAIL) | TP=467 FN=61 FP=162 TN=800 | 3 submissions | 4 turns | 578.3s
+  attempt 2: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 0 submissions | 1 turns | 3.2s
+  attempt 3: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 0 submissions | 1 turns | 1.6s
+  attempt 4: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 0 submissions | 1 turns | 1.7s
+  attempt 5: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 0 submissions | 1 turns | 1.5s
+  attempt 6: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 0 submissions | 1 turns | 1.5s
+  attempt 7: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 0 submissions | 1 turns | 1.6s
+  attempt 8: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 0 submissions | 1 turns | 1.5s
+  attempt 9: 0/0 (FAIL) | TP=0 FN=0 FP=0 TN=0 | 0 submissions | 1 turns | 2.2s
+
+Mean score: 87.68%
+Min: 85.03% | Max: 90.34%
+All-pass rate: 0/2 (0%)
+
+Aggregate confusion matrix (sum over 2 attempts):
+                  Predicted Valid  Predicted Invalid
+  Actually Valid   TP=909            FN=147
+  Actually Invalid FP=220            TN=1704
+
+  By version 1.0 (sum over 2 attempts): 1305/1490 (87.6%)
+    TP=440  FN=74  FP=111  TN=865
+
+  By version 1.1 (sum over 2 attempts): 1308/1490 (87.8%)
+    TP=469  FN=73  FP=109  TN=839
+
+  Discrimination tests (where 1.0 != 1.1 expected):
+    1.0-side: 34/36 (94.4%)
+    1.1-side: 30/36 (83.3%)

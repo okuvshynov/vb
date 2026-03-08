@@ -1,8 +1,8 @@
 {
-  "model": "anthropic/claude-sonnet-4-0",
-  "task": "toml-1.0-cpp",
+  "model": "zai/glm-5",
+  "task": "toml-combined-cpp",
   "prompt": "prompt",
-  "n_attempts": 10,
+  "n_attempts": 5,
   "max_turns": 5,
   "sampling_params": {
     "max_tokens": 32768
