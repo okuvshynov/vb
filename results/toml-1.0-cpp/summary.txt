@@ -2,7 +2,7 @@
 Model                | Attempts |        First-turn |         Best-of-5 |       Best-of-all
 -------------------------------------------------------------------------------------------
 Claude Opus 4.6      |        5 |         267.2/678 |         673.6/678 |         673.6/678
-Claude Sonnet 4.0    |       10 |         506.0/678 |         571.7/678 |         571.7/678
+Claude Sonnet 4.0    |       15 |         471.1/678 |         568.3/678 |         568.3/678
 Devstral             |        9 |         347.4/678 |         395.4/678 |         395.4/678
 GLM-5                |       10 |         175.0/678 |         621.6/678 |         621.6/678
 GPT Codex 5.3 (high) |        5 |         134.2/678 |         677.6/678 |         677.6/678
@@ -30,6 +30,11 @@ Qwen3.5-122B Q8      |       10 |         296.1/678 |         527.5/678 |       
     attempt 7: first=551/678  best5=601/678  bestAll=601/678
     attempt 8: first=501/678  best5=566/678  bestAll=566/678
     attempt 9: first=553/678  best5=636/678  bestAll=636/678
+    attempt 10: first=530/678  best5=641/678  bestAll=641/678
+    attempt 11: first=545/678  best5=632/678  bestAll=632/678
+    attempt 12: first=488/678  best5=562/678  bestAll=562/678
+    attempt 13: first=443/678  best5=454/678  bestAll=454/678
+    attempt 14: first=0/678  best5=519/678  bestAll=519/678
 
   Devstral:
     attempt 0: first=314/678  best5=314/678  bestAll=314/678

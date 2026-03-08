@@ -1,17 +1,17 @@
 ============================================================
 Task: toml-1.0-cpp | Prompt: prompt | Model: anthropic/claude-sonnet-4-0 | Attempts: 5
 ============================================================
-  attempt 5: 503/678 (FAIL) | TP=151 FN=54 FP=121 TN=352 | 5 submissions | 5 turns | 307.4s
-  attempt 6: 575/678 (FAIL) | TP=124 FN=81 FP=22 TN=451 | 5 submissions | 5 turns | 451.4s
-  attempt 7: 600/678 (FAIL) | TP=141 FN=64 FP=14 TN=459 | 5 submissions | 5 turns | 525.3s
-  attempt 8: 508/678 (FAIL) | TP=134 FN=71 FP=99 TN=374 | 5 submissions | 5 turns | 442.6s
-  attempt 9: 636/678 (FAIL) | TP=170 FN=35 FP=7 TN=466 | 5 submissions | 5 turns | 524.4s
+  attempt 14: 641/678 (FAIL) | TP=180 FN=25 FP=12 TN=461 | 5 submissions | 5 turns | 498.7s
+  attempt 15: 629/678 (FAIL) | TP=177 FN=28 FP=21 TN=452 | 5 submissions | 5 turns | 541.8s
+  attempt 16: 447/678 (FAIL) | TP=154 FN=51 FP=180 TN=293 | 5 submissions | 5 turns | 316.2s
+  attempt 17: 325/678 (FAIL) | TP=168 FN=37 FP=316 TN=157 | 5 submissions | 5 turns | 219.5s
+  attempt 18: 514/678 (FAIL) | TP=140 FN=65 FP=99 TN=374 | 5 submissions | 5 turns | 469.2s
 
-Mean score: 83.24%
-Min: 74.19% | Max: 93.81%
+Mean score: 75.40%
+Min: 47.94% | Max: 94.54%
 All-pass rate: 0/5 (0%)
 
 Aggregate confusion matrix (sum over 5 attempts):
                   Predicted Valid  Predicted Invalid
-  Actually Valid   TP=720            FN=305
-  Actually Invalid FP=263            TN=2102
+  Actually Valid   TP=819            FN=206
+  Actually Invalid FP=628            TN=1737
