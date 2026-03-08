@@ -82,6 +82,10 @@ TOML v1.0.0 file validation in C++17. The prompt embeds the full TOML 1.0 specif
 
 TOML v1.1.0 file validation in C++17. Same prompt as `toml-cpp-v0` (already targets 1.1). Test data: 680 cases (214 valid, 466 invalid) sourced from [toml-test](https://github.com/toml-lang/toml-test) `files-toml-1.1.0` — no contradictions between valid/invalid expectations. Tests use `input_file` to reference `.toml` files under `tests/valid/` and `tests/invalid/`.
 
+### `toml-combined-cpp`
+
+Combined TOML v1.0+1.1 file validation in C++17. The model must write a **single validator** that takes a version argument (`./validator 1.0 < input.toml` or `./validator 1.1 < input.toml`) and correctly handles version-specific behavior. The prompt contains the full TOML 1.0 spec plus a diff showing 1.1 changes. Test data: 745 unique test files (union of 1.0 and 1.1 file lists) run twice each (once per version) for 1490 total evaluations. Of these, 18 files (36 evaluations) are "discrimination tests" where the expected result differs between versions — testing inline table newlines/trailing commas, `\xHH`/`\e` escapes, optional seconds in datetimes, and bare CR handling.
+
 ### `toml-cpp-v0` (legacy)
 
 Original TOML task using the union of all toml-test files (745 cases). Kept for historical result references. Superseded by `toml-1.0-cpp` and `toml-1.1-cpp` which use the clean per-version file lists and have no contradictions.
