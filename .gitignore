@@ -3,3 +3,6 @@ tags
 __pycache__/
 results/*/*/attempts/
 old_results/
+.cache/
+tasks/*/tests
+tasks/*/tests.jsonl
