@@ -5,6 +5,7 @@ Claude Sonnet 4.0 |        5 |         272.2/678 |         588.8/678 |         5
 GLM-5             |       10 |         114.2/678 |         424.7/678 |         424.7/678
 Kimi K2.5         |       10 |         327.0/678 |         622.0/678 |         622.0/678
 MiniMax M2.5      |       10 |          93.6/678 |         508.4/678 |         508.4/678
+Qwen3.5-397B A17B |        9 |         472.8/678 |         580.0/678 |         580.0/678
 ----------------------------------------------------------------------------------------
 
   Claude Sonnet 4.0:
@@ -49,3 +50,14 @@ MiniMax M2.5      |       10 |          93.6/678 |         508.4/678 |         5
     attempt 7: first=0/678  best5=463/678  bestAll=463/678
     attempt 8: first=0/678  best5=507/678  bestAll=507/678
     attempt 9: first=0/678  best5=556/678  bestAll=556/678
+
+  Qwen3.5-397B A17B:
+    attempt 0: first=495/678  best5=580/678  bestAll=580/678
+    attempt 1: first=0/678  best5=520/678  bestAll=520/678
+    attempt 2: first=552/678  best5=591/678  bestAll=591/678
+    attempt 3: first=529/678  best5=583/678  bestAll=583/678
+    attempt 4: first=536/678  best5=609/678  bestAll=609/678
+    attempt 5: first=549/678  best5=616/678  bestAll=616/678
+    attempt 6: first=505/678  best5=551/678  bestAll=551/678
+    attempt 7: first=544/678  best5=597/678  bestAll=597/678
+    attempt 8: first=545/678  best5=573/678  bestAll=573/678

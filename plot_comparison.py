@@ -23,6 +23,7 @@ MODEL_CONFIG = OrderedDict([
     ("MiniMax M2.5",         "api"),
     ("Devstral",             "api"),
     ("GPT-oss-120B F16",     "local"),
+    ("Qwen3.5-397B A17B",    "local"),
     ("Qwen3.5-122B Q8",      "local"),
 ])
 
