@@ -168,10 +168,11 @@ def main():
         color_10, _ = CATEGORY_COLORS[cat]
         legend_handles.append(mpatches.Patch(facecolor=color_10, edgecolor="black", label=label))
 
-    ax.legend(handles=legend_handles, loc="upper right", fontsize=8, framealpha=0.9)
+    ax.legend(handles=legend_handles, loc="upper left", bbox_to_anchor=(1.01, 1),
+              fontsize=8, framealpha=0.9, borderaxespad=0)
 
     fig.tight_layout()
-    fig.savefig(args.output, dpi=150)
+    fig.savefig(args.output, dpi=150, bbox_inches="tight")
     print(f"Saved to {args.output}")
 
 
