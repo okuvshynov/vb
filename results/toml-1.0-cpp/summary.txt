@@ -2,7 +2,7 @@
 Model             | Attempts |        First-turn |         Best-of-5 |       Best-of-all
 ----------------------------------------------------------------------------------------
 Claude Sonnet 4.0 |        5 |         272.2/678 |         588.8/678 |         588.8/678
-GLM-5             |       10 |         114.2/678 |         424.7/678 |         424.7/678
+GLM-5             |       20 |         200.3/678 |         499.8/678 |         499.8/678
 Kimi K2.5         |       10 |         327.0/678 |         622.0/678 |         622.0/678
 MiniMax M2.5      |       10 |          93.6/678 |         508.4/678 |         508.4/678
 Qwen3.5-397B A17B |        9 |         472.8/678 |         580.0/678 |         580.0/678
@@ -26,6 +26,16 @@ Qwen3.5-397B A17B |        9 |         472.8/678 |         580.0/678 |         5
     attempt 7: first=0/678  best5=621/678  bestAll=621/678
     attempt 8: first=0/678  best5=0/678  bestAll=0/678
     attempt 9: first=0/678  best5=640/678  bestAll=640/678
+    attempt 10: first=573/678  best5=646/678  bestAll=646/678
+    attempt 11: first=0/678  best5=637/678  bestAll=637/678
+    attempt 12: first=0/678  best5=656/678  bestAll=656/678
+    attempt 13: first=599/678  best5=634/678  bestAll=634/678
+    attempt 14: first=0/678  best5=641/678  bestAll=641/678
+    attempt 15: first=0/678  best5=0/678  bestAll=0/678
+    attempt 16: first=559/678  best5=638/678  bestAll=638/678
+    attempt 17: first=595/678  best5=624/678  bestAll=624/678
+    attempt 18: first=0/678  best5=639/678  bestAll=639/678
+    attempt 19: first=539/678  best5=634/678  bestAll=634/678
 
   Kimi K2.5:
     attempt 0: first=0/678  best5=623/678  bestAll=623/678
