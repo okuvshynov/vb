@@ -281,6 +281,8 @@ def derive_slug(model: str, reasoning_effort: str | None = None) -> str:
         zai/glm-5                        -> glm-5
         moonshot/kimi-k2.5               -> kimi-k2.5
         mistral/devstral-latest          -> devstral
+        openai/Qwen3.5-122B-A10B-UD-Q6_K_XL-00001-of-00004.gguf -> qwen3.5-122b-a10b-q6_k_xl
+        openai/Qwen3.5-397B-A17B-UD-IQ3_XXS-00001-of-00004.gguf -> qwen3.5-397b-a17b-iq3_xxs
     """
     # Strip provider prefix
     if "/" in model:
@@ -288,9 +290,11 @@ def derive_slug(model: str, reasoning_effort: str | None = None) -> str:
     else:
         name = model
 
-    # Strip GGUF filenames to base model name
-    name = re.sub(r'-UD-.*\.gguf$', '', name, flags=re.IGNORECASE)
-    name = re.sub(r'\.gguf$', '', name, flags=re.IGNORECASE)
+    # Strip GGUF filenames: keep quant level, drop shard suffix and extension
+    # e.g. Qwen3.5-122B-A10B-UD-Q6_K_XL-00001-of-00004.gguf -> Qwen3.5-122B-A10B-Q6_K_XL
+    # e.g. model-UD-IQ3_XXS-00001-of-00004.gguf -> model-IQ3_XXS
+    name = re.sub(r'-UD-([A-Za-z0-9_]+)(-\d+-of-\d+)?\.gguf$', r'-\1', name)
+    name = re.sub(r'(-\d+-of-\d+)?\.gguf$', '', name, flags=re.IGNORECASE)
 
     name = name.lower()
 

@@ -24,8 +24,10 @@ MODEL_CONFIG = OrderedDict([
     ("minimax-m2.5",        "api"),
     ("devstral",            "api"),
     ("gpt-oss-120b-f16",    "local"),
-    ("qwen3.5-397b-a17b",   "local"),
-    ("qwen3.5-122b-q8",     "local"),
+    ("qwen3.5-397b-a17b",       "local"),
+    ("qwen3.5-397b-a17b-iq3_xxs", "local"),
+    ("qwen3.5-122b-a10b-q6_k_xl", "local"),
+    ("qwen3.5-122b-q8",         "local"),
 ])
 
 CATEGORY_COLORS = {
