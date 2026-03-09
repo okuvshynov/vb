@@ -2,9 +2,12 @@
 """AI Coding Benchmark Harness — evaluates models on code generation tasks."""
 
 import argparse
+import datetime
 import json
+import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -59,6 +62,14 @@ class AttemptResult:
     elapsed_seconds: float
     version_matrices: dict[str, ConfusionMatrix] | None = None
     disc_matrices: dict[str, ConfusionMatrix] | None = None
+
+
+@dataclass
+class InfraFailure:
+    timestamp: str       # ISO 8601
+    turn: int            # which turn failed
+    error_type: str      # "api_error", "timeout", etc.
+    error_message: str
 
 
 SUBMIT_TOOL = {
@@ -306,6 +317,20 @@ def next_attempt_index(attempts_dir: Path) -> int:
     return max(existing) + 1 if existing else 0
 
 
+def claim_attempt_dir(attempts_dir: Path) -> tuple[int, Path]:
+    """Atomically claim next attempt directory. Safe for concurrent use."""
+    attempts_dir.mkdir(parents=True, exist_ok=True)
+    for _ in range(100):
+        idx = next_attempt_index(attempts_dir)
+        attempt_dir = attempts_dir / str(idx)
+        try:
+            attempt_dir.mkdir()
+            return idx, attempt_dir
+        except FileExistsError:
+            continue
+    raise RuntimeError("Could not claim attempt dir after 100 retries")
+
+
 def serialize_message(msg) -> dict:
     """Convert a message (dict or LiteLLM/OpenAI object) to a JSON-serializable dict."""
     if isinstance(msg, dict):
@@ -327,22 +352,24 @@ def run_attempt(
     tests: list[dict],
     max_turns: int,
     sampling_params: dict,
-    attempt_index: int,
-    attempt_dir: Path,
+    attempts_dir: Path,
     compile_cmd: str,
     src_ext: str,
     task_dir: Path | None = None,
     api_base: str | None = None,
     api_key: str | None = None,
     timeout: float = 600,
-) -> AttemptResult:
-    attempt_dir.mkdir(parents=True, exist_ok=True)
-    submissions_dir = attempt_dir / "submissions"
+) -> AttemptResult | InfraFailure:
+    staging = tempfile.TemporaryDirectory()
+    staging_dir = Path(staging.name)
+    submissions_dir = staging_dir / "submissions"
     submissions_dir.mkdir()
 
     messages = [{"role": "user", "content": user_prompt}]
     submissions = 0
     last_compiled_result: TestResult | None = None
+    api_error: Exception | None = None
+    error_turn = -1
     start = time.time()
 
     for turn in range(max_turns):
@@ -361,7 +388,9 @@ def run_attempt(
                 **sampling_params,
             )
         except Exception as e:
-            print(f"  [attempt {attempt_index}] API error on turn {turn}: {e}", file=sys.stderr)
+            print(f"  API error on turn {turn}: {e}", file=sys.stderr)
+            api_error = e
+            error_turn = turn
             break
 
         choice = response.choices[0]
@@ -373,7 +402,7 @@ def run_attempt(
         messages.append(serialize_message(assistant_msg))
 
         if finish_reason == "length":
-            print(f"  [attempt {attempt_index}] turn {turn}: response truncated (max_tokens too low)", file=sys.stderr)
+            print(f"  turn {turn}: response truncated (max_tokens too low)", file=sys.stderr)
 
         if not assistant_msg.tool_calls:
             # Model stopped without calling a tool
@@ -422,7 +451,7 @@ def run_attempt(
                 m = result.matrix
                 status = f"{m.passed}/{m.total} (TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn})"
 
-            print(f"  [attempt {attempt_index}] turn {turn}, submission {submissions}: {status}")
+            print(f"  turn {turn}, submission {submissions}: {status}")
 
             messages.append({
                 "role": "tool",
@@ -437,14 +466,62 @@ def run_attempt(
                 break
 
     elapsed = time.time() - start
+
+    # If API error occurred, treat entire attempt as infrastructure failure
+    if api_error is not None:
+        staging.cleanup()
+        error_type = "timeout" if "timeout" in str(api_error).lower() else "api_error"
+        return InfraFailure(
+            timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            turn=error_turn,
+            error_type=error_type,
+            error_message=str(api_error),
+        )
+
+    # No submissions at all (model never called submit) — also infra failure
+    if submissions == 0:
+        staging.cleanup()
+        return InfraFailure(
+            timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            turn=turn if 'turn' in dir() else 0,
+            error_type="no_submissions",
+            error_message="Model completed without making any submissions",
+        )
+
+    # Success — claim a slot and move staging data there
     final_matrix = last_compiled_result.matrix if last_compiled_result else ConfusionMatrix()
+    attempt_index, attempt_dir = claim_attempt_dir(attempts_dir)
+    turns_used = min(turn + 1, max_turns) if 'turn' in dir() else 0
+
+    # Move submissions
+    shutil.move(str(submissions_dir), str(attempt_dir / "submissions"))
 
     # Save conversation transcript
     save_attempt_log(attempt_dir, messages)
 
+    # Write result.json
+    result_data = {
+        "attempt_index": attempt_index,
+        "turns_used": turns_used,
+        "submissions": submissions,
+        "elapsed_seconds": round(elapsed, 1),
+        "score": {"passed": final_matrix.passed, "total": final_matrix.total},
+        "matrix": {
+            "tp": final_matrix.tp,
+            "fn": final_matrix.fn,
+            "fp": final_matrix.fp,
+            "tn": final_matrix.tn,
+        },
+    }
+    (attempt_dir / "result.json").write_text(
+        json.dumps(result_data, indent=2) + "\n"
+    )
+
+    staging.cleanup()
+
     return AttemptResult(
         attempt_index=attempt_index,
-        turns_used=min(turn + 1, max_turns) if 'turn' in dir() else 0,
+        turns_used=turns_used,
         submissions=submissions,
         final_matrix=final_matrix,
         elapsed_seconds=round(elapsed, 1),
@@ -542,6 +619,7 @@ def main():
     parser.add_argument("--timeout", type=float, default=600, help="API request timeout in seconds (default: 600)")
     parser.add_argument("--slug", default=None, help="Model slug for results directory (default: auto-derived from model name)")
     parser.add_argument("--results-dir", default="results", help="Base results directory (default: results/)")
+    parser.add_argument("--data-dir", default=None, help="Base data directory for attempts (default: ~/.vb-data, env: VB_DATA_DIR)")
     args = parser.parse_args()
 
     # Resolve task directory
@@ -579,15 +657,10 @@ def main():
     if args.model:
         model = args.model
         if "/" in model:
-            # Cloud provider (e.g. "anthropic/claude-sonnet-4-20250514", "openai/gpt-4o"):
-            # LiteLLM routes automatically, api_base not needed.
             api_base = None
         else:
-            # Bare model name (e.g. "qwen2.5-coder-32b") means local server:
-            # prefix with "openai/" so LiteLLM uses the OpenAI-compatible path.
             model = f"openai/{model}"
     else:
-        # Auto-detect from local server and prefix with "openai/".
         bare_model = auto_detect_model(api_base, api_key or "no-key")
         model = f"openai/{bare_model}"
 
@@ -598,37 +671,40 @@ def main():
     if args.reasoning_effort is not None:
         sampling_params["reasoning_effort"] = args.reasoning_effort
 
-    # Resolve output directory
+    # Resolve directories
     slug = args.slug or derive_slug(model, args.reasoning_effort)
     results_base = Path(__file__).parent / args.results_dir
     run_dir = results_base / args.task / slug
-    attempts_dir = run_dir / "attempts"
+
+    data_dir_base = Path(args.data_dir or os.environ.get("VB_DATA_DIR", "") or Path.home() / ".vb-data")
+    data_run_dir = data_dir_base / args.task / slug
+    attempts_dir = data_run_dir / "attempts"
     attempts_dir.mkdir(parents=True, exist_ok=True)
 
-    # Check for existing attempts (append mode)
-    start_index = next_attempt_index(attempts_dir)
-    if start_index > 0:
-        print(f"Appending to existing run ({start_index} attempts already present)")
+    # Check for existing attempts
+    existing = next_attempt_index(attempts_dir)
+    if existing > 0:
+        print(f"Appending to existing run ({existing} attempts already present)")
 
     print(f"Running task '{args.task}' (prompt: {args.prompt}) with model '{model}'")
     sampling_str = ", ".join(f"{k}={v}" for k, v in sampling_params.items()) or "server defaults"
-    print(f"Attempts: {args.n_attempts} (indices {start_index}–{start_index + args.n_attempts - 1}) | Max turns: {args.max_turns} | Sampling: {sampling_str}")
-    print(f"Output: {run_dir}")
+    print(f"Attempts: {args.n_attempts} | Max turns: {args.max_turns} | Sampling: {sampling_str}")
+    print(f"Data: {data_run_dir}")
+    print(f"Results: {run_dir}")
     print("-" * 60)
 
-    results = []
+    results: list[AttemptResult] = []
+    failures: list[InfraFailure] = []
     try:
         for i in range(args.n_attempts):
-            attempt_index = start_index + i
-            print(f"\n--- Attempt {attempt_index} ---")
+            print(f"\n--- Attempt {i + 1}/{args.n_attempts} ---")
             r = run_attempt(
                 model=model,
                 user_prompt=user_prompt,
                 tests=tests,
                 max_turns=args.max_turns,
                 sampling_params=sampling_params,
-                attempt_index=attempt_index,
-                attempt_dir=attempts_dir / str(attempt_index),
+                attempts_dir=attempts_dir,
                 compile_cmd=compile_cmd,
                 src_ext=src_ext,
                 task_dir=tasks_dir,
@@ -636,23 +712,43 @@ def main():
                 api_key=api_key,
                 timeout=args.timeout,
             )
-            results.append(r)
+            if isinstance(r, InfraFailure):
+                failures.append(r)
+                print(f"  Infrastructure failure: {r.error_type}: {r.error_message}")
+            else:
+                results.append(r)
+                print(f"  [attempt {r.attempt_index}] saved to {attempts_dir / str(r.attempt_index)}")
     except KeyboardInterrupt:
         print("\n\nInterrupted! Showing results collected so far.")
 
+    # Append failures to failures.jsonl
+    if failures:
+        failures_file = data_run_dir / "failures.jsonl"
+        with open(failures_file, "a") as f:
+            for fail in failures:
+                f.write(json.dumps({
+                    "timestamp": fail.timestamp,
+                    "turn": fail.turn,
+                    "error_type": fail.error_type,
+                    "error_message": fail.error_message,
+                }) + "\n")
+        print(f"\n{len(failures)} infrastructure failure(s) logged to {failures_file}")
+
     if results:
-        total_attempts = start_index + len(results)
-        summary = print_summary(results, model, args.task, args.prompt)
-        (run_dir / "summary.txt").write_text(summary.lstrip("\n") + "\n")
-        (run_dir / "meta.json").write_text(json.dumps({
-            "model": model,
-            "task": args.task,
-            "prompt": args.prompt,
-            "n_attempts": total_attempts,
-            "max_turns": args.max_turns,
-            "sampling_params": sampling_params,
-        }, indent=2) + "\n")
-        print(f"\nOutput saved to: {run_dir}")
+        print_summary(results, model, args.task, args.prompt)
+
+    # Always write meta.json (even if all attempts failed, to record the run)
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "meta.json").write_text(json.dumps({
+        "model": model,
+        "task": args.task,
+        "prompt": args.prompt,
+        "slug": slug,
+        "max_turns": args.max_turns,
+        "sampling_params": sampling_params,
+        "data_dir": str(data_run_dir),
+    }, indent=2) + "\n")
+    print(f"\nResults: {run_dir}")
 
 
 if __name__ == "__main__":

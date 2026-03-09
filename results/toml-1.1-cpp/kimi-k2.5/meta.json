@@ -2,9 +2,10 @@
   "model": "moonshot/kimi-k2.5",
   "task": "toml-1.1-cpp",
   "prompt": "prompt",
-  "n_attempts": 20,
+  "slug": "kimi-k2.5",
   "max_turns": 5,
   "sampling_params": {
     "max_tokens": 32768
-  }
+  },
+  "data_dir": "/Users/oleksandr/.vb-data/toml-1.1-cpp/kimi-k2.5"
 }
