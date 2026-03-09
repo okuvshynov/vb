@@ -1,21 +1,21 @@
 ----------------------------------------------------------------------------------------
 Model             | Attempts |        First-turn |         Best-of-5 |       Best-of-all
 ----------------------------------------------------------------------------------------
-Claude Sonnet 4.0 |        5 |         272.2/678 |         588.8/678 |         588.8/678
-GLM-5             |       20 |         200.3/678 |         499.8/678 |         499.8/678
-Kimi K2.5         |       10 |         327.0/678 |         622.0/678 |         622.0/678
-MiniMax M2.5      |       10 |          93.6/678 |         508.4/678 |         508.4/678
-Qwen3.5-397B A17B |        9 |         472.8/678 |         580.0/678 |         580.0/678
+claude-sonnet-4.0 |        5 |         272.2/678 |         588.8/678 |         588.8/678
+glm-5             |       20 |         200.3/678 |         499.8/678 |         499.8/678
+kimi-k2.5         |       10 |         327.0/678 |         622.0/678 |         622.0/678
+minimax-m2.5      |       10 |          93.6/678 |         508.4/678 |         508.4/678
+qwen3.5-397b-a17b |        9 |         472.8/678 |         580.0/678 |         580.0/678
 ----------------------------------------------------------------------------------------
 
-  Claude Sonnet 4.0:
+  claude-sonnet-4.0:
     attempt 0: first=504/678  best5=578/678  bestAll=578/678
     attempt 1: first=0/678  best5=637/678  bestAll=637/678
     attempt 2: first=380/678  best5=559/678  bestAll=559/678
     attempt 3: first=0/678  best5=574/678  bestAll=574/678
     attempt 4: first=477/678  best5=596/678  bestAll=596/678
 
-  GLM-5:
+  glm-5:
     attempt 0: first=0/678  best5=583/678  bestAll=583/678
     attempt 1: first=0/678  best5=0/678  bestAll=0/678
     attempt 2: first=0/678  best5=603/678  bestAll=603/678
@@ -37,7 +37,7 @@ Qwen3.5-397B A17B |        9 |         472.8/678 |         580.0/678 |         5
     attempt 18: first=0/678  best5=639/678  bestAll=639/678
     attempt 19: first=539/678  best5=634/678  bestAll=634/678
 
-  Kimi K2.5:
+  kimi-k2.5:
     attempt 0: first=0/678  best5=623/678  bestAll=623/678
     attempt 1: first=0/678  best5=646/678  bestAll=646/678
     attempt 2: first=540/678  best5=604/678  bestAll=604/678
@@ -49,7 +49,7 @@ Qwen3.5-397B A17B |        9 |         472.8/678 |         580.0/678 |         5
     attempt 8: first=571/678  best5=630/678  bestAll=630/678
     attempt 9: first=523/678  best5=633/678  bestAll=633/678
 
-  MiniMax M2.5:
+  minimax-m2.5:
     attempt 0: first=0/678  best5=487/678  bestAll=487/678
     attempt 1: first=0/678  best5=522/678  bestAll=522/678
     attempt 2: first=0/678  best5=507/678  bestAll=507/678
@@ -61,7 +61,7 @@ Qwen3.5-397B A17B |        9 |         472.8/678 |         580.0/678 |         5
     attempt 8: first=0/678  best5=507/678  bestAll=507/678
     attempt 9: first=0/678  best5=556/678  bestAll=556/678
 
-  Qwen3.5-397B A17B:
+  qwen3.5-397b-a17b:
     attempt 0: first=495/678  best5=580/678  bestAll=580/678
     attempt 1: first=0/678  best5=520/678  bestAll=520/678
     attempt 2: first=552/678  best5=591/678  bestAll=591/678

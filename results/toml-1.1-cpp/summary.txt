@@ -1,28 +1,28 @@
-------------------------------------------------------------------------------------------
-Model               | Attempts |        First-turn |         Best-of-5 |       Best-of-all
-------------------------------------------------------------------------------------------
-Claude Opus 4.6     |        3 |         216.3/680 |         670.0/680 |         670.0/680
-Claude Sonnet 4.0   |        5 |         255.2/680 |         595.8/680 |         595.8/680
-GLM-5               |       10 |         226.5/680 |         603.6/680 |         603.6/680
-Kimi K2.5           |       10 |         373.1/680 |         613.0/680 |         613.0/680
-GPT 5.3 Codex (low) |        5 |           0.0/680 |         662.0/680 |         662.0/680
-GPT-oss-120B F16    |        4 |           0.0/680 |         298.5/680 |         298.5/680
-Qwen3.5-397B A17B   |        8 |         324.5/680 |         557.2/680 |         557.2/680
-------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+Model             | Attempts |        First-turn |         Best-of-5 |       Best-of-all
+----------------------------------------------------------------------------------------
+claude-opus-4.6   |        3 |         216.3/680 |         670.0/680 |         670.0/680
+claude-sonnet-4.0 |        5 |         255.2/680 |         595.8/680 |         595.8/680
+glm-5             |       10 |         226.5/680 |         603.6/680 |         603.6/680
+gpt-5.3-codex-low |        5 |           0.0/680 |         662.0/680 |         662.0/680
+gpt-oss-120b-f16  |        4 |           0.0/680 |         298.5/680 |         298.5/680
+kimi-k2.5         |       10 |         373.1/680 |         613.0/680 |         613.0/680
+qwen3.5-397b-a17b |        8 |         324.5/680 |         557.2/680 |         557.2/680
+----------------------------------------------------------------------------------------
 
-  Claude Opus 4.6:
+  claude-opus-4.6:
     attempt 0: first=0/680  best5=665/680  bestAll=665/680
     attempt 1: first=0/680  best5=672/680  bestAll=672/680
     attempt 2: first=649/680  best5=673/680  bestAll=673/680
 
-  Claude Sonnet 4.0:
+  claude-sonnet-4.0:
     attempt 0: first=0/680  best5=588/680  bestAll=588/680
     attempt 1: first=0/680  best5=579/680  bestAll=579/680
     attempt 2: first=525/680  best5=598/680  bestAll=598/680
     attempt 3: first=380/680  best5=585/680  bestAll=585/680
     attempt 4: first=371/680  best5=629/680  bestAll=629/680
 
-  GLM-5:
+  glm-5:
     attempt 0: first=570/680  best5=618/680  bestAll=618/680
     attempt 1: first=0/680  best5=624/680  bestAll=624/680
     attempt 2: first=563/680  best5=594/680  bestAll=594/680
@@ -34,7 +34,20 @@ Qwen3.5-397B A17B   |        8 |         324.5/680 |         557.2/680 |        
     attempt 8: first=0/680  best5=575/680  bestAll=575/680
     attempt 9: first=0/680  best5=617/680  bestAll=617/680
 
-  Kimi K2.5:
+  gpt-5.3-codex-low:
+    attempt 0: first=0/680  best5=665/680  bestAll=665/680
+    attempt 1: first=0/680  best5=657/680  bestAll=657/680
+    attempt 2: first=0/680  best5=667/680  bestAll=667/680
+    attempt 3: first=0/680  best5=649/680  bestAll=649/680
+    attempt 4: first=0/680  best5=672/680  bestAll=672/680
+
+  gpt-oss-120b-f16:
+    attempt 0: first=0/680  best5=252/680  bestAll=252/680
+    attempt 1: first=0/680  best5=254/680  bestAll=254/680
+    attempt 2: first=0/680  best5=400/680  bestAll=400/680
+    attempt 3: first=0/680  best5=288/680  bestAll=288/680
+
+  kimi-k2.5:
     attempt 0: first=482/680  best5=560/680  bestAll=560/680
     attempt 1: first=532/680  best5=634/680  bestAll=634/680
     attempt 2: first=535/680  best5=630/680  bestAll=630/680
@@ -46,20 +59,7 @@ Qwen3.5-397B A17B   |        8 |         324.5/680 |         557.2/680 |        
     attempt 8: first=560/680  best5=628/680  bestAll=628/680
     attempt 9: first=540/680  best5=629/680  bestAll=629/680
 
-  GPT 5.3 Codex (low):
-    attempt 0: first=0/680  best5=665/680  bestAll=665/680
-    attempt 1: first=0/680  best5=657/680  bestAll=657/680
-    attempt 2: first=0/680  best5=667/680  bestAll=667/680
-    attempt 3: first=0/680  best5=649/680  bestAll=649/680
-    attempt 4: first=0/680  best5=672/680  bestAll=672/680
-
-  GPT-oss-120B F16:
-    attempt 0: first=0/680  best5=252/680  bestAll=252/680
-    attempt 1: first=0/680  best5=254/680  bestAll=254/680
-    attempt 2: first=0/680  best5=400/680  bestAll=400/680
-    attempt 3: first=0/680  best5=288/680  bestAll=288/680
-
-  Qwen3.5-397B A17B:
+  qwen3.5-397b-a17b:
     attempt 0: first=481/680  best5=519/680  bestAll=519/680
     attempt 1: first=534/680  best5=582/680  bestAll=582/680
     attempt 2: first=507/680  best5=507/680  bestAll=507/680

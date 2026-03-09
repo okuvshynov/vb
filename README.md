@@ -39,6 +39,10 @@ CLI arguments:
 
 ## Tasks
 
+### `toml-1.0-c`
+
+TOML v1.0.0 file validation in C11. Same test data as `toml-1.0-cpp` (678 cases) but compiled with `clang -std=c11 -O2`. Forces manual memory management — no `std::string`, `std::map`, `std::vector`, exceptions, or RAII.
+
 ### `toml-1.0-cpp`
 
 TOML v1.0.0 file validation in C++17. The prompt embeds the full TOML 1.0 specification with version-appropriate rules: no `\e` or `\xHH` escape sequences, seconds required in datetime values, and inline tables restricted to single lines without trailing commas. Test data: 678 cases (205 valid, 473 invalid) sourced from [toml-test](https://github.com/toml-lang/toml-test) `files-toml-1.0.0` (MIT licensed). Validated against Python's `tomllib` with 678/678 match (0 discrepancies).
@@ -61,3 +65,23 @@ Each line in `tests.jsonl` has the following fields:
 - `input_file` (string): path to input file relative to task directory — mutually exclusive with `input`/`input_hex`, used for large or structured test data (e.g., TOML files)
 - `expected`: `"valid"` or `"invalid"`
 - `label`: human-readable test description
+
+## Updating results
+
+After running benchmarks, regenerate all summaries and charts:
+
+```bash
+./update_results.sh
+```
+
+This script:
+1. Scans `results/<task>/<slug>/meta.json` to discover runs
+2. Counts attempts via each run's `data_dir` (from `meta.json`)
+3. Skips models with 0 attempts
+4. Runs `analyze_runs.py --verbose` per task → `results/<task>/summary.txt`
+5. Runs `plot_results.py` per task → `results/<task>/chart.png`
+6. Runs `plot_comparison.py` → `results/comparison.png`
+
+Model slugs are used as labels everywhere (summaries, charts, comparison).
+
+To add a new model to the comparison chart's ordering/categories, edit `MODEL_CONFIG` in `plot_comparison.py`. Models not listed in `MODEL_CONFIG` still appear in per-task charts but are excluded from the comparison.

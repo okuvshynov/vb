@@ -12,19 +12,20 @@ import numpy as np
 from plot_results import parse_summary
 
 # Model display order and category assignment.
+# Keys are slugs (as used by validation_bench.py and update_results.sh).
 # Categories: "proprietary" (closed-weight), "api" (open-weight via API), "local" (GGUF/local)
 MODEL_CONFIG = OrderedDict([
-    ("GPT 5.3 Codex (high)", "proprietary"),
-    ("GPT 5.3 Codex (low)",  "proprietary"),
-    ("Claude Opus 4.6",      "proprietary"),
-    ("Claude Sonnet 4.0",    "proprietary"),
-    ("GLM-5",                "api"),
-    ("Kimi K2.5",            "api"),
-    ("MiniMax M2.5",         "api"),
-    ("Devstral",             "api"),
-    ("GPT-oss-120B F16",     "local"),
-    ("Qwen3.5-397B A17B",    "local"),
-    ("Qwen3.5-122B Q8",      "local"),
+    ("gpt-5.3-codex-high",  "proprietary"),
+    ("gpt-5.3-codex-low",   "proprietary"),
+    ("claude-opus-4.6",     "proprietary"),
+    ("claude-sonnet-4.0",   "proprietary"),
+    ("glm-5",               "api"),
+    ("kimi-k2.5",           "api"),
+    ("minimax-m2.5",        "api"),
+    ("devstral",            "api"),
+    ("gpt-oss-120b-f16",    "local"),
+    ("qwen3.5-397b-a17b",   "local"),
+    ("qwen3.5-122b-q8",     "local"),
 ])
 
 CATEGORY_COLORS = {
