@@ -1,0 +1,51 @@
+----------------------------------------------------------------------------------------
+Model             | Attempts |        First-turn |         Best-of-5 |       Best-of-all
+----------------------------------------------------------------------------------------
+Claude Sonnet 4.0 |        5 |         272.2/678 |         588.8/678 |         588.8/678
+GLM-5             |       10 |         114.2/678 |         424.7/678 |         424.7/678
+Kimi K2.5         |       10 |         327.0/678 |         622.0/678 |         622.0/678
+MiniMax M2.5      |       10 |          93.6/678 |         508.4/678 |         508.4/678
+----------------------------------------------------------------------------------------
+
+  Claude Sonnet 4.0:
+    attempt 0: first=504/678  best5=578/678  bestAll=578/678
+    attempt 1: first=0/678  best5=637/678  bestAll=637/678
+    attempt 2: first=380/678  best5=559/678  bestAll=559/678
+    attempt 3: first=0/678  best5=574/678  bestAll=574/678
+    attempt 4: first=477/678  best5=596/678  bestAll=596/678
+
+  GLM-5:
+    attempt 0: first=0/678  best5=583/678  bestAll=583/678
+    attempt 1: first=0/678  best5=0/678  bestAll=0/678
+    attempt 2: first=0/678  best5=603/678  bestAll=603/678
+    attempt 3: first=0/678  best5=540/678  bestAll=540/678
+    attempt 4: first=573/678  best5=613/678  bestAll=613/678
+    attempt 5: first=0/678  best5=0/678  bestAll=0/678
+    attempt 6: first=569/678  best5=647/678  bestAll=647/678
+    attempt 7: first=0/678  best5=621/678  bestAll=621/678
+    attempt 8: first=0/678  best5=0/678  bestAll=0/678
+    attempt 9: first=0/678  best5=640/678  bestAll=640/678
+
+  Kimi K2.5:
+    attempt 0: first=0/678  best5=623/678  bestAll=623/678
+    attempt 1: first=0/678  best5=646/678  bestAll=646/678
+    attempt 2: first=540/678  best5=604/678  bestAll=604/678
+    attempt 3: first=545/678  best5=645/678  bestAll=645/678
+    attempt 4: first=0/678  best5=589/678  bestAll=589/678
+    attempt 5: first=592/678  best5=615/678  bestAll=615/678
+    attempt 6: first=499/678  best5=600/678  bestAll=600/678
+    attempt 7: first=0/678  best5=635/678  bestAll=635/678
+    attempt 8: first=571/678  best5=630/678  bestAll=630/678
+    attempt 9: first=523/678  best5=633/678  bestAll=633/678
+
+  MiniMax M2.5:
+    attempt 0: first=0/678  best5=487/678  bestAll=487/678
+    attempt 1: first=0/678  best5=522/678  bestAll=522/678
+    attempt 2: first=0/678  best5=507/678  bestAll=507/678
+    attempt 3: first=0/678  best5=507/678  bestAll=507/678
+    attempt 4: first=452/678  best5=485/678  bestAll=485/678
+    attempt 5: first=484/678  best5=561/678  bestAll=561/678
+    attempt 6: first=0/678  best5=489/678  bestAll=489/678
+    attempt 7: first=0/678  best5=463/678  bestAll=463/678
+    attempt 8: first=0/678  best5=507/678  bestAll=507/678
+    attempt 9: first=0/678  best5=556/678  bestAll=556/678

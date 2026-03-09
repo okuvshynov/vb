@@ -14,15 +14,16 @@ from plot_results import parse_summary
 # Model display order and category assignment.
 # Categories: "proprietary" (closed-weight), "api" (open-weight via API), "local" (GGUF/local)
 MODEL_CONFIG = OrderedDict([
-    ("GPT Codex 5.3 (high)", "proprietary"),
-    ("GPT Codex 5.3 (low)",  "proprietary"),
+    ("GPT 5.3 Codex (high)", "proprietary"),
+    ("GPT 5.3 Codex (low)",  "proprietary"),
     ("Claude Opus 4.6",      "proprietary"),
     ("Claude Sonnet 4.0",    "proprietary"),
     ("GLM-5",                "api"),
     ("Kimi K2.5",            "api"),
     ("MiniMax M2.5",         "api"),
     ("Devstral",             "api"),
-    ("Qwen3.5-122B Q8",     "local"),
+    ("GPT-oss-120B F16",     "local"),
+    ("Qwen3.5-122B Q8",      "local"),
 ])
 
 CATEGORY_COLORS = {

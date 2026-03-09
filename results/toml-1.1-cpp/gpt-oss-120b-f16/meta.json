@@ -1,0 +1,11 @@
+{
+  "model": "openai/gpt-oss-120b-F16.gguf",
+  "task": "toml-1.1-cpp",
+  "prompt": "prompt",
+  "slug": "gpt-oss-120b-f16",
+  "max_turns": 5,
+  "sampling_params": {
+    "max_tokens": 32768
+  },
+  "data_dir": "/Users/oleksandr/.vb-data/toml-1.1-cpp/gpt-oss-120b-f16"
+}
