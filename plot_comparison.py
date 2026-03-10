@@ -34,12 +34,14 @@ CATEGORY_COLORS = {
     "proprietary": ("#4878a8", "#6a9fd8"),  # (1.0, 1.1) — blue tones
     "api":         ("#d4813f", "#e8a96a"),   # orange tones
     "local":       ("#5a9e5a", "#82c482"),   # green tones
+    "unknown":     ("#888888", "#aaaaaa"),   # gray tones
 }
 
 CATEGORY_LABELS = {
     "proprietary": "Proprietary",
     "api":         "Open-weight (API)",
     "local":       "Open-weight (local)",
+    "unknown":     "Unknown",
 }
 
 
@@ -62,13 +64,17 @@ def main():
         print("Error: no data found in either summary file.", file=sys.stderr)
         sys.exit(1)
 
-    # Use models from MODEL_CONFIG that appear in at least one dataset
+    # Use models from MODEL_CONFIG that appear in at least one dataset,
+    # then append any unknown models sorted alphabetically with "unknown" category.
     all_available = set(models_10.keys()) | set(models_11.keys())
     model_names = [m for m in MODEL_CONFIG if m in all_available]
+    unknown = sorted(all_available - set(MODEL_CONFIG.keys()))
+    if unknown:
+        print(f"Note: models not in MODEL_CONFIG (will use 'unknown' category): {', '.join(unknown)}", file=sys.stderr)
+        model_names.extend(unknown)
 
     if not model_names:
-        print("Error: no models in MODEL_CONFIG match the summary data.", file=sys.stderr)
-        print(f"  Summary models: {all_available}", file=sys.stderr)
+        print("Error: no models match the summary data.", file=sys.stderr)
         sys.exit(1)
 
     n = len(model_names)
@@ -97,9 +103,9 @@ def main():
     # Draw category background bands
     prev_cat = None
     band_start = -0.5
-    band_colors = {"proprietary": "#e8eef5", "api": "#fdf0e5", "local": "#e8f5e8"}
+    band_colors = {"proprietary": "#e8eef5", "api": "#fdf0e5", "local": "#e8f5e8", "unknown": "#eeeeee"}
     for i, name in enumerate(model_names):
-        cat = MODEL_CONFIG[name]
+        cat = MODEL_CONFIG.get(name, "unknown")
         if cat != prev_cat and prev_cat is not None:
             ax.axvspan(band_start, i * group_width - 0.5, color=band_colors[prev_cat], alpha=0.5, zorder=0)
             band_start = i * group_width - 0.5
@@ -110,7 +116,7 @@ def main():
 
     # Plot each model
     for i, name in enumerate(model_names):
-        cat = MODEL_CONFIG[name]
+        cat = MODEL_CONFIG.get(name, "unknown")
         color_10, color_11 = CATEGORY_COLORS[cat]
 
         for version, models_data, total, pos, color, hatch in [
