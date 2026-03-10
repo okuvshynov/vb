@@ -4,11 +4,13 @@ Model                     | Attempts |        First-turn |         Best-of-5 |  
 claude-opus-4.6           |        3 |         216.3/680 |         670.0/680 |         670.0/680
 claude-sonnet-4.0         |        5 |         255.2/680 |         595.8/680 |         595.8/680
 glm-5                     |       10 |         226.5/680 |         603.6/680 |         603.6/680
+gpt-5.3-codex-high        |        2 |         336.5/680 |         679.5/680 |         679.5/680
 gpt-5.3-codex-low         |        5 |           0.0/680 |         662.0/680 |         662.0/680
 gpt-oss-120b-f16          |        4 |           0.0/680 |         298.5/680 |         298.5/680
 kimi-k2.5                 |       10 |         373.1/680 |         613.0/680 |         613.0/680
 minimax-m2.5              |        9 |         210.1/680 |         512.6/680 |         512.6/680
 qwen3.5-122b-a10b-q6_k_xl |       10 |         147.6/680 |         504.7/680 |         504.7/680
+qwen3.5-397b-a17b-iq1_m   |        6 |         349.2/680 |         549.8/680 |         549.8/680
 qwen3.5-397b-a17b-iq3_xxs |        8 |         324.5/680 |         557.2/680 |         557.2/680
 ------------------------------------------------------------------------------------------------
 
@@ -35,6 +37,10 @@ qwen3.5-397b-a17b-iq3_xxs |        8 |         324.5/680 |         557.2/680 |  
     attempt 7: first=608/680  best5=636/680  bestAll=636/680
     attempt 8: first=0/680  best5=575/680  bestAll=575/680
     attempt 9: first=0/680  best5=617/680  bestAll=617/680
+
+  gpt-5.3-codex-high:
+    attempt 0: first=673/680  best5=680/680  bestAll=680/680
+    attempt 1: first=0/680  best5=679/680  bestAll=679/680
 
   gpt-5.3-codex-low:
     attempt 0: first=0/680  best5=665/680  bestAll=665/680
@@ -83,6 +89,14 @@ qwen3.5-397b-a17b-iq3_xxs |        8 |         324.5/680 |         557.2/680 |  
     attempt 7: first=0/680  best5=539/680  bestAll=539/680
     attempt 8: first=0/680  best5=514/680  bestAll=514/680
     attempt 9: first=0/680  best5=500/680  bestAll=500/680
+
+  qwen3.5-397b-a17b-iq1_m:
+    attempt 0: first=542/680  best5=587/680  bestAll=587/680
+    attempt 1: first=516/680  best5=522/680  bestAll=522/680
+    attempt 2: first=0/680  best5=542/680  bestAll=542/680
+    attempt 3: first=509/680  best5=541/680  bestAll=541/680
+    attempt 4: first=528/680  best5=568/680  bestAll=568/680
+    attempt 5: first=0/680  best5=539/680  bestAll=539/680
 
   qwen3.5-397b-a17b-iq3_xxs:
     attempt 0: first=481/680  best5=519/680  bestAll=519/680
