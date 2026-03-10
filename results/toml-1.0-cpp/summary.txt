@@ -5,6 +5,7 @@ claude-opus-4.6           |        3 |         424.7/678 |         676.7/678 |  
 claude-sonnet-4.0         |        5 |         272.2/678 |         588.8/678 |         588.8/678
 glm-5                     |       20 |         200.3/678 |         499.8/678 |         499.8/678
 gpt-5.3-codex-high        |        2 |         670.0/678 |         677.0/678 |         677.0/678
+gpt-5.3-codex-low         |        3 |           0.0/678 |         671.3/678 |         671.3/678
 kimi-k2.5                 |       10 |         327.0/678 |         622.0/678 |         622.0/678
 minimax-m2.5              |       10 |          93.6/678 |         508.4/678 |         508.4/678
 qwen3.5-397b-a17b-iq3_xxs |        9 |         472.8/678 |         580.0/678 |         580.0/678
@@ -47,6 +48,11 @@ qwen3.5-397b-a17b-iq3_xxs |        9 |         472.8/678 |         580.0/678 |  
   gpt-5.3-codex-high:
     attempt 0: first=670/678  best5=677/678  bestAll=677/678
     attempt 1: first=670/678  best5=677/678  bestAll=677/678
+
+  gpt-5.3-codex-low:
+    attempt 0: first=0/678  best5=674/678  bestAll=674/678
+    attempt 1: first=0/678  best5=674/678  bestAll=674/678
+    attempt 2: first=0/678  best5=666/678  bestAll=666/678
 
   kimi-k2.5:
     attempt 0: first=0/678  best5=623/678  bestAll=623/678
