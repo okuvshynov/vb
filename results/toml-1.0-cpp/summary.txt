@@ -8,6 +8,7 @@ gpt-5.3-codex-high        |        2 |         670.0/678 |         677.0/678 |  
 gpt-5.3-codex-low         |        3 |           0.0/678 |         671.3/678 |         671.3/678
 kimi-k2.5                 |       10 |         327.0/678 |         622.0/678 |         622.0/678
 minimax-m2.5              |       10 |          93.6/678 |         508.4/678 |         508.4/678
+qwen3.5-397b-a17b-iq1_m   |       10 |         415.1/678 |         565.5/678 |         565.5/678
 qwen3.5-397b-a17b-iq3_xxs |        9 |         472.8/678 |         580.0/678 |         580.0/678
 ------------------------------------------------------------------------------------------------
 
@@ -77,6 +78,18 @@ qwen3.5-397b-a17b-iq3_xxs |        9 |         472.8/678 |         580.0/678 |  
     attempt 7: first=0/678  best5=463/678  bestAll=463/678
     attempt 8: first=0/678  best5=507/678  bestAll=507/678
     attempt 9: first=0/678  best5=556/678  bestAll=556/678
+
+  qwen3.5-397b-a17b-iq1_m:
+    attempt 0: first=523/678  best5=572/678  bestAll=572/678
+    attempt 1: first=544/678  best5=587/678  bestAll=587/678
+    attempt 2: first=0/678  best5=596/678  bestAll=596/678
+    attempt 3: first=474/678  best5=474/678  bestAll=474/678
+    attempt 4: first=520/678  best5=598/678  bestAll=598/678
+    attempt 5: first=550/678  best5=582/678  bestAll=582/678
+    attempt 6: first=564/678  best5=594/678  bestAll=594/678
+    attempt 7: first=0/678  best5=511/678  bestAll=511/678
+    attempt 8: first=465/678  best5=570/678  bestAll=570/678
+    attempt 9: first=511/678  best5=571/678  bestAll=571/678
 
   qwen3.5-397b-a17b-iq3_xxs:
     attempt 0: first=495/678  best5=580/678  bestAll=580/678
