@@ -1,19 +1,42 @@
 #!/usr/bin/env python3
-"""Analyze turn-by-turn score improvement across benchmark runs."""
+"""Analyze turn-by-turn improvement: scatter plot of best score vs improvement gained."""
 
 import argparse
 import json
 import sys
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import numpy as np
+
 from analyze_runs import parse_tests_txt, resolve_attempts_dir
 
 
-def collect_turn_data(run_dir: Path, n_attempts: int | None = None) -> list[list[int]]:
-    """Collect per-attempt turn scores: [[t1, t2, ...], ...]."""
+# Consistent colors per model across tasks
+MODEL_COLORS = {
+    "gpt-5.3-codex-high": "#1f77b4",
+    "gpt-5.3-codex-low": "#6baed6",
+    "claude-opus-4.6": "#2ca02c",
+    "claude-sonnet-4.0": "#98df8a",
+    "glm-5": "#d62728",
+    "kimi-k2.5": "#ff7f0e",
+    "minimax-m2.5": "#e377c2",
+    "devstral": "#bcbd22",
+    "gpt-oss-120b-f16": "#9467bd",
+    "qwen3.5-397b-a17b-iq3_xxs": "#8c564b",
+    "qwen3.5-397b-a17b-iq1_m": "#c49c94",
+    "qwen3.5-122b-a10b-q6_k_xl": "#17becf",
+    "qwen3.5-122b-a10b-iq4_xs": "#7fcdbb",
+    "qwen3.5-122b-q8": "#aec7e8",
+}
+_FALLBACK_COLORS = plt.cm.tab20.colors
+
+
+def collect_attempt_points(run_dir: Path, n_attempts: int | None = None) -> list[tuple[int, int]]:
+    """Return [(best_score, best - first), ...] per attempt."""
     attempts_dir = resolve_attempts_dir(run_dir)
     if attempts_dir is None:
-        print(f"Warning: no attempts found for {run_dir}", file=sys.stderr)
         return []
 
     attempt_dirs = sorted(
@@ -23,192 +46,151 @@ def collect_turn_data(run_dir: Path, n_attempts: int | None = None) -> list[list
     if n_attempts is not None:
         attempt_dirs = attempt_dirs[:n_attempts]
 
-    all_turns = []
+    points = []
     for attempt_dir in attempt_dirs:
         subs_dir = attempt_dir / "submissions"
         if not subs_dir.is_dir():
-            all_turns.append([])
             continue
         sub_dirs = sorted(
             [d for d in subs_dir.iterdir() if d.is_dir()],
             key=lambda d: int(d.name),
         )
+        if not sub_dirs:
+            continue
         scores = []
         for sub_dir in sub_dirs:
             passed, _ = parse_tests_txt(sub_dir / "tests.txt")
             scores.append(passed)
-        all_turns.append(scores)
-
-    return all_turns
-
-
-def mean(xs: list[int | float]) -> float:
-    return sum(xs) / len(xs) if xs else 0.0
+        first = scores[0]
+        best = max(scores)
+        points.append((best, best - first))
+    return points
 
 
-def print_per_turn_table(models: list[tuple[str, list[list[int]]]]):
-    """Table 1: per-turn average score."""
-    # Find max turn count across all models
-    max_turns = 0
-    for _, turn_data in models:
-        for scores in turn_data:
-            max_turns = max(max_turns, len(scores))
-
-    if max_turns == 0:
-        print("No submission data found.")
-        return
-
-    name_width = max(len(name) for name, _ in models)
-    name_width = max(name_width, 5)
-
-    # Header
-    turn_headers = [f"Turn {i+1}" for i in range(max_turns)]
-    header = f"{'Model':<{name_width}}"
-    for th in turn_headers:
-        header += f" | {th:>12}"
-    sep = "-" * len(header)
-
-    print(sep)
-    print(header)
-    print(sep)
-
-    for model_name, turn_data in models:
-        row = f"{model_name:<{name_width}}"
-        for t in range(max_turns):
-            scores_at_t = [s[t] for s in turn_data if len(s) > t]
-            if scores_at_t:
-                avg = mean(scores_at_t)
-                row += f" | {avg:>6.1f} ({len(scores_at_t):>2})"
-            else:
-                row += f" | {'':>12}"
-        print(row)
-
-    print(sep)
-
-
-def compute_summary(turn_data: list[list[int]]) -> dict:
-    """Compute summary stats from turn data."""
-    first_turns = []
-    final_minus_first = []
-    positive_gains = []
-    regressions = 0
-    total_pairs = 0
-    recovery_successes = 0
-    recovery_opportunities = 0
-
-    for scores in turn_data:
-        if not scores:
+def discover_task_runs(task_dir: Path) -> list[tuple[str, Path]]:
+    """Find all (slug, run_dir) pairs in a task results directory."""
+    runs = []
+    for d in sorted(task_dir.iterdir()):
+        if not d.is_dir():
             continue
-        first_turns.append(scores[0])
-        final_minus_first.append(scores[-1] - scores[0])
-
-        for i in range(len(scores) - 1):
-            delta = scores[i + 1] - scores[i]
-            total_pairs += 1
-            if delta > 0:
-                positive_gains.append(delta)
-            elif delta < 0:
-                regressions += 1
-            # Recovery: 0 followed by another turn
-            if scores[i] == 0:
-                recovery_opportunities += 1
-                if scores[i + 1] > 0:
-                    recovery_successes += 1
-
-    return {
-        "avg_t1": mean(first_turns),
-        "avg_gain": mean(positive_gains),
-        "regress_pct": (regressions / total_pairs * 100) if total_pairs else 0.0,
-        "recovery": (recovery_successes, recovery_opportunities),
-        "final_t1": mean(final_minus_first),
-    }
+        meta_file = d / "meta.json"
+        if meta_file.exists():
+            meta = json.loads(meta_file.read_text())
+            slug = meta.get("slug", d.name)
+        else:
+            slug = d.name
+        runs.append((slug, d))
+    return runs
 
 
-def print_summary_table(models: list[tuple[str, list[list[int]]]]):
-    """Table 2: summary stats."""
-    name_width = max(len(name) for name, _ in models)
-    name_width = max(name_width, 5)
-
-    header = (
-        f"{'Model':<{name_width}} | {'Avg T1':>7} | {'Avg Gain':>8} | "
-        f"{'Regress%':>8} | {'Recovery':>8} | {'Final-T1':>8}"
-    )
-    sep = "-" * len(header)
-
-    print(sep)
-    print(header)
-    print(sep)
-
-    for model_name, turn_data in models:
-        s = compute_summary(turn_data)
-        rec_s, rec_o = s["recovery"]
-        rec_str = f"{rec_s}/{rec_o}" if rec_o > 0 else "n/a"
-        print(
-            f"{model_name:<{name_width}} | {s['avg_t1']:>7.1f} | "
-            f"{s['avg_gain']:>+8.1f} | {s['regress_pct']:>7.1f}% | "
-            f"{rec_str:>8} | {s['final_t1']:>+8.1f}"
-        )
-
-    print(sep)
-
-
-def print_verbose(models: list[tuple[str, list[list[int]]]]):
-    """Print per-attempt submission traces."""
-    for model_name, turn_data in models:
-        print(f"\n  {model_name}:")
-        for i, scores in enumerate(turn_data):
-            if not scores:
-                print(f"    attempt {i}: (no submissions)")
-                continue
-            trace = " -> ".join(str(s) for s in scores)
-            net = scores[-1] - scores[0]
-            print(f"    attempt {i}: {trace}  (net: {net:+d})")
+def get_color(slug: str, idx: int) -> str:
+    if slug in MODEL_COLORS:
+        return MODEL_COLORS[slug]
+    return _FALLBACK_COLORS[idx % len(_FALLBACK_COLORS)]
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze turn-by-turn score improvement")
-    parser.add_argument("runs", nargs="+", help="Run directories to analyze")
-    parser.add_argument("--labels", default=None, help="Comma-separated model labels")
+    parser = argparse.ArgumentParser(
+        description="Scatter plot: best score vs improvement from first turn"
+    )
+    parser.add_argument(
+        "tasks", nargs="+",
+        help="Task result directories (e.g. results/toml-1.0-cpp results/toml-1.1-cpp)",
+    )
     parser.add_argument("--n-attempts", type=int, default=None, help="Only use first N attempts")
-    parser.add_argument("--verbose", action="store_true", help="Show per-attempt traces")
+    parser.add_argument("-o", "--output", default="results/turns.png", help="Output PNG path")
     args = parser.parse_args()
 
-    labels = args.labels.split(",") if args.labels else [None] * len(args.runs)
-    if len(labels) != len(args.runs):
-        print(f"Error: {len(labels)} labels but {len(args.runs)} runs", file=sys.stderr)
+    task_dirs = [Path(t) for t in args.tasks]
+    for td in task_dirs:
+        if not td.is_dir():
+            print(f"Warning: {td} not found, skipping", file=sys.stderr)
+
+    task_dirs = [td for td in task_dirs if td.is_dir()]
+    if not task_dirs:
+        print("No valid task directories found.")
         sys.exit(1)
 
-    models = []
-    for run_path, label in zip(args.runs, labels):
-        run_dir = Path(run_path)
-        if not run_dir.is_dir():
-            print(f"Warning: {run_dir} not found, skipping", file=sys.stderr)
-            continue
+    # Collect data: {task_name: {slug: [(best, improvement), ...]}}
+    all_data = {}
+    all_slugs = set()
+    for td in task_dirs:
+        task_name = td.name
+        runs = discover_task_runs(td)
+        task_data = {}
+        for slug, run_dir in runs:
+            pts = collect_attempt_points(run_dir, args.n_attempts)
+            if pts:
+                task_data[slug] = pts
+                all_slugs.add(slug)
+        all_data[task_name] = task_data
 
-        meta_file = run_dir / "meta.json"
-        if label:
-            model_name = label
-        elif meta_file.exists():
-            meta = json.loads(meta_file.read_text())
-            model_name = meta.get("slug", meta.get("model", run_dir.name))
-        else:
-            model_name = run_dir.name
+    n_tasks = len(all_data)
+    # Grid: each task gets [scatter (wide), boxplot (narrow)]
+    fig, axes = plt.subplots(
+        1, n_tasks * 2, figsize=(6 * n_tasks + 3 * n_tasks, 7),
+        gridspec_kw={"width_ratios": [3, 1.2] * n_tasks},
+    )
+    if n_tasks == 1:
+        axes = [axes]  # ensure indexable
 
-        turn_data = collect_turn_data(run_dir, args.n_attempts)
-        models.append((model_name, turn_data))
+    # Stable slug ordering for legend
+    slug_order = sorted(all_slugs)
 
-    if not models:
-        print("No valid runs found.")
-        return
+    for task_idx, (task_name, task_data) in enumerate(all_data.items()):
+        ax_scatter = axes[task_idx * 2]
+        ax_box = axes[task_idx * 2 + 1]
 
-    print("\n=== Per-Turn Average Score ===\n")
-    print_per_turn_table(models)
+        box_data = []
+        box_labels = []
+        box_colors = []
 
-    print("\n=== Summary ===\n")
-    print_summary_table(models)
+        for idx, slug in enumerate(slug_order):
+            if slug not in task_data:
+                continue
+            pts = task_data[slug]
+            bests = [p[0] for p in pts]
+            improvements = [p[1] for p in pts]
+            color = get_color(slug, idx)
 
-    if args.verbose:
-        print_verbose(models)
+            ax_scatter.scatter(
+                bests, improvements, c=color, label=slug, s=40, alpha=0.8,
+                edgecolors="white", linewidths=0.4, zorder=3,
+            )
+            box_data.append(improvements)
+            box_labels.append(slug)
+            box_colors.append(color)
+
+        # Scatter formatting
+        ax_scatter.axhline(y=0, color="gray", linestyle="--", alpha=0.5, linewidth=0.8)
+        ax_scatter.set_xlabel("Best score (across turns)", fontsize=10)
+        ax_scatter.set_ylabel("Improvement (best − first turn)", fontsize=10)
+        ax_scatter.set_title(task_name, fontsize=12, fontweight="bold")
+        ax_scatter.grid(alpha=0.3)
+        ax_scatter.legend(fontsize=7, loc="upper left", framealpha=0.9)
+
+        # Boxplot
+        if box_data:
+            bp = ax_box.boxplot(
+                box_data, vert=True, patch_artist=True, widths=0.6,
+                showmeans=True,
+                meanprops=dict(marker="D", markerfacecolor="white",
+                               markeredgecolor="black", markersize=3),
+                medianprops=dict(color="black", linewidth=1),
+                flierprops=dict(marker="", linewidth=0),
+            )
+            for patch, color in zip(bp["boxes"], box_colors):
+                patch.set_facecolor(color)
+                patch.set_alpha(0.7)
+            ax_box.set_xticklabels(box_labels, rotation=60, ha="right", fontsize=6)
+            ax_box.set_title("Improvement", fontsize=10)
+            ax_box.grid(axis="y", alpha=0.3)
+            ax_box.axhline(y=0, color="gray", linestyle="--", alpha=0.5, linewidth=0.8)
+
+    fig.suptitle("Multi-turn Improvement", fontsize=14, fontweight="bold")
+    fig.tight_layout()
+    fig.savefig(args.output, dpi=150, bbox_inches="tight")
+    print(f"Saved to {args.output}")
 
 
 if __name__ == "__main__":
