@@ -12,6 +12,7 @@ qwen3.5-122b-a10b-iq3_xxs |       20 |         328.8/678 |         498.6/678 |  
 qwen3.5-122b-a10b-iq4_xs  |       20 |         237.0/678 |         497.2/678 |         497.2/678
 qwen3.5-122b-a10b-q6_k_xl |        8 |         300.0/678 |         386.4/678 |         386.4/678
 qwen3.5-397b-a17b-iq1_m   |       10 |         415.1/678 |         565.5/678 |         565.5/678
+qwen3.5-397b-a17b-iq2_xxs |       18 |         374.3/678 |         550.9/678 |         550.9/678
 qwen3.5-397b-a17b-iq3_xxs |        9 |         472.8/678 |         580.0/678 |         580.0/678
 ------------------------------------------------------------------------------------------------
 
@@ -147,6 +148,26 @@ qwen3.5-397b-a17b-iq3_xxs |        9 |         472.8/678 |         580.0/678 |  
     attempt 7: first=0/678  best5=511/678  bestAll=511/678
     attempt 8: first=465/678  best5=570/678  bestAll=570/678
     attempt 9: first=511/678  best5=571/678  bestAll=571/678
+
+  qwen3.5-397b-a17b-iq2_xxs:
+    attempt 0: first=495/678  best5=516/678  bestAll=516/678
+    attempt 1: first=526/678  best5=563/678  bestAll=563/678
+    attempt 2: first=0/678  best5=474/678  bestAll=474/678
+    attempt 3: first=486/678  best5=572/678  bestAll=572/678
+    attempt 4: first=0/678  best5=539/678  bestAll=539/678
+    attempt 5: first=492/678  best5=522/678  bestAll=522/678
+    attempt 6: first=511/678  best5=567/678  bestAll=567/678
+    attempt 7: first=0/678  best5=531/678  bestAll=531/678
+    attempt 8: first=540/678  best5=593/678  bestAll=593/678
+    attempt 9: first=0/678  best5=573/678  bestAll=573/678
+    attempt 10: first=553/678  best5=624/678  bestAll=624/678
+    attempt 11: first=544/678  best5=567/678  bestAll=567/678
+    attempt 12: first=546/678  best5=592/678  bestAll=592/678
+    attempt 13: first=541/678  best5=563/678  bestAll=563/678
+    attempt 14: first=514/678  best5=543/678  bestAll=543/678
+    attempt 15: first=502/678  best5=538/678  bestAll=538/678
+    attempt 16: first=487/678  best5=518/678  bestAll=518/678
+    attempt 17: first=0/678  best5=521/678  bestAll=521/678
 
   qwen3.5-397b-a17b-iq3_xxs:
     attempt 0: first=495/678  best5=580/678  bestAll=580/678
