@@ -168,6 +168,17 @@ def main():
     ax.axhline(y=100, color="gray", linestyle="--", alpha=0.4, linewidth=0.8)
     ax.grid(axis="y", alpha=0.3)
 
+    # Trivial baseline: "reject everything" (= #invalid / #total)
+    # This is the best a trivial classifier can do (since invalid > valid)
+    trivial_10 = 473 / 678 * 100  # 69.8%
+    trivial_11 = 466 / 680 * 100  # 68.5%
+    ax.axhline(y=trivial_10, color="#4878a8", linestyle=":", alpha=0.6, linewidth=1.2)
+    ax.axhline(y=trivial_11, color="#5a9e5a", linestyle=":", alpha=0.6, linewidth=1.2)
+    ax.text(n * group_width - 0.5, trivial_10 + 0.5, f"trivial 1.0 ({trivial_10:.0f}%)",
+            fontsize=7, color="#4878a8", ha="right", va="bottom")
+    ax.text(n * group_width - 0.5, trivial_11 - 1.5, f"trivial 1.1 ({trivial_11:.0f}%)",
+            fontsize=7, color="#5a9e5a", ha="right", va="top")
+
     # Title
     ax.set_title(f"TOML Validator Benchmark — {metric_label} score (1.0 vs 1.1)", fontsize=13, fontweight="bold")
 

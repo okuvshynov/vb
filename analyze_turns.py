@@ -119,6 +119,7 @@ def main():
     # Collect data: {task_name: {slug: [(best, improvement), ...]}}
     all_data = {}
     all_slugs = set()
+    trivial_baselines = {}  # task_name -> trivial score (max(#valid, #invalid))
     for td in task_dirs:
         task_name = td.name
         runs = discover_task_runs(td)
@@ -129,6 +130,14 @@ def main():
                 task_data[slug] = pts
                 all_slugs.add(slug)
         all_data[task_name] = task_data
+
+        # Compute trivial baseline from tests.jsonl
+        tests_jsonl = Path("tasks") / task_name / "tests.jsonl"
+        if tests_jsonl.exists():
+            tests = [json.loads(line) for line in tests_jsonl.open()]
+            n_valid = sum(1 for t in tests if t["expected"] == "valid")
+            n_invalid = len(tests) - n_valid
+            trivial_baselines[task_name] = max(n_valid, n_invalid)
 
     n_tasks = len(all_data)
     # Grid: each task gets [scatter (wide), boxplot (narrow)]
@@ -168,6 +177,12 @@ def main():
 
         # Scatter formatting
         ax_scatter.axhline(y=0, color="gray", linestyle="--", alpha=0.5, linewidth=0.8)
+        if task_name in trivial_baselines:
+            tv = trivial_baselines[task_name]
+            ax_scatter.axvline(x=tv, color="red", linestyle=":", alpha=0.5, linewidth=1.2)
+            ax_scatter.text(tv - 2, ax_scatter.get_ylim()[1] * 0.95,
+                            f"trivial ({tv})", fontsize=7, color="red",
+                            ha="right", va="top", rotation=90)
         ax_scatter.set_xlabel("Best score (across turns)", fontsize=10)
         ax_scatter.set_ylabel("Improvement (best − first turn)", fontsize=10)
         ax_scatter.set_title(task_name, fontsize=12, fontweight="bold")
