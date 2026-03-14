@@ -23,7 +23,6 @@ MODEL_CONFIG = OrderedDict([
     ("kimi-k2.5",           "api"),
     ("minimax-m2.5",        "api"),
     ("devstral",            "api"),
-    ("gpt-oss-120b-f16",        "local"),
     # qwen3.5-397b-a17b: grouped by quant level (high to low)
     ("qwen3.5-397b-a17b",       "local"),
     ("qwen3.5-397b-a17b-iq3_xxs", "local"),

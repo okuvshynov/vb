@@ -195,7 +195,7 @@ def main():
             model_name = label
         elif meta_file.exists():
             meta = json.loads(meta_file.read_text())
-            model_name = meta.get("model", run_dir.name)
+            model_name = meta.get("slug", meta.get("model", run_dir.name))
         else:
             model_name = run_dir.name
 

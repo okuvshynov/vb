@@ -23,7 +23,6 @@ MODEL_COLORS = {
     "kimi-k2.5": "#ff7f0e",
     "minimax-m2.5": "#e377c2",
     "devstral": "#bcbd22",
-    "gpt-oss-120b-f16": "#9467bd",
     # qwen3.5-397b-a17b variants (brown tones, darker = higher quant)
     "qwen3.5-397b-a17b": "#5b3a1a",
     "qwen3.5-397b-a17b-iq3_xxs": "#8c564b",
