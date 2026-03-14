@@ -2,9 +2,11 @@
 """Generate a boxplot + strip chart from analyze_runs.py summary output."""
 
 import argparse
+import json
 import re
 import sys
 from collections import OrderedDict
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -102,6 +104,19 @@ def main():
     ax.set_ylim(bottom=0, top=total_tests * 1.05)
     ax.axhline(y=total_tests, color="gray", linestyle="--", alpha=0.4, linewidth=0.8)
     ax.grid(axis="y", alpha=0.3)
+
+    # Trivial baseline: infer task from summary path (results/<task>/summary.txt)
+    summary_path = Path(args.summary)
+    task_name = summary_path.parent.name
+    tests_jsonl = Path("tasks") / task_name / "tests.jsonl"
+    if tests_jsonl.exists():
+        tests = [json.loads(line) for line in tests_jsonl.open()]
+        n_valid = sum(1 for t in tests if t["expected"] == "valid")
+        n_invalid = len(tests) - n_valid
+        trivial = max(n_valid, n_invalid)
+        ax.axhline(y=trivial, color="red", linestyle=":", alpha=0.5, linewidth=1.2)
+        ax.text(len(names) - 0.5, trivial + total_tests * 0.01,
+                f"trivial ({trivial}/{total_tests})", fontsize=8, color="red", ha="right")
 
     fig.tight_layout()
     fig.savefig(args.output, dpi=150)
