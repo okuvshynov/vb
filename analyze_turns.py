@@ -24,11 +24,17 @@ MODEL_COLORS = {
     "minimax-m2.5": "#e377c2",
     "devstral": "#bcbd22",
     "gpt-oss-120b-f16": "#9467bd",
+    # qwen3.5-397b-a17b variants (brown tones, darker = higher quant)
+    "qwen3.5-397b-a17b": "#5b3a1a",
     "qwen3.5-397b-a17b-iq3_xxs": "#8c564b",
+    "qwen3.5-397b-a17b-iq2_xxs": "#a0725e",
     "qwen3.5-397b-a17b-iq1_m": "#c49c94",
+    # qwen3.5-122b-a10b variants (teal tones, darker = higher quant)
+    "qwen3.5-122b-q8": "#0a6e6e",
     "qwen3.5-122b-a10b-q6_k_xl": "#17becf",
     "qwen3.5-122b-a10b-iq4_xs": "#7fcdbb",
-    "qwen3.5-122b-q8": "#aec7e8",
+    "qwen3.5-122b-a10b-iq3_xxs": "#a8dbd9",
+    "qwen3.5-122b-a10b": "#aec7e8",
 }
 _FALLBACK_COLORS = plt.cm.tab20.colors
 
