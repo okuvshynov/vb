@@ -1,0 +1,11 @@
+{
+  "model": "openai/NVIDIA-Nemotron-3-Super-120B-A12B-UD-Q8_K_XL-00001-of-00004.gguf",
+  "task": "toml-1.0-cpp",
+  "prompt": "prompt",
+  "slug": "nvidia-nemotron-3-super-120b-a12b-q8_k_xl",
+  "max_turns": 5,
+  "sampling_params": {
+    "max_tokens": 32768
+  },
+  "data_dir": "/Users/oleksandr/.vb-data/toml-1.0-cpp/nvidia-nemotron-3-super-120b-a12b-q8_k_xl"
+}
