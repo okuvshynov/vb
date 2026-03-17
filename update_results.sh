@@ -60,9 +60,12 @@ for task_dir in results/*/; do
             -o "$task_dir/chart-best-of-$bo.png" --best-of $bo --sort 2>&1
     done
 
-    # Generate best-of-N improvement curve
+    # Generate best-of-N improvement curves: all models (averaged) + top-tier (per-attempt)
     python3 plot_best_of_n.py "$task_dir/summary.txt" \
         -o "$task_dir/chart-best-of-n.png" --sort --pct 2>&1
+    python3 plot_best_of_n.py "$task_dir/summary.txt" \
+        -o "$task_dir/chart-best-of-n-top.png" --pct --per-attempt \
+        --models "gpt-5.3-codex-high,gpt-5.3-codex-low,claude-opus-4.6" 2>&1
 done
 
 # Generate comparison charts: default (best-of-all) + best-of-N for N=1..5
