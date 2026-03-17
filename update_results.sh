@@ -52,15 +52,26 @@ for task_dir in results/*/; do
         --labels "$label_str" \
         > "$task_dir/summary.txt" 2>&1
 
-    # Generate chart
+    # Generate per-task charts: default (best-of-all) + best-of-N for N=1..5
     python3 plot_results.py "$task_dir/summary.txt" \
         -o "$task_dir/chart.png" --sort 2>&1
+    for bo in 1 2 3 4 5; do
+        python3 plot_results.py "$task_dir/summary.txt" \
+            -o "$task_dir/chart-best-of-$bo.png" --best-of $bo --sort 2>&1
+    done
+
+    # Generate best-of-N improvement curve
+    python3 plot_best_of_n.py "$task_dir/summary.txt" \
+        -o "$task_dir/chart-best-of-n.png" --sort --pct 2>&1
 done
 
-# Generate comparison chart
+# Generate comparison charts: default (best-of-all) + best-of-N for N=1..5
 if [ -f results/toml-1.0-cpp/summary.txt ] || [ -f results/toml-1.1-cpp/summary.txt ]; then
-    echo "Generating comparison chart..."
+    echo "Generating comparison charts..."
     python3 plot_comparison.py -o results/comparison.png 2>&1
+    for bo in 1 2 3 4 5; do
+        python3 plot_comparison.py -o "results/comparison-best-of-$bo.png" --best-of $bo 2>&1
+    done
 fi
 
 echo "Done."
