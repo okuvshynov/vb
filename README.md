@@ -51,6 +51,14 @@ TOML v1.0.0 file validation in C++17. The prompt embeds the full TOML 1.0 specif
 
 TOML v1.1.0 file validation in C++17. Same prompt as `toml-cpp-v0` (already targets 1.1). Test data: 680 cases (214 valid, 466 invalid) sourced from [toml-test](https://github.com/toml-lang/toml-test) `files-toml-1.1.0` — no contradictions between valid/invalid expectations. Tests use `input_file` to reference `.toml` files under `tests/valid/` and `tests/invalid/`.
 
+### `toml-1.0-cpp-nospec`
+
+Same as `toml-1.0-cpp` (same test data, same compiler) but the prompt does **not** include the TOML specification. Tests the model's built-in knowledge of TOML v1.0.0 rather than instruction-following ability.
+
+### `toml-1.1-cpp-nospec`
+
+Same as `toml-1.1-cpp` (same test data, same compiler) but without the specification in the prompt. Tests model knowledge of TOML v1.1.0 — particularly interesting since 1.1 adds `\e`, `\xHH` escapes, optional seconds in datetimes, and multi-line inline tables, which models may not know about.
+
 ## Adding tasks
 
 Create a directory under `tasks/` with:
