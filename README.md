@@ -36,7 +36,6 @@ CLI arguments:
 | `--prompt` | `prompt` | Prompt variant name |
 | `--slug` | auto-derived | Model slug for results directory name |
 | `--results-dir` | `results/` | Base results directory |
-| `--parallel` | `1` | Number of attempts to run in parallel (useful for local servers) |
 
 ## Tasks
 
