@@ -12,14 +12,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 ATTEMPT_RE = re.compile(
-    r"^\s+attempt \d+: first=(\d+)/(\d+)\s+best5=(\d+)/(\d+)\s+bestAll=(\d+)/(\d+)$"
+    r"^\s+attempt \d+: scores=([\d,]+)$"
 )
 MODEL_RE = re.compile(r"^\s{2}(.+):$")
 
 
-def parse_summary(path: str) -> tuple[OrderedDict[str, list[dict]], int]:
-    """Parse verbose summary file. Returns {model: [{first, best5, bestAll, total}, ...], ...}."""
-    models: OrderedDict[str, list[dict]] = OrderedDict()
+def parse_summary(path: str) -> tuple[OrderedDict[str, list[list[int]]], int]:
+    """Parse verbose summary file.
+
+    Returns {model: [[sub0, sub1, ...], ...], ...} and total_tests.
+    Each inner list is per-submission scores for one attempt.
+    """
+    models: OrderedDict[str, list[list[int]]] = OrderedDict()
     current_model = None
     total_tests = 0
 
@@ -33,23 +37,38 @@ def parse_summary(path: str) -> tuple[OrderedDict[str, list[dict]], int]:
 
             m = ATTEMPT_RE.match(line)
             if m and current_model is not None:
-                total_tests = int(m.group(2))
-                models[current_model].append({
-                    "first": int(m.group(1)),
-                    "best5": int(m.group(3)),
-                    "bestAll": int(m.group(5)),
-                    "total": total_tests,
-                })
+                scores = [int(x) for x in m.group(1).split(",")]
+                models[current_model].append(scores)
+
+    # Infer total_tests from the table header line (e.g. "123.4/678")
+    if not total_tests:
+        with open(path) as f:
+            for line in f:
+                m2 = re.search(r"/(\d+)", line)
+                if m2:
+                    total_tests = int(m2.group(1))
+                    break
 
     return models, total_tests
+
+
+def best_of_n(submissions: list[list[int]], n: int | None) -> list[int]:
+    """Compute best-of-N score per attempt. None means best-of-all."""
+    result = []
+    for subs in submissions:
+        if n is None:
+            result.append(max(subs))
+        else:
+            result.append(max(subs[:n]))
+    return result
 
 
 def main():
     parser = argparse.ArgumentParser(description="Plot benchmark results from summary file")
     parser.add_argument("summary", help="Path to summary.txt (with --verbose detail)")
     parser.add_argument("-o", "--output", default="results/chart.png", help="Output PNG path")
-    parser.add_argument("--metric", default="best5", choices=["first", "best5", "bestAll"],
-                        help="Which metric to plot (default: best5)")
+    parser.add_argument("--best-of", type=int, default=None, metavar="N",
+                        help="Plot best score out of first N submissions per attempt (default: all)")
     parser.add_argument("--sort", action="store_true", help="Sort models by median score")
     args = parser.parse_args()
 
@@ -58,11 +77,12 @@ def main():
         print("Error: no per-attempt data found. Run analyze_runs.py with --verbose.", file=sys.stderr)
         sys.exit(1)
 
-    metric_label = {"first": "First-turn", "best5": "Best-of-5", "bestAll": "Best-of-all"}[args.metric]
+    n = args.best_of
+    metric_label = f"Best-of-{n}" if n else "Best-of-all"
 
     # Extract scores per model
     names = list(models.keys())
-    scores = [np.array([a[args.metric] for a in models[n]]) for n in names]
+    scores = [np.array(best_of_n(models[name], n)) for name in names]
 
     if args.sort:
         order = sorted(range(len(names)), key=lambda i: np.median(scores[i]))

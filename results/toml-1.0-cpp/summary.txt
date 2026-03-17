@@ -18,187 +18,187 @@ qwen3.5-397b-a17b-iq3_xxs |        9 |         472.8/678 |         580.0/678 |  
 ------------------------------------------------------------------------------------------------
 
   claude-opus-4.6:
-    attempt 0: first=638/678  best5=676/678  bestAll=676/678
-    attempt 1: first=0/678  best5=676/678  bestAll=676/678
-    attempt 2: first=636/678  best5=678/678  bestAll=678/678
+    attempt 0: scores=638,668,674,676,676
+    attempt 1: scores=0,666,668,668,676
+    attempt 2: scores=636,674,674,674,678
 
   claude-sonnet-4.0:
-    attempt 0: first=504/678  best5=578/678  bestAll=578/678
-    attempt 1: first=0/678  best5=637/678  bestAll=637/678
-    attempt 2: first=380/678  best5=559/678  bestAll=559/678
-    attempt 3: first=0/678  best5=574/678  bestAll=574/678
-    attempt 4: first=477/678  best5=596/678  bestAll=596/678
+    attempt 0: scores=504,563,0,578,531
+    attempt 1: scores=0,531,606,616,637
+    attempt 2: scores=380,540,559,281,278
+    attempt 3: scores=0,522,574,0,0
+    attempt 4: scores=477,533,572,596,546
 
   glm-5:
-    attempt 0: first=0/678  best5=583/678  bestAll=583/678
-    attempt 1: first=0/678  best5=0/678  bestAll=0/678
-    attempt 2: first=0/678  best5=603/678  bestAll=603/678
-    attempt 3: first=0/678  best5=540/678  bestAll=540/678
-    attempt 4: first=573/678  best5=613/678  bestAll=613/678
-    attempt 5: first=0/678  best5=0/678  bestAll=0/678
-    attempt 6: first=569/678  best5=647/678  bestAll=647/678
-    attempt 7: first=0/678  best5=621/678  bestAll=621/678
-    attempt 8: first=0/678  best5=0/678  bestAll=0/678
-    attempt 9: first=0/678  best5=640/678  bestAll=640/678
-    attempt 10: first=573/678  best5=646/678  bestAll=646/678
-    attempt 11: first=0/678  best5=637/678  bestAll=637/678
-    attempt 12: first=0/678  best5=656/678  bestAll=656/678
-    attempt 13: first=599/678  best5=634/678  bestAll=634/678
-    attempt 14: first=0/678  best5=641/678  bestAll=641/678
-    attempt 15: first=0/678  best5=0/678  bestAll=0/678
-    attempt 16: first=559/678  best5=638/678  bestAll=638/678
-    attempt 17: first=595/678  best5=624/678  bestAll=624/678
-    attempt 18: first=0/678  best5=639/678  bestAll=639/678
-    attempt 19: first=539/678  best5=634/678  bestAll=634/678
+    attempt 0: scores=0,0,583,0,0
+    attempt 1: scores=0,0,0,0,0
+    attempt 2: scores=0,0,0,603,0
+    attempt 3: scores=0,0,0,0,540
+    attempt 4: scores=573,577,583,610,613
+    attempt 5: scores=0,0,0,0,0
+    attempt 6: scores=569,0,0,618,647
+    attempt 7: scores=0,0,603,621,618
+    attempt 8: scores=0,0,0,0,0
+    attempt 9: scores=0,553,594,610,640
+    attempt 10: scores=573,634,643,646,635
+    attempt 11: scores=0,546,614,633,637
+    attempt 12: scores=0,0,608,651,656
+    attempt 13: scores=599,0,0,634,611
+    attempt 14: scores=0,0,632,641,633
+    attempt 15: scores=0,0,0,0,0
+    attempt 16: scores=559,631,633,633,638
+    attempt 17: scores=595,586,0,618,624
+    attempt 18: scores=0,0,590,639,639
+    attempt 19: scores=539,0,544,609,634
 
   gpt-5.3-codex-high:
-    attempt 0: first=670/678  best5=677/678  bestAll=677/678
-    attempt 1: first=670/678  best5=677/678  bestAll=677/678
+    attempt 0: scores=670,677,677,677,673
+    attempt 1: scores=670,675,677,677,677
 
   gpt-5.3-codex-low:
-    attempt 0: first=0/678  best5=674/678  bestAll=674/678
-    attempt 1: first=0/678  best5=674/678  bestAll=674/678
-    attempt 2: first=0/678  best5=666/678  bestAll=666/678
+    attempt 0: scores=0,0,654,669,674
+    attempt 1: scores=0,0,643,668,674
+    attempt 2: scores=0,0,637,663,666
 
   kimi-k2.5:
-    attempt 0: first=0/678  best5=623/678  bestAll=623/678
-    attempt 1: first=0/678  best5=646/678  bestAll=646/678
-    attempt 2: first=540/678  best5=604/678  bestAll=604/678
-    attempt 3: first=545/678  best5=645/678  bestAll=645/678
-    attempt 4: first=0/678  best5=589/678  bestAll=589/678
-    attempt 5: first=592/678  best5=615/678  bestAll=615/678
-    attempt 6: first=499/678  best5=600/678  bestAll=600/678
-    attempt 7: first=0/678  best5=635/678  bestAll=635/678
-    attempt 8: first=571/678  best5=630/678  bestAll=630/678
-    attempt 9: first=523/678  best5=633/678  bestAll=633/678
+    attempt 0: scores=0,0,551,618,623
+    attempt 1: scores=0,565,608,637,646
+    attempt 2: scores=540,582,598,604,600
+    attempt 3: scores=545,627,635,643,645
+    attempt 4: scores=0,531,585,589,587
+    attempt 5: scores=592,600,615,615,615
+    attempt 6: scores=499,562,600,0,586
+    attempt 7: scores=0,579,629,635,635
+    attempt 8: scores=571,627,618,630,610
+    attempt 9: scores=523,600,620,633,633
 
   minimax-m2.5:
-    attempt 0: first=0/678  best5=487/678  bestAll=487/678
-    attempt 1: first=0/678  best5=522/678  bestAll=522/678
-    attempt 2: first=0/678  best5=507/678  bestAll=507/678
-    attempt 3: first=0/678  best5=507/678  bestAll=507/678
-    attempt 4: first=452/678  best5=485/678  bestAll=485/678
-    attempt 5: first=484/678  best5=561/678  bestAll=561/678
-    attempt 6: first=0/678  best5=489/678  bestAll=489/678
-    attempt 7: first=0/678  best5=463/678  bestAll=463/678
-    attempt 8: first=0/678  best5=507/678  bestAll=507/678
-    attempt 9: first=0/678  best5=556/678  bestAll=556/678
+    attempt 0: scores=0,0,455,487,487
+    attempt 1: scores=0,0,0,522,490
+    attempt 2: scores=0,505,505,506,507
+    attempt 3: scores=0,470,0,507,0
+    attempt 4: scores=452,482,485,479,485
+    attempt 5: scores=484,460,521,555,561
+    attempt 6: scores=0,471,486,489,489
+    attempt 7: scores=0,0,463,463,463
+    attempt 8: scores=0,486,0,507,507
+    attempt 9: scores=0,550,556,556,205
 
   qwen3.5-122b-a10b-iq3_xxs:
-    attempt 0: first=477/678  best5=477/678  bestAll=477/678
-    attempt 1: first=0/678  best5=463/678  bestAll=463/678
-    attempt 2: first=507/678  best5=532/678  bestAll=532/678
-    attempt 3: first=469/678  best5=499/678  bestAll=499/678
-    attempt 4: first=437/678  best5=476/678  bestAll=476/678
-    attempt 5: first=0/678  best5=530/678  bestAll=530/678
-    attempt 6: first=483/678  best5=525/678  bestAll=525/678
-    attempt 7: first=503/678  best5=515/678  bestAll=515/678
-    attempt 8: first=0/678  best5=513/678  bestAll=513/678
-    attempt 9: first=502/678  best5=502/678  bestAll=502/678
-    attempt 10: first=0/678  best5=511/678  bestAll=511/678
-    attempt 11: first=507/678  best5=507/678  bestAll=507/678
-    attempt 12: first=492/678  best5=522/678  bestAll=522/678
-    attempt 13: first=0/678  best5=392/678  bestAll=392/678
-    attempt 14: first=461/678  best5=527/678  bestAll=527/678
-    attempt 15: first=0/678  best5=561/678  bestAll=561/678
-    attempt 16: first=469/678  best5=520/678  bestAll=520/678
-    attempt 17: first=374/678  best5=478/678  bestAll=478/678
-    attempt 18: first=510/678  best5=510/678  bestAll=510/678
-    attempt 19: first=384/678  best5=412/678  bestAll=412/678
+    attempt 0: scores=477,452,446,446,446
+    attempt 1: scores=0,456,463,463,463
+    attempt 2: scores=507,530,530,532
+    attempt 3: scores=469,491,496,499,499
+    attempt 4: scores=437,476,421,421,421
+    attempt 5: scores=0,502,0,530,530
+    attempt 6: scores=483,0,438,514,525
+    attempt 7: scores=503,0,479,512,515
+    attempt 8: scores=0,483,513,507,508
+    attempt 9: scores=502,0,470,502,502
+    attempt 10: scores=0,472,506,511
+    attempt 11: scores=507,480,0,476,476
+    attempt 12: scores=492,0,522,522,521
+    attempt 13: scores=0,316,364,392,350
+    attempt 14: scores=461,0,522,527,523
+    attempt 15: scores=0,561,522,518,518
+    attempt 16: scores=469,0,516,513,520
+    attempt 17: scores=374,478,478,478,478
+    attempt 18: scores=510,508,505,505,505
+    attempt 19: scores=384,412,412,412,342
 
   qwen3.5-122b-a10b-iq4_xs:
-    attempt 0: first=526/678  best5=540/678  bestAll=540/678
-    attempt 1: first=451/678  best5=487/678  bestAll=487/678
-    attempt 2: first=0/678  best5=477/678  bestAll=477/678
-    attempt 3: first=469/678  best5=527/678  bestAll=527/678
-    attempt 4: first=0/678  best5=448/678  bestAll=448/678
-    attempt 5: first=521/678  best5=535/678  bestAll=535/678
-    attempt 6: first=516/678  best5=545/678  bestAll=545/678
-    attempt 7: first=0/678  best5=422/678  bestAll=422/678
-    attempt 8: first=205/678  best5=516/678  bestAll=516/678
-    attempt 9: first=0/678  best5=480/678  bestAll=480/678
-    attempt 10: first=0/678  best5=522/678  bestAll=522/678
-    attempt 11: first=0/678  best5=404/678  bestAll=404/678
-    attempt 12: first=0/678  best5=479/678  bestAll=479/678
-    attempt 13: first=0/678  best5=532/678  bestAll=532/678
-    attempt 14: first=513/678  best5=541/678  bestAll=541/678
-    attempt 15: first=506/678  best5=535/678  bestAll=535/678
-    attempt 16: first=0/678  best5=460/678  bestAll=460/678
-    attempt 17: first=513/678  best5=513/678  bestAll=513/678
-    attempt 18: first=0/678  best5=447/678  bestAll=447/678
-    attempt 19: first=520/678  best5=534/678  bestAll=534/678
+    attempt 0: scores=526,540,482,482,480
+    attempt 1: scores=451,0,487,487,487
+    attempt 2: scores=0,0,477,445,440
+    attempt 3: scores=469,470,527,523,0
+    attempt 4: scores=0,0,435,0,448
+    attempt 5: scores=521,535,535,532,532
+    attempt 6: scores=516,0,545,542,542
+    attempt 7: scores=0,0,396,0,422
+    attempt 8: scores=205,515,510,510,516
+    attempt 9: scores=0,0,480,480,480
+    attempt 10: scores=0,0,505,0,522
+    attempt 11: scores=0,0,381,381,404
+    attempt 12: scores=0,0,0,0,479
+    attempt 13: scores=0,528,532,532,532
+    attempt 14: scores=513,537,540,541,541
+    attempt 15: scores=506,532,532,532,535
+    attempt 16: scores=0,453,454,460,460
+    attempt 17: scores=513,0,0,491,0
+    attempt 18: scores=0,437,445,447
+    attempt 19: scores=520,531,0,534,0
 
   qwen3.5-122b-a10b-q2_k_xl:
-    attempt 0: first=0/678  best5=0/678  bestAll=0/678
-    attempt 1: first=0/678  best5=468/678  bestAll=468/678
-    attempt 2: first=420/678  best5=496/678  bestAll=496/678
-    attempt 3: first=441/678  best5=503/678  bestAll=503/678
-    attempt 4: first=501/678  best5=515/678  bestAll=515/678
-    attempt 5: first=510/678  best5=525/678  bestAll=525/678
-    attempt 6: first=0/678  best5=503/678  bestAll=503/678
-    attempt 7: first=0/678  best5=537/678  bestAll=537/678
-    attempt 8: first=0/678  best5=205/678  bestAll=205/678
-    attempt 9: first=0/678  best5=442/678  bestAll=442/678
-    attempt 10: first=326/678  best5=487/678  bestAll=487/678
-    attempt 11: first=0/678  best5=486/678  bestAll=486/678
-    attempt 12: first=0/678  best5=506/678  bestAll=506/678
-    attempt 13: first=0/678  best5=539/678  bestAll=539/678
-    attempt 14: first=0/678  best5=517/678  bestAll=517/678
-    attempt 15: first=511/678  best5=511/678  bestAll=511/678
-    attempt 16: first=407/678  best5=454/678  bestAll=454/678
-    attempt 17: first=0/678  best5=512/678  bestAll=512/678
-    attempt 18: first=0/678  best5=451/678  bestAll=451/678
-    attempt 19: first=378/678  best5=434/678  bestAll=434/678
+    attempt 0: scores=0,0,0,0,0
+    attempt 1: scores=0,0,180,468,459
+    attempt 2: scores=420,447,496,494,474
+    attempt 3: scores=441,503,440,457,460
+    attempt 4: scores=501,515,510,498,0
+    attempt 5: scores=510,525,525,0,509
+    attempt 6: scores=0,493,0,486,503
+    attempt 7: scores=0,0,500,529,537
+    attempt 8: scores=0,0,205,0,205
+    attempt 9: scores=0,0,442,0,440
+    attempt 10: scores=326,487,472,447,248
+    attempt 11: scores=0,0,486,469,486
+    attempt 12: scores=0,0,478,506,448
+    attempt 13: scores=0,513,539,495,495
+    attempt 14: scores=0,484,517,509,507
+    attempt 15: scores=511,455,422,351,368
+    attempt 16: scores=407,0,0,0,454
+    attempt 17: scores=0,449,494,512,500
+    attempt 18: scores=0,451,440,389,342
+    attempt 19: scores=378,0,434,0,397
 
   qwen3.5-122b-a10b-q6_k_xl:
-    attempt 0: first=499/678  best5=499/678  bestAll=499/678
-    attempt 1: first=0/678  best5=0/678  bestAll=0/678
-    attempt 2: first=473/678  best5=520/678  bestAll=520/678
-    attempt 3: first=0/678  best5=0/678  bestAll=0/678
-    attempt 4: first=477/678  best5=478/678  bestAll=478/678
-    attempt 5: first=0/678  best5=531/678  bestAll=531/678
-    attempt 6: first=474/678  best5=525/678  bestAll=525/678
-    attempt 7: first=477/678  best5=538/678  bestAll=538/678
+    attempt 0: scores=499,470,441,442,447
+    attempt 1: scores=0,0,0,0,0
+    attempt 2: scores=473,0,0,520,520
+    attempt 3: scores=0,0,0,0,0
+    attempt 4: scores=477,474,478,478,478
+    attempt 5: scores=0,505,0,520,531
+    attempt 6: scores=474,525,483,0,476
+    attempt 7: scores=477,503,507,538,533
 
   qwen3.5-397b-a17b-iq1_m:
-    attempt 0: first=523/678  best5=572/678  bestAll=572/678
-    attempt 1: first=544/678  best5=587/678  bestAll=587/678
-    attempt 2: first=0/678  best5=596/678  bestAll=596/678
-    attempt 3: first=474/678  best5=474/678  bestAll=474/678
-    attempt 4: first=520/678  best5=598/678  bestAll=598/678
-    attempt 5: first=550/678  best5=582/678  bestAll=582/678
-    attempt 6: first=564/678  best5=594/678  bestAll=594/678
-    attempt 7: first=0/678  best5=511/678  bestAll=511/678
-    attempt 8: first=465/678  best5=570/678  bestAll=570/678
-    attempt 9: first=511/678  best5=571/678  bestAll=571/678
+    attempt 0: scores=523,563,572,572,0
+    attempt 1: scores=544,570,580,582,587
+    attempt 2: scores=0,581,574,596,596
+    attempt 3: scores=474,0,474,0,474
+    attempt 4: scores=520,598,588,581,588
+    attempt 5: scores=550,582,572,575,573
+    attempt 6: scores=564,562,0,585,594
+    attempt 7: scores=0,468,507,504,511
+    attempt 8: scores=465,474,474,570,569
+    attempt 9: scores=511,553,569,566,571
 
   qwen3.5-397b-a17b-iq2_xxs:
-    attempt 0: first=495/678  best5=516/678  bestAll=516/678
-    attempt 1: first=526/678  best5=563/678  bestAll=563/678
-    attempt 2: first=0/678  best5=474/678  bestAll=474/678
-    attempt 3: first=486/678  best5=572/678  bestAll=572/678
-    attempt 4: first=0/678  best5=539/678  bestAll=539/678
-    attempt 5: first=492/678  best5=522/678  bestAll=522/678
-    attempt 6: first=511/678  best5=567/678  bestAll=567/678
-    attempt 7: first=0/678  best5=531/678  bestAll=531/678
-    attempt 8: first=540/678  best5=593/678  bestAll=593/678
-    attempt 9: first=0/678  best5=573/678  bestAll=573/678
-    attempt 10: first=553/678  best5=624/678  bestAll=624/678
-    attempt 11: first=544/678  best5=567/678  bestAll=567/678
-    attempt 12: first=546/678  best5=592/678  bestAll=592/678
-    attempt 13: first=541/678  best5=563/678  bestAll=563/678
-    attempt 14: first=514/678  best5=543/678  bestAll=543/678
-    attempt 15: first=502/678  best5=538/678  bestAll=538/678
-    attempt 16: first=487/678  best5=518/678  bestAll=518/678
-    attempt 17: first=0/678  best5=521/678  bestAll=521/678
+    attempt 0: scores=495,516,509,482,484
+    attempt 1: scores=526,563,550,550,548
+    attempt 2: scores=0,474,474,473,473
+    attempt 3: scores=486,513,511,551,572
+    attempt 4: scores=0,513,539,501,509
+    attempt 5: scores=492,513,522,522,522
+    attempt 6: scores=511,553,567,552,551
+    attempt 7: scores=0,500,528,531,531
+    attempt 8: scores=540,584,587,590,593
+    attempt 9: scores=0,528,561,562,573
+    attempt 10: scores=553,599,618,622,624
+    attempt 11: scores=544,556,562,531,567
+    attempt 12: scores=546,585,592,586,586
+    attempt 13: scores=541,546,563,541,512
+    attempt 14: scores=514,0,543,539,542
+    attempt 15: scores=502,534,536,535,538
+    attempt 16: scores=487,507,510,518,518
+    attempt 17: scores=0,475,500,514,521
 
   qwen3.5-397b-a17b-iq3_xxs:
-    attempt 0: first=495/678  best5=580/678  bestAll=580/678
-    attempt 1: first=0/678  best5=520/678  bestAll=520/678
-    attempt 2: first=552/678  best5=591/678  bestAll=591/678
-    attempt 3: first=529/678  best5=583/678  bestAll=583/678
-    attempt 4: first=536/678  best5=609/678  bestAll=609/678
-    attempt 5: first=549/678  best5=616/678  bestAll=616/678
-    attempt 6: first=505/678  best5=551/678  bestAll=551/678
-    attempt 7: first=544/678  best5=597/678  bestAll=597/678
-    attempt 8: first=545/678  best5=573/678  bestAll=573/678
+    attempt 0: scores=495,555,554,578,580
+    attempt 1: scores=0,463,474,474,520
+    attempt 2: scores=552,591,586,586,586
+    attempt 3: scores=529,0,573,583,0
+    attempt 4: scores=536,609,605,599,599
+    attempt 5: scores=549,588,575,615,616
+    attempt 6: scores=505,551,551,551,507
+    attempt 7: scores=544,578,597,597,597
+    attempt 8: scores=545,573,562,562,562

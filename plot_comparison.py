@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 
-from plot_results import parse_summary
+from plot_results import parse_summary, best_of_n
 
 # Model display order and category assignment.
 # Keys are slugs (as used by validation_bench.py and update_results.sh).
@@ -59,8 +59,8 @@ def main():
                         help="Path to toml-1.1-cpp summary.txt")
     parser.add_argument("-o", "--output", default="results/comparison.png",
                         help="Output PNG path")
-    parser.add_argument("--metric", default="best5", choices=["first", "best5", "bestAll"],
-                        help="Which metric to plot (default: best5)")
+    parser.add_argument("--best-of", type=int, default=None, metavar="N",
+                        help="Plot best score out of first N submissions per attempt (default: all)")
     args = parser.parse_args()
 
     models_10, total_10 = parse_summary(args.v10)
@@ -84,12 +84,13 @@ def main():
         sys.exit(1)
 
     n = len(model_names)
-    metric = args.metric
-    metric_label = {"first": "First-turn", "best5": "Best-of-5", "bestAll": "Best-of-all"}[metric]
+    bo = args.best_of
+    metric_label = f"Best-of-{bo}" if bo else "Best-of-all"
 
     # Normalize to percentage
-    def to_pct(attempts, total):
-        return [a[metric] / total * 100 for a in attempts]
+    def to_pct(submissions, total):
+        scores = best_of_n(submissions, bo)
+        return [s / total * 100 for s in scores]
 
     fig, ax = plt.subplots(figsize=(max(10, n * 1.6), 7))
 

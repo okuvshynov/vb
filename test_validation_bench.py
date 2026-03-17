@@ -24,7 +24,7 @@ from validation_bench import derive_slug, claim_attempt_dir, InfraFailure
     # Strip "-latest" suffix
     ("mistral/devstral-latest", None, "devstral"),
     # GGUF filenames — strip quantization/shard suffixes
-    ("openai/Qwen3.5-122B-A10B-UD-Q8_K_XL-00001-of-00004.gguf", None, "qwen3.5-122b-a10b"),
+    ("openai/Qwen3.5-122B-A10B-UD-Q8_K_XL-00001-of-00004.gguf", None, "qwen3.5-122b-a10b-q8_k_xl"),
     ("openai/some-model.gguf", None, "some-model"),
     # Bare model names (local server, gets openai/ prefix before reaching derive_slug)
     ("openai/qwen2.5-coder-32b", None, "qwen2.5-coder-32b"),

@@ -98,10 +98,11 @@ def analyze_run(run_dir: Path, n_attempts: int | None = None) -> dict:
 
 
 def compute_stats(analysis: dict) -> dict:
-    """Compute first-turn, best-of-5, best-of-all stats from analysis."""
+    """Compute per-attempt submission scores and aggregate stats from analysis."""
     first_turns = []
     best_of_5 = []
     best_of_all = []
+    all_submissions = []  # list of lists: per-attempt submission scores
     total_tests = 0
 
     for attempt in analysis["attempts"]:
@@ -110,6 +111,7 @@ def compute_stats(analysis: dict) -> dict:
             first_turns.append(0)
             best_of_5.append(0)
             best_of_all.append(0)
+            all_submissions.append([0])
             continue
 
         # Track total from first submission that has total > 0
@@ -118,9 +120,11 @@ def compute_stats(analysis: dict) -> dict:
                 total_tests = s["total"]
                 break
 
-        first_turns.append(subs[0]["passed"])
-        best_of_5.append(max(s["passed"] for s in subs[:5]))
-        best_of_all.append(max(s["passed"] for s in subs))
+        scores = [s["passed"] for s in subs]
+        all_submissions.append(scores)
+        first_turns.append(scores[0])
+        best_of_5.append(max(scores[:5]))
+        best_of_all.append(max(scores))
 
     return {
         "n_attempts": len(analysis["attempts"]),
@@ -128,6 +132,7 @@ def compute_stats(analysis: dict) -> dict:
         "first_turn": first_turns,
         "best_of_5": best_of_5,
         "best_of_all": best_of_all,
+        "submissions": all_submissions,
     }
 
 
@@ -239,10 +244,9 @@ def main():
         for model_name, stats, _ in rows:
             t = stats["total_tests"]
             print(f"\n  {model_name}:")
-            for i, (ft, b5, ba) in enumerate(zip(
-                stats["first_turn"], stats["best_of_5"], stats["best_of_all"]
-            )):
-                print(f"    attempt {i}: first={ft}/{t}  best5={b5}/{t}  bestAll={ba}/{t}")
+            for i, subs in enumerate(stats["submissions"]):
+                scores_str = ",".join(str(s) for s in subs)
+                print(f"    attempt {i}: scores={scores_str}")
 
     if args.with_failures:
         for model_name, _, run_dir in rows:
