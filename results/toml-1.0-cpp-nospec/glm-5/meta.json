@@ -1,0 +1,11 @@
+{
+  "model": "zai/glm-5",
+  "task": "toml-1.0-cpp-nospec",
+  "prompt": "prompt",
+  "slug": "glm-5",
+  "max_turns": 5,
+  "sampling_params": {
+    "max_tokens": 32768
+  },
+  "data_dir": "/Users/oleksandr/.vb-data/toml-1.0-cpp-nospec/glm-5"
+}
