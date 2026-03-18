@@ -15,7 +15,6 @@ from plot_results import parse_summary, best_of_n
 
 # Model display order and category assignment.
 # Keys are slugs (as used by validation_bench.py and update_results.sh).
-# Categories: "proprietary" (closed-weight), "api" (open-weight via API), "local" (GGUF/local)
 MODEL_CONFIG = OrderedDict([
     ("gpt-5.3-codex-high",  "proprietary"),
     ("gpt-5.3-codex-low",   "proprietary"),
@@ -25,30 +24,34 @@ MODEL_CONFIG = OrderedDict([
     ("kimi-k2.5",           "api"),
     ("minimax-m2.5",        "api"),
     ("devstral",            "api"),
-    # qwen3.5-397b-a17b: grouped by quant level (high to low)
-    ("qwen3.5-397b-a17b",       "local"),
-    ("qwen3.5-397b-a17b-iq3_xxs", "local"),
-    ("qwen3.5-397b-a17b-iq2_xxs", "local"),
-    ("qwen3.5-397b-a17b-iq1_m",   "local"),
-    # qwen3.5-122b-a10b: grouped by quant level (high to low)
-    ("qwen3.5-122b-q8",           "local"),
-    ("qwen3.5-122b-a10b-q6_k_xl", "local"),
-    ("qwen3.5-122b-a10b-iq4_xs",  "local"),
-    ("qwen3.5-122b-a10b-iq3_xxs", "local"),
-    ("qwen3.5-122b-a10b",         "local"),
+    # Qwen3.5-397B-A17B: quant level high to low
+    ("qwen3.5-397b-a17b",         "local-397b"),
+    ("qwen3.5-397b-a17b-iq3_xxs", "local-397b"),
+    ("qwen3.5-397b-a17b-iq2_xxs", "local-397b"),
+    ("qwen3.5-397b-a17b-iq1_m",   "local-397b"),
+    # Qwen3.5-122B-A10B: quant level high to low
+    ("qwen3.5-122b-q8",           "local-122b"),
+    ("qwen3.5-122b-a10b-q6_k_xl", "local-122b"),
+    ("qwen3.5-122b-a10b-iq4_xs",  "local-122b"),
+    ("qwen3.5-122b-a10b-q2_k_xl", "local-122b"),
+    ("qwen3.5-122b-a10b-iq3_xxs", "local-122b"),
+    ("qwen3.5-122b-a10b-iq1_m",   "local-122b"),
+    ("qwen3.5-122b-a10b",         "local-122b"),
 ])
 
 CATEGORY_COLORS = {
-    "proprietary": ("#4878a8", "#6a9fd8"),  # (left, right) box colors
-    "api":         ("#d4813f", "#e8a96a"),
-    "local":       ("#5a9e5a", "#82c482"),
-    "unknown":     ("#888888", "#aaaaaa"),
+    "proprietary": ("#4878a8", "#6a9fd8"),  # (left, right) box colors — blue
+    "api":         ("#d4813f", "#e8a96a"),   # orange
+    "local-397b":  ("#5a9e5a", "#82c482"),   # green
+    "local-122b":  ("#8e6bbf", "#b094d8"),   # purple
+    "unknown":     ("#888888", "#aaaaaa"),   # gray
 }
 
 CATEGORY_LABELS = {
     "proprietary": "Proprietary",
     "api":         "Open-weight (API)",
-    "local":       "Open-weight (local)",
+    "local-397b":  "Qwen3.5-397B (local)",
+    "local-122b":  "Qwen3.5-122B (local)",
     "unknown":     "Unknown",
 }
 
@@ -128,7 +131,10 @@ def main():
     # Draw category background bands
     prev_cat = None
     band_start = -0.5
-    band_colors = {"proprietary": "#e8eef5", "api": "#fdf0e5", "local": "#e8f5e8", "unknown": "#eeeeee"}
+    band_colors = {
+        "proprietary": "#e8eef5", "api": "#fdf0e5",
+        "local-397b": "#e8f5e8", "local-122b": "#ede8f5", "unknown": "#eeeeee",
+    }
     for i, name in enumerate(model_names):
         cat = MODEL_CONFIG.get(name, "unknown")
         if cat != prev_cat and prev_cat is not None:
