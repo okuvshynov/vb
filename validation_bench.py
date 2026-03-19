@@ -2,6 +2,7 @@
 """AI Coding Benchmark Harness — evaluates models on code generation tasks."""
 
 import argparse
+import concurrent.futures
 import datetime
 import json
 import os
@@ -11,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -70,6 +72,15 @@ class InfraFailure:
     turn: int            # which turn failed
     error_type: str      # "api_error", "timeout", etc.
     error_message: str
+
+
+_print_lock = threading.Lock()
+
+
+def _log(msg: str, label: str | None = None):
+    prefix = f"[{label}] " if label else ""
+    with _print_lock:
+        print(f"{prefix}{msg}", flush=True)
 
 
 SUBMIT_TOOL = {
@@ -363,6 +374,7 @@ def run_attempt(
     api_base: str | None = None,
     api_key: str | None = None,
     timeout: float = 600,
+    label: str | None = None,
 ) -> AttemptResult | InfraFailure:
     staging = tempfile.TemporaryDirectory()
     staging_dir = Path(staging.name)
@@ -392,7 +404,7 @@ def run_attempt(
                 **sampling_params,
             )
         except Exception as e:
-            print(f"  API error on turn {turn}: {e}", file=sys.stderr)
+            _log(f"  API error on turn {turn}: {e}", label)
             api_error = e
             error_turn = turn
             break
@@ -406,7 +418,7 @@ def run_attempt(
         messages.append(serialize_message(assistant_msg))
 
         if finish_reason == "length":
-            print(f"  turn {turn}: response truncated (max_tokens too low)", file=sys.stderr)
+            _log(f"  turn {turn}: response truncated (max_tokens too low)", label)
 
         if not assistant_msg.tool_calls:
             # Model stopped without calling a tool
@@ -455,7 +467,7 @@ def run_attempt(
                 m = result.matrix
                 status = f"{m.passed}/{m.total} (TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn})"
 
-            print(f"  turn {turn}, submission {submissions}: {status}")
+            _log(f"  turn {turn}, submission {submissions}: {status}", label)
 
             messages.append({
                 "role": "tool",
@@ -623,6 +635,7 @@ def main():
     parser.add_argument("--timeout", type=float, default=600, help="API request timeout in seconds (default: 600)")
     parser.add_argument("--slug", default=None, help="Model slug for results directory (default: auto-derived from model name)")
     parser.add_argument("--results-dir", default="results", help="Base results directory (default: results/)")
+    parser.add_argument("--parallel", type=int, default=1, help="Number of attempts to run in parallel (default: 1 = serial)")
     parser.add_argument("--data-dir", default=None, help="Base data directory for attempts (default: ~/.vb-data, env: VB_DATA_DIR)")
     args = parser.parse_args()
 
@@ -699,29 +712,47 @@ def main():
 
     results: list[AttemptResult] = []
     failures: list[InfraFailure] = []
+    parallel = max(1, args.parallel)
+
+    def _run_one(i: int) -> AttemptResult | InfraFailure:
+        label = f"{i + 1}/{args.n_attempts}" if parallel > 1 else None
+        _log(f"\n--- Attempt {i + 1}/{args.n_attempts} ---", label)
+        return run_attempt(
+            model=model,
+            user_prompt=user_prompt,
+            tests=tests,
+            max_turns=args.max_turns,
+            sampling_params=sampling_params,
+            attempts_dir=attempts_dir,
+            compile_cmd=compile_cmd,
+            src_ext=src_ext,
+            task_dir=tasks_dir,
+            api_base=api_base,
+            api_key=api_key,
+            timeout=args.timeout,
+            label=label,
+        )
+
+    def _handle_result(r: AttemptResult | InfraFailure, label: str | None = None):
+        if isinstance(r, InfraFailure):
+            failures.append(r)
+            _log(f"  Infrastructure failure: {r.error_type}: {r.error_message}", label)
+        else:
+            results.append(r)
+            _log(f"  [attempt {r.attempt_index}] saved to {attempts_dir / str(r.attempt_index)}", label)
+
     try:
-        for i in range(args.n_attempts):
-            print(f"\n--- Attempt {i + 1}/{args.n_attempts} ---")
-            r = run_attempt(
-                model=model,
-                user_prompt=user_prompt,
-                tests=tests,
-                max_turns=args.max_turns,
-                sampling_params=sampling_params,
-                attempts_dir=attempts_dir,
-                compile_cmd=compile_cmd,
-                src_ext=src_ext,
-                task_dir=tasks_dir,
-                api_base=api_base,
-                api_key=api_key,
-                timeout=args.timeout,
-            )
-            if isinstance(r, InfraFailure):
-                failures.append(r)
-                print(f"  Infrastructure failure: {r.error_type}: {r.error_message}")
-            else:
-                results.append(r)
-                print(f"  [attempt {r.attempt_index}] saved to {attempts_dir / str(r.attempt_index)}")
+        if parallel <= 1:
+            for i in range(args.n_attempts):
+                _handle_result(_run_one(i))
+        else:
+            _log(f"Running {args.n_attempts} attempts with parallelism={parallel}")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=parallel) as executor:
+                futures = {executor.submit(_run_one, i): i for i in range(args.n_attempts)}
+                for future in concurrent.futures.as_completed(futures):
+                    i = futures[future]
+                    label = f"{i + 1}/{args.n_attempts}"
+                    _handle_result(future.result(), label)
     except KeyboardInterrupt:
         print("\n\nInterrupted! Showing results collected so far.")
 
