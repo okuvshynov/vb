@@ -7,9 +7,6 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# Collect global summary: "task slug attempts" lines
-summary_lines=()
-
 # For each task dir under results/, collect model run dirs that have
 # at least one attempt in their data_dir.
 for task_dir in results/*/; do
@@ -38,7 +35,6 @@ for task_dir in results/*/; do
         if [ "$n" -gt 0 ]; then
             run_dirs+=("$model_dir")
             labels+=("$slug")
-            summary_lines+=("$task $slug $n")
         fi
     done
 
@@ -91,17 +87,7 @@ for ver in "1.0" "1.1"; do
     done
 done
 
-# Print global summary table
-if [ ${#summary_lines[@]} -gt 0 ]; then
-    echo ""
-    echo "=== Summary ==="
-    printf "%-25s %-40s %s\n" "Task" "Model" "Attempts"
-    printf "%-25s %-40s %s\n" "----" "-----" "--------"
-    for line in "${summary_lines[@]}"; do
-        read -r task slug attempts <<< "$line"
-        printf "%-25s %-40s %s\n" "$task" "$slug" "$attempts"
-    done
-fi
-
+echo ""
+./summary.sh
 echo ""
 echo "Done."
