@@ -264,7 +264,10 @@ def format_tool_result(result: TestResult) -> str:
 def auto_detect_model(api_base: str, api_key: str) -> str:
     """Auto-detect model from a local OpenAI-compatible server via /models endpoint."""
     url = api_base.rstrip("/") + "/models"
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {api_key}"})
+    req = urllib.request.Request(url, headers={
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "validation-bench/1.0",
+    })
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read())
