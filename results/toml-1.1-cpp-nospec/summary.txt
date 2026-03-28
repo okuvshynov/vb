@@ -10,8 +10,8 @@ kimi-k2.5                 |        4 |         233.0/680 |         541.8/680 |  
 minimax-m2.5              |        9 |         346.8/680 |         498.8/680 |         498.8/680
 minimax-m2.7              |        9 |         151.9/680 |         480.4/680 |         480.4/680
 qwen3.5-122b-a10b-iq1_m   |       10 |         194.8/680 |         445.2/680 |         445.2/680
-qwen3.5-122b-a10b-iq4_xs  |       10 |         279.0/680 |         493.1/680 |         493.1/680
-qwen3.5-397b-a17b-iq1_m   |       31 |         326.8/680 |         515.6/680 |         515.6/680
+qwen3.5-122b-a10b-iq4_xs  |       40 |         263.3/680 |         490.7/680 |         490.7/680
+qwen3.5-397b-a17b-iq1_m   |       40 |         352.6/680 |         515.5/680 |         515.5/680
 qwen3.5-397b-a17b-iq2_xxs |       39 |         378.3/680 |         514.2/680 |         514.2/680
 ------------------------------------------------------------------------------------------------
 
@@ -95,6 +95,36 @@ qwen3.5-397b-a17b-iq2_xxs |       39 |         378.3/680 |         514.2/680 |  
     attempt 7: scores=453,480,467,468,489
     attempt 8: scores=0,0,490,467,466
     attempt 9: scores=446,498,519,0,478
+    attempt 10: scores=480,513,457,0,0
+    attempt 11: scores=0,455,0,471,478
+    attempt 12: scores=491,515,524,526,524
+    attempt 13: scores=510,522,523,521,521
+    attempt 14: scores=0,483,472,472,472
+    attempt 15: scores=432,0,476,479,482
+    attempt 16: scores=0,459,486,486,486
+    attempt 17: scores=444,466,471,471,481
+    attempt 18: scores=0,447,0,444,441
+    attempt 19: scores=0,461,501,497,497
+    attempt 20: scores=0,0,433,447,446
+    attempt 21: scores=462,466,473,473,473
+    attempt 22: scores=418,491,480,401,0
+    attempt 23: scores=0,468,505,0,481
+    attempt 24: scores=433,496,511,496,496
+    attempt 25: scores=0,486,509,494,494
+    attempt 26: scores=0,484,506,505,427
+    attempt 27: scores=0,374,422,422,422
+    attempt 28: scores=400,497,502,475,475
+    attempt 29: scores=0,441,471,471,471
+    attempt 30: scores=433,500,510,516,501
+    attempt 31: scores=0,472,479,491,491
+    attempt 32: scores=468,468,468,468,0
+    attempt 33: scores=473,329,312,311,314
+    attempt 34: scores=482,452,457,480,485
+    attempt 35: scores=501,521,526,523,522
+    attempt 36: scores=436,490,0,0,507
+    attempt 37: scores=453,0,482,484,514
+    attempt 38: scores=0,471,475,474,474
+    attempt 39: scores=425,476,470,484,466
 
   qwen3.5-397b-a17b-iq1_m:
     attempt 0: scores=431,523,535,513,532
@@ -128,6 +158,15 @@ qwen3.5-397b-a17b-iq2_xxs |       39 |         378.3/680 |         514.2/680 |  
     attempt 28: scores=0,0,0,479,0
     attempt 29: scores=450,487,487,473,473
     attempt 30: scores=463,533,537,543,543
+    attempt 31: scores=449,507,491,491,491
+    attempt 32: scores=396,498,511,509,510
+    attempt 33: scores=452,550,555,503,536
+    attempt 34: scores=442,497,501,511,511
+    attempt 35: scores=446,517,526,537,510
+    attempt 36: scores=504,529,540,540,539
+    attempt 37: scores=418,512,518,507,504
+    attempt 38: scores=411,468,475,477,479
+    attempt 39: scores=458,477,469,453,453
 
   qwen3.5-397b-a17b-iq2_xxs:
     attempt 0: scores=469,475,475,475,452
