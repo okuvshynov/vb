@@ -13,7 +13,7 @@ qwen3.5-122b-a10b-iq1_m   |        9 |         229.6/678 |         451.0/678 |  
 qwen3.5-122b-a10b-iq4_xs  |       40 |         281.9/678 |         499.2/678 |         499.2/678
 qwen3.5-397b-a17b-iq1_m   |       40 |         377.1/678 |         514.8/678 |         514.8/678
 qwen3.5-397b-a17b-iq2_xxs |       40 |         425.4/678 |         535.2/678 |         535.2/678
-qwen3.5-397b-a17b-iq3_xxs |        2 |         475.5/678 |         546.0/678 |         546.0/678
+qwen3.5-397b-a17b-iq3_xxs |       22 |         258.2/678 |         526.9/678 |         526.9/678
 ------------------------------------------------------------------------------------------------
 
   claude-opus-4.6:
@@ -217,3 +217,23 @@ qwen3.5-397b-a17b-iq3_xxs |        2 |         475.5/678 |         546.0/678 |  
   qwen3.5-397b-a17b-iq3_xxs:
     attempt 0: scores=500,533,531,532,484
     attempt 1: scores=451,529,559,553,549
+    attempt 2: scores=529,566,576,575,581
+    attempt 3: scores=0,0,430,0,0
+    attempt 4: scores=0,504,0,0,0
+    attempt 5: scores=0,0,497,551,562
+    attempt 6: scores=440,497,528,530,537
+    attempt 7: scores=498,0,544,544,544
+    attempt 8: scores=0,428,0,0,452
+    attempt 9: scores=425,0,509,490,490
+    attempt 10: scores=469,504,521,0,530
+    attempt 11: scores=494,524,549,558,547
+    attempt 12: scores=0,0,475,0,523
+    attempt 13: scores=474,512,514,514,473
+    attempt 14: scores=0,0,447,0,0
+    attempt 15: scores=0,493,0,560,568
+    attempt 16: scores=433,542,553,560,555
+    attempt 17: scores=0,0,0,499,0
+    attempt 18: scores=0,0,473,0,539
+    attempt 19: scores=487,545,0,543,538
+    attempt 20: scores=0,484,0,555,0
+    attempt 21: scores=480,535,543,529,528
