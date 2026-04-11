@@ -40,10 +40,6 @@ CLI arguments:
 
 ## Tasks
 
-### `toml-1.0-c`
-
-TOML v1.0.0 file validation in C11. Same test data as `toml-1.0-cpp` (678 cases) but compiled with `clang -std=c11 -O2`. Forces manual memory management — no `std::string`, `std::map`, `std::vector`, exceptions, or RAII.
-
 ### `toml-1.0-cpp`
 
 TOML v1.0.0 file validation in C++17. The prompt embeds the full TOML 1.0 specification with version-appropriate rules: no `\e` or `\xHH` escape sequences, seconds required in datetime values, and inline tables restricted to single lines without trailing commas. Test data: 678 cases (205 valid, 473 invalid) sourced from [toml-test](https://github.com/toml-lang/toml-test) `files-toml-1.0.0` (MIT licensed). Validated against Python's `tomllib` with 678/678 match (0 discrepancies).
