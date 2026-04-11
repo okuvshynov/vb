@@ -21,22 +21,49 @@ pip install -r requirements.txt
 
 ## Usage
 
-CLI arguments:
+### Examples
+
+Run against OpenAI API (uses `OPENAI_API_KEY` env var):
+
+```bash
+python validation_bench.py --task toml-1.0-cpp --model openai/gpt-5.3-codex --n-attempts 5
+```
+
+With reasoning effort:
+
+```bash
+python validation_bench.py --task toml-1.0-cpp --model openai/gpt-5.3-codex --reasoning-effort low --n-attempts 5
+```
+
+Run against Anthropic API (uses `ANTHROPIC_API_KEY` env var):
+
+```bash
+python validation_bench.py --task toml-1.0-cpp --model anthropic/claude-sonnet-4-20250514 --n-attempts 5
+```
+
+Run against a local OpenAI-compatible server (e.g. llama.cpp):
+
+```bash
+python validation_bench.py --task toml-1.0-cpp --api-base http://localhost:8080/v1 --n-attempts 5
+```
+
+### CLI arguments
 
 | Argument | Default | Description |
 |---|---|---|
 | `--task` | required | Task name (directory under `tasks/`) |
 | `--n-attempts` | `1` | Number of independent attempts |
 | `--api-base` | `http://localhost:8080/v1` | OpenAI-compatible endpoint |
-| `--api-key` | `"no-key"` | API key |
-| `--model` | auto-detect | Model name; empty = query `/v1/models` |
-| `--temperature` | server default | Sampling temperature (omit to let the server decide) |
+| `--api-key` | env var | API key (or set `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`) |
+| `--model` | auto-detect | Model name in LiteLLM format (e.g. `openai/gpt-5.3-codex`, `anthropic/claude-sonnet-4-20250514`); empty = auto-detect from local server |
+| `--temperature` | server default | Sampling temperature |
+| `--reasoning-effort` | none | Reasoning effort: `low`, `medium`, or `high` |
+| `--max-tokens` | `32768` | Max tokens per response |
 | `--max-turns` | `10` | Max conversation turns per attempt |
 | `--timeout` | `600` | API request timeout in seconds |
-| `--prompt` | `prompt` | Prompt variant name |
 | `--slug` | auto-derived | Model slug for results directory name |
 | `--results-dir` | `results/` | Base results directory |
-| `--parallel` | `1` | Number of attempts to run in parallel |
+| `--data-dir` | `~/.vb-data` | Base data directory for attempts (env: `VB_DATA_DIR`) |
 
 ## Tasks
 
@@ -59,15 +86,12 @@ Same as `toml-1.1-cpp` (same test data, same compiler) but without the specifica
 ## Adding tasks
 
 Create a directory under `tasks/` with:
-- `prompt.txt` — default task prompt (includes role instructions, tool usage, and spec)
-- `prompt-{variant}.txt` — optional alternative prompt variants
+- `prompt.txt` — task prompt (includes role instructions, tool usage, and spec)
 - `tests.jsonl` — test cases, one JSON object per line
 
 Each line in `tests.jsonl` has the following fields:
 - `id` (string): stable case identifier (e.g., `s01`, `i14`, `d07`)
-- `input` (string): plain text input piped to the validator via stdin
-- `input_hex` (string): hex-encoded input — mutually exclusive with `input`, used for binary data
-- `input_file` (string): path to input file relative to task directory — mutually exclusive with `input`/`input_hex`, used for large or structured test data (e.g., TOML files)
+- `input_file` (string): path to input file relative to task directory, piped to the validator via stdin
 - `expected`: `"valid"` or `"invalid"`
 - `label`: human-readable test description
 

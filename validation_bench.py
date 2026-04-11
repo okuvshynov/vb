@@ -2,7 +2,6 @@
 """AI Coding Benchmark Harness — evaluates models on code generation tasks."""
 
 import argparse
-import concurrent.futures
 import datetime
 import json
 import os
@@ -13,7 +12,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import threading
 import time
 import urllib.error
 import urllib.request
@@ -80,13 +78,8 @@ class InfraFailure:
     error_message: str
 
 
-_print_lock = threading.Lock()
-
-
-def _log(msg: str, label: str | None = None):
-    prefix = f"[{label}] " if label else ""
-    with _print_lock:
-        print(f"{prefix}{msg}", flush=True)
+def _log(msg: str):
+    print(msg, flush=True)
 
 
 SUBMIT_TOOL = {
@@ -119,18 +112,13 @@ def load_tests(tests_file: Path) -> list[dict]:
     return tests
 
 
-def run_tests(binary: Path, tests: list[dict], task_dir: Path | None = None) -> tuple[str, ConfusionMatrix]:
+def run_tests(binary: Path, tests: list[dict], task_dir: Path) -> tuple[str, ConfusionMatrix]:
     """Run all test cases against the binary, return (output_text, matrix)."""
     matrix = ConfusionMatrix()
     lines = []
 
     for t in tests:
-        if "input_file" in t:
-            input_data = (task_dir / t["input_file"]).read_bytes()
-        elif "input_hex" in t:
-            input_data = bytes.fromhex(t["input_hex"])
-        else:
-            input_data = t["input"].encode()
+        input_data = (task_dir / t["input_file"]).read_bytes()
 
         tid = t.get("id", "?")
         label = t["label"]
@@ -162,7 +150,7 @@ def run_tests(binary: Path, tests: list[dict], task_dir: Path | None = None) -> 
     return "\n".join(lines), matrix
 
 
-def handle_submit(source_code: str, tests: list[dict], compile_cmd: str, src_ext: str, task_dir: Path | None = None) -> TestResult:
+def handle_submit(source_code: str, tests: list[dict], compile_cmd: str, src_ext: str, task_dir: Path) -> TestResult:
     with tempfile.TemporaryDirectory() as tmpdir:
         src_name = f"solution{src_ext}"
         src = Path(tmpdir) / src_name
@@ -296,7 +284,7 @@ def next_attempt_index(attempts_dir: Path) -> int:
 
 
 def claim_attempt_dir(attempts_dir: Path) -> tuple[int, Path]:
-    """Atomically claim next attempt directory. Safe for concurrent use."""
+    """Atomically claim next attempt directory."""
     attempts_dir.mkdir(parents=True, exist_ok=True)
     for _ in range(100):
         idx = next_attempt_index(attempts_dir)
@@ -333,11 +321,10 @@ def run_attempt(
     attempts_dir: Path,
     compile_cmd: str,
     src_ext: str,
-    task_dir: Path | None = None,
+    task_dir: Path,
     api_base: str | None = None,
     api_key: str | None = None,
     timeout: float = 600,
-    label: str | None = None,
 ) -> AttemptResult | InfraFailure:
     staging = tempfile.TemporaryDirectory()
     staging_dir = Path(staging.name)
@@ -367,7 +354,7 @@ def run_attempt(
                 **sampling_params,
             )
         except Exception as e:
-            _log(f"  API error on turn {turn}: {e}", label)
+            _log(f"  API error on turn {turn}: {e}")
             api_error = e
             error_turn = turn
             break
@@ -381,7 +368,7 @@ def run_attempt(
         messages.append(serialize_message(assistant_msg))
 
         if finish_reason == "length":
-            _log(f"  turn {turn}: response truncated (max_tokens too low)", label)
+            _log(f"  turn {turn}: response truncated (max_tokens too low)")
 
         if not assistant_msg.tool_calls:
             # Model stopped without calling a tool
@@ -430,7 +417,7 @@ def run_attempt(
                 m = result.matrix
                 status = f"{m.passed}/{m.total} (TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn}) MCC={m.mcc:.3f}"
 
-            _log(f"  turn {turn}, submission {submissions}: {status}", label)
+            _log(f"  turn {turn}, submission {submissions}: {status}")
 
             messages.append({
                 "role": "tool",
@@ -507,11 +494,11 @@ def run_attempt(
     )
 
 
-def print_summary(results: list[AttemptResult], model: str, task: str, prompt: str) -> str:
+def print_summary(results: list[AttemptResult], model: str, task: str) -> str:
     lines = []
     lines.append("")
     lines.append("=" * 60)
-    lines.append(f"Task: {task} | Prompt: {prompt} | Model: {model} | Attempts: {len(results)}")
+    lines.append(f"Task: {task} | Model: {model} | Attempts: {len(results)}")
     lines.append("=" * 60)
 
     for r in results:
@@ -566,11 +553,9 @@ def main():
     parser.add_argument("--reasoning-effort", choices=["low", "medium", "high"], default=None, help="Reasoning effort for reasoning models (low/medium/high)")
     parser.add_argument("--max-tokens", type=int, default=32768, help="Max tokens per response (default: 32768)")
     parser.add_argument("--max-turns", type=int, default=10, help="Max conversation turns per attempt")
-    parser.add_argument("--prompt", default="prompt", help="Prompt variant (loads prompt-{name}.txt, or 'prompt' for prompt.txt)")
     parser.add_argument("--timeout", type=float, default=600, help="API request timeout in seconds (default: 600)")
     parser.add_argument("--slug", default=None, help="Model slug for results directory (default: auto-derived from model name)")
     parser.add_argument("--results-dir", default="results", help="Base results directory (default: results/)")
-    parser.add_argument("--parallel", type=int, default=1, help="Number of attempts to run in parallel (default: 1 = serial)")
     parser.add_argument("--data-dir", default=None, help="Base data directory for attempts (default: ~/.vb-data, env: VB_DATA_DIR)")
     args = parser.parse_args()
 
@@ -580,10 +565,7 @@ def main():
         print(f"Error: task directory not found: {tasks_dir}", file=sys.stderr)
         sys.exit(1)
 
-    if args.prompt == "prompt":
-        prompt_file = tasks_dir / "prompt.txt"
-    else:
-        prompt_file = tasks_dir / f"prompt-{args.prompt}.txt"
+    prompt_file = tasks_dir / "prompt.txt"
     tests_file = tasks_dir / "tests.jsonl"
     for f in [prompt_file, tests_file]:
         if not f.exists():
@@ -638,7 +620,7 @@ def main():
     if existing > 0:
         print(f"Appending to existing run ({existing} attempts already present)")
 
-    print(f"Running task '{args.task}' (prompt: {args.prompt}) with model '{model}'")
+    print(f"Running task '{args.task}' with model '{model}'")
     sampling_str = ", ".join(f"{k}={v}" for k, v in sampling_params.items()) or "server defaults"
     print(f"Attempts: {args.n_attempts} | Max turns: {args.max_turns} | Sampling: {sampling_str}")
     print(f"Data: {data_run_dir}")
@@ -647,47 +629,30 @@ def main():
 
     results: list[AttemptResult] = []
     failures: list[InfraFailure] = []
-    parallel = max(1, args.parallel)
-
-    def _run_one(i: int) -> AttemptResult | InfraFailure:
-        label = f"{i + 1}/{args.n_attempts}" if parallel > 1 else None
-        _log(f"\n--- Attempt {i + 1}/{args.n_attempts} ---", label)
-        return run_attempt(
-            model=model,
-            user_prompt=user_prompt,
-            tests=tests,
-            max_turns=args.max_turns,
-            sampling_params=sampling_params,
-            attempts_dir=attempts_dir,
-            compile_cmd=compile_cmd,
-            src_ext=src_ext,
-            task_dir=tasks_dir,
-            api_base=api_base,
-            api_key=api_key,
-            timeout=args.timeout,
-            label=label,
-        )
-
-    def _handle_result(r: AttemptResult | InfraFailure, label: str | None = None):
-        if isinstance(r, InfraFailure):
-            failures.append(r)
-            _log(f"  Infrastructure failure: {r.error_type}: {r.error_message}", label)
-        else:
-            results.append(r)
-            _log(f"  [attempt {r.attempt_index}] saved to {attempts_dir / str(r.attempt_index)}", label)
 
     try:
-        if parallel <= 1:
-            for i in range(args.n_attempts):
-                _handle_result(_run_one(i))
-        else:
-            _log(f"Running {args.n_attempts} attempts with parallelism={parallel}")
-            with concurrent.futures.ThreadPoolExecutor(max_workers=parallel) as executor:
-                futures = {executor.submit(_run_one, i): i for i in range(args.n_attempts)}
-                for future in concurrent.futures.as_completed(futures):
-                    i = futures[future]
-                    label = f"{i + 1}/{args.n_attempts}"
-                    _handle_result(future.result(), label)
+        for i in range(args.n_attempts):
+            _log(f"\n--- Attempt {i + 1}/{args.n_attempts} ---")
+            r = run_attempt(
+                model=model,
+                user_prompt=user_prompt,
+                tests=tests,
+                max_turns=args.max_turns,
+                sampling_params=sampling_params,
+                attempts_dir=attempts_dir,
+                compile_cmd=compile_cmd,
+                src_ext=src_ext,
+                task_dir=tasks_dir,
+                api_base=api_base,
+                api_key=api_key,
+                timeout=args.timeout,
+            )
+            if isinstance(r, InfraFailure):
+                failures.append(r)
+                _log(f"  Infrastructure failure: {r.error_type}: {r.error_message}")
+            else:
+                results.append(r)
+                _log(f"  [attempt {r.attempt_index}] saved to {attempts_dir / str(r.attempt_index)}")
     except KeyboardInterrupt:
         print("\n\nInterrupted! Showing results collected so far.")
 
@@ -705,14 +670,13 @@ def main():
         print(f"\n{len(failures)} infrastructure failure(s) logged to {failures_file}")
 
     if results:
-        print_summary(results, model, args.task, args.prompt)
+        print_summary(results, model, args.task)
 
     # Always write meta.json (even if all attempts failed, to record the run)
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "meta.json").write_text(json.dumps({
         "model": model,
         "task": args.task,
-        "prompt": args.prompt,
         "slug": slug,
         "max_turns": args.max_turns,
         "sampling_params": sampling_params,
