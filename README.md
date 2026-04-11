@@ -95,22 +95,8 @@ Each line in `tests.jsonl` has the following fields:
 - `expected`: `"valid"` or `"invalid"`
 - `label`: human-readable test description
 
-## Updating results
+## Results format
 
-After running benchmarks, regenerate all summaries and charts:
+Results are stored as JSONL files: `results/<task>/<slug>.jsonl`, one line per attempt. Each line contains the task, model, timestamp, sampling params, and per-submission data (turn number + confusion matrix). These files are version-controlled.
 
-```bash
-./update_results.sh
-```
-
-This script:
-1. Scans `results/<task>/<slug>/meta.json` to discover runs
-2. Counts attempts via each run's `data_dir` (from `meta.json`)
-3. Skips models with 0 attempts
-4. Runs `analyze_runs.py --verbose` per task → `results/<task>/summary.txt`
-5. Runs `plot_results.py` per task → `results/<task>/chart.png`
-6. Runs `plot_comparison.py` → `results/comparison.png`
-
-Model slugs are used as labels everywhere (summaries, charts, comparison).
-
-To add a new model to the comparison chart's ordering/categories, edit `MODEL_CONFIG` in `plot_comparison.py`. Models not listed in `MODEL_CONFIG` still appear in per-task charts but are excluded from the comparison.
+Debug logs (full conversation transcripts, submitted source code, compiler/test output) are stored separately in `~/.vb-data/` (or `$VB_DATA_DIR`) and are not version-controlled.

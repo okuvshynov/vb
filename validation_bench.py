@@ -62,12 +62,18 @@ class TestResult:
 
 
 @dataclass
+class Submission:
+    turn: int
+    matrix: ConfusionMatrix | None = None  # None for failed submissions
+    error: str | None = None  # e.g. "compile_error", "compile_timeout"
+
+
+@dataclass
 class AttemptResult:
     attempt_index: int
-    turns_used: int
-    submissions: int
-    final_matrix: ConfusionMatrix
+    timestamp: str  # ISO 8601, recorded when attempt completes
     elapsed_seconds: float
+    submissions: list[Submission]
 
 
 @dataclass
@@ -332,8 +338,8 @@ def run_attempt(
     submissions_dir.mkdir()
 
     messages = [{"role": "user", "content": user_prompt}]
-    submissions = 0
-    last_compiled_result: TestResult | None = None
+    submission_count = 0
+    submission_results: list[Submission] = []
     api_error: Exception | None = None
     error_turn = -1
     start = time.time()
@@ -396,9 +402,9 @@ def run_attempt(
                 })
                 continue
 
-            submissions += 1
+            submission_count += 1
             # Save submission source code
-            sub_dir = submissions_dir / str(submissions)
+            sub_dir = submissions_dir / str(submission_count)
             sub_dir.mkdir()
             (sub_dir / f"solution{src_ext}").write_text(source_code)
 
@@ -411,13 +417,16 @@ def run_attempt(
 
             tool_result_str = format_tool_result(result)
 
-            status = "COMPILE_FAIL"
             if result.compiled:
-                last_compiled_result = result
+                submission_results.append(Submission(turn=turn, matrix=result.matrix))
                 m = result.matrix
                 status = f"{m.passed}/{m.total} (TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn}) MCC={m.mcc:.3f}"
+            else:
+                error = "compile_timeout" if "timed out" in result.compiler_output else "compile_error"
+                submission_results.append(Submission(turn=turn, error=error))
+                status = error.upper()
 
-            _log(f"  turn {turn}, submission {submissions}: {status}")
+            _log(f"  turn {turn}, submission {submission_count}: {status}")
 
             messages.append({
                 "role": "tool",
@@ -426,8 +435,8 @@ def run_attempt(
             })
 
         # Early exit if all tests passed
-        if last_compiled_result:
-            m = last_compiled_result.matrix
+        if submission_results and submission_results[-1].matrix:
+            m = submission_results[-1].matrix
             if m.passed == m.total and m.total > 0:
                 break
 
@@ -445,7 +454,7 @@ def run_attempt(
         )
 
     # No submissions at all (model never called submit) — also infra failure
-    if submissions == 0:
+    if submission_count == 0:
         staging.cleanup()
         return InfraFailure(
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -454,44 +463,24 @@ def run_attempt(
             error_message="Model completed without making any submissions",
         )
 
-    # Success — claim a slot and move staging data there
-    final_matrix = last_compiled_result.matrix if last_compiled_result else ConfusionMatrix()
+    # Save debug logs
     attempt_index, attempt_dir = claim_attempt_dir(attempts_dir)
-    turns_used = min(turn + 1, max_turns) if 'turn' in dir() else 0
-
-    # Move submissions
     shutil.move(str(submissions_dir), str(attempt_dir / "submissions"))
-
-    # Save conversation transcript
     save_attempt_log(attempt_dir, messages)
-
-    # Write result.json
-    result_data = {
-        "attempt_index": attempt_index,
-        "turns_used": turns_used,
-        "submissions": submissions,
-        "elapsed_seconds": round(elapsed, 1),
-        "score": {"passed": final_matrix.passed, "total": final_matrix.total},
-        "matrix": {
-            "tp": final_matrix.tp,
-            "fn": final_matrix.fn,
-            "fp": final_matrix.fp,
-            "tn": final_matrix.tn,
-        },
-    }
-    (attempt_dir / "result.json").write_text(
-        json.dumps(result_data, indent=2) + "\n"
-    )
 
     staging.cleanup()
 
     return AttemptResult(
         attempt_index=attempt_index,
-        turns_used=turns_used,
-        submissions=submissions,
-        final_matrix=final_matrix,
+        timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
         elapsed_seconds=round(elapsed, 1),
+        submissions=submission_results,
     )
+
+
+def final_matrix(r: AttemptResult) -> ConfusionMatrix | None:
+    """Return the last submission's matrix, or None if no compiled submissions."""
+    return r.submissions[-1].matrix if r.submissions else None
 
 
 def print_summary(results: list[AttemptResult], model: str, task: str) -> str:
@@ -502,30 +491,32 @@ def print_summary(results: list[AttemptResult], model: str, task: str) -> str:
     lines.append("=" * 60)
 
     for r in results:
-        m = r.final_matrix
-        score = f"{m.passed}/{m.total}" if m.total > 0 else "0/0"
-        status = "PASS" if m.passed == m.total and m.total > 0 else "FAIL"
-        lines.append(
-            f"  attempt {r.attempt_index}: {score} ({status}) "
-            f"| TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn} | MCC={m.mcc:.3f} "
-            f"| {r.submissions} submissions | {r.turns_used} turns | {r.elapsed_seconds}s"
-        )
+        m = final_matrix(r)
+        if m and m.total > 0:
+            score = f"{m.passed}/{m.total}"
+            status = "PASS" if m.passed == m.total else "FAIL"
+            lines.append(
+                f"  attempt {r.attempt_index}: {score} ({status}) "
+                f"| TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn} | MCC={m.mcc:.3f} "
+                f"| {len(r.submissions)} submissions | {r.elapsed_seconds}s"
+            )
+        else:
+            lines.append(f"  attempt {r.attempt_index}: 0/0 (FAIL) | {r.elapsed_seconds}s")
 
-    scored = [r for r in results if r.final_matrix.total > 0]
+    scored = [r for r in results if final_matrix(r) and final_matrix(r).total > 0]
     if scored:
-        scores = [r.final_matrix.passed / r.final_matrix.total for r in scored]
+        scores = [final_matrix(r).passed / final_matrix(r).total for r in scored]
         mean = sum(scores) / len(scores)
         all_pass = sum(1 for s in scores if s == 1.0)
         lines.append(f"\nMean score: {mean:.2%}")
         lines.append(f"Min: {min(scores):.2%} | Max: {max(scores):.2%}")
         lines.append(f"All-pass rate: {all_pass}/{len(scored)} ({all_pass/len(scored):.0%})")
 
-        # Aggregate confusion matrix
         agg = ConfusionMatrix(
-            tp=sum(r.final_matrix.tp for r in scored),
-            fn=sum(r.final_matrix.fn for r in scored),
-            fp=sum(r.final_matrix.fp for r in scored),
-            tn=sum(r.final_matrix.tn for r in scored),
+            tp=sum(final_matrix(r).tp for r in scored),
+            fn=sum(final_matrix(r).fn for r in scored),
+            fp=sum(final_matrix(r).fp for r in scored),
+            tn=sum(final_matrix(r).tn for r in scored),
         )
         n = len(scored)
         lines.append(f"\nAggregate confusion matrix (sum over {n} attempts):")
@@ -533,7 +524,6 @@ def print_summary(results: list[AttemptResult], model: str, task: str) -> str:
         lines.append(f"  Actually Valid   TP={agg.tp:<14d} FN={agg.fn}")
         lines.append(f"  Actually Invalid FP={agg.fp:<14d} TN={agg.tn}")
         lines.append(f"  MCC={agg.mcc:.3f}")
-
     else:
         lines.append("\nNo valid submissions across all attempts.")
 
@@ -608,7 +598,7 @@ def main():
     # Resolve directories
     slug = args.slug or derive_slug(model, args.reasoning_effort)
     results_base = Path(__file__).parent / args.results_dir
-    run_dir = results_base / args.task / slug
+    results_file = results_base / args.task / f"{slug}.jsonl"
 
     data_dir_base = Path(args.data_dir or os.environ.get("VB_DATA_DIR", "") or Path.home() / ".vb-data")
     data_run_dir = data_dir_base / args.task / slug
@@ -623,8 +613,8 @@ def main():
     print(f"Running task '{args.task}' with model '{model}'")
     sampling_str = ", ".join(f"{k}={v}" for k, v in sampling_params.items()) or "server defaults"
     print(f"Attempts: {args.n_attempts} | Max turns: {args.max_turns} | Sampling: {sampling_str}")
-    print(f"Data: {data_run_dir}")
-    print(f"Results: {run_dir}")
+    print(f"Debug logs: {data_run_dir}")
+    print(f"Results: {results_file}")
     print("-" * 60)
 
     results: list[AttemptResult] = []
@@ -652,11 +642,11 @@ def main():
                 _log(f"  Infrastructure failure: {r.error_type}: {r.error_message}")
             else:
                 results.append(r)
-                _log(f"  [attempt {r.attempt_index}] saved to {attempts_dir / str(r.attempt_index)}")
+                _log(f"  [attempt {r.attempt_index}] debug logs saved")
     except KeyboardInterrupt:
         print("\n\nInterrupted! Showing results collected so far.")
 
-    # Append failures to failures.jsonl
+    # Append failures to failures.jsonl (debug logs)
     if failures:
         failures_file = data_run_dir / "failures.jsonl"
         with open(failures_file, "a") as f:
@@ -669,20 +659,31 @@ def main():
                 }) + "\n")
         print(f"\n{len(failures)} infrastructure failure(s) logged to {failures_file}")
 
+    # Append results to JSONL (version-controlled)
     if results:
-        print_summary(results, model, args.task)
+        results_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(results_file, "a") as f:
+            for r in results:
+                record = {
+                    "task": args.task,
+                    "model": model,
+                    "slug": slug,
+                    "timestamp": r.timestamp,
+                    "attempt": r.attempt_index,
+                    "elapsed_seconds": r.elapsed_seconds,
+                    "sampling_params": sampling_params,
+                    "submissions": [
+                        {"turn": s.turn, "matrix": {"tp": s.matrix.tp, "fn": s.matrix.fn,
+                                                    "fp": s.matrix.fp, "tn": s.matrix.tn}}
+                        if s.matrix else
+                        {"turn": s.turn, "error": s.error}
+                        for s in r.submissions
+                    ],
+                }
+                f.write(json.dumps(record) + "\n")
 
-    # Always write meta.json (even if all attempts failed, to record the run)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    (run_dir / "meta.json").write_text(json.dumps({
-        "model": model,
-        "task": args.task,
-        "slug": slug,
-        "max_turns": args.max_turns,
-        "sampling_params": sampling_params,
-        "data_dir": str(data_run_dir),
-    }, indent=2) + "\n")
-    print(f"\nResults: {run_dir}")
+        print_summary(results, model, args.task)
+        print(f"\nResults appended to {results_file}")
 
 
 if __name__ == "__main__":
