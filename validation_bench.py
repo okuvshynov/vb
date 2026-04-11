@@ -61,8 +61,6 @@ class TestResult:
     compiler_output: str
     test_output: str
     matrix: ConfusionMatrix
-    version_matrices: dict[str, ConfusionMatrix] | None = None
-    disc_matrices: dict[str, ConfusionMatrix] | None = None
 
 
 @dataclass
@@ -72,8 +70,6 @@ class AttemptResult:
     submissions: int
     final_matrix: ConfusionMatrix
     elapsed_seconds: float
-    version_matrices: dict[str, ConfusionMatrix] | None = None
-    disc_matrices: dict[str, ConfusionMatrix] | None = None
 
 
 @dataclass
@@ -123,39 +119,10 @@ def load_tests(tests_file: Path) -> list[dict]:
     return tests
 
 
-def _is_combined_format(tests: list[dict]) -> bool:
-    return bool(tests) and "expected_1.0" in tests[0]
-
-
-def _score(matrix: ConfusionMatrix, expected: str, passed: bool):
-    if passed:
-        if expected == "valid":
-            matrix.tp += 1
-        else:
-            matrix.tn += 1
-    else:
-        if expected == "valid":
-            matrix.fn += 1
-        else:
-            matrix.fp += 1
-
-
-def run_tests(binary: Path, tests: list[dict], task_dir: Path | None = None) -> tuple[str, ConfusionMatrix, dict | None]:
-    """Run all test cases against the binary, return (output_text, matrix, extra).
-
-    extra is None for single-version tasks. For combined tasks it contains:
-        {"version_matrices": {ver: CM}, "disc_matrices": {ver: CM}}
-    """
-    combined = _is_combined_format(tests)
+def run_tests(binary: Path, tests: list[dict], task_dir: Path | None = None) -> tuple[str, ConfusionMatrix]:
+    """Run all test cases against the binary, return (output_text, matrix)."""
     matrix = ConfusionMatrix()
     lines = []
-
-    if combined:
-        versions = ["1.0", "1.1"]
-        ver_matrices = {v: ConfusionMatrix() for v in versions}
-        disc_matrices = {v: ConfusionMatrix() for v in versions}
-    else:
-        ver_matrices = disc_matrices = None
 
     for t in tests:
         if "input_file" in t:
@@ -167,47 +134,32 @@ def run_tests(binary: Path, tests: list[dict], task_dir: Path | None = None) -> 
 
         tid = t.get("id", "?")
         label = t["label"]
+        expected = t["expected"]
 
-        if combined:
-            is_disc = t["expected_1.0"] != t["expected_1.1"]
-            for version in versions:
-                expected = t[f"expected_{version}"]
-                try:
-                    proc = subprocess.run(
-                        [str(binary), version], input=input_data,
-                        capture_output=True, timeout=5,
-                    )
-                    rc = proc.returncode
-                except subprocess.TimeoutExpired:
-                    rc = -1
+        try:
+            proc = subprocess.run(
+                [str(binary)], input=input_data,
+                capture_output=True, timeout=5,
+            )
+            rc = proc.returncode
+        except subprocess.TimeoutExpired:
+            rc = -1
 
-                passed = (expected == "valid" and rc == 0) or (expected == "invalid" and rc != 0)
-                _score(matrix, expected, passed)
-                _score(ver_matrices[version], expected, passed)
-                if is_disc:
-                    _score(disc_matrices[version], expected, passed)
-                if not passed:
-                    lines.append(f"FAIL {version}/{tid}: {label} (exit={rc}, expected {expected})")
+        passed = (expected == "valid" and rc == 0) or (expected == "invalid" and rc != 0)
+        if passed:
+            if expected == "valid":
+                matrix.tp += 1
+            else:
+                matrix.tn += 1
         else:
-            expected = t["expected"]
-            try:
-                proc = subprocess.run(
-                    [str(binary)], input=input_data,
-                    capture_output=True, timeout=5,
-                )
-                rc = proc.returncode
-            except subprocess.TimeoutExpired:
-                rc = -1
+            if expected == "valid":
+                matrix.fn += 1
+            else:
+                matrix.fp += 1
+            lines.append(f"FAIL {tid}: {label} (exit={rc}, expected {expected})")
 
-            passed = (expected == "valid" and rc == 0) or (expected == "invalid" and rc != 0)
-            _score(matrix, expected, passed)
-            if not passed:
-                lines.append(f"FAIL {tid}: {label} (exit={rc}, expected {expected})")
-
-    summary = f"{matrix.passed}/{matrix.total} passed"
-    lines.append(summary)
-    extra = {"version_matrices": ver_matrices, "disc_matrices": disc_matrices} if combined else None
-    return "\n".join(lines), matrix, extra
+    lines.append(f"{matrix.passed}/{matrix.total} passed")
+    return "\n".join(lines), matrix
 
 
 def handle_submit(source_code: str, tests: list[dict], compile_cmd: str, src_ext: str, task_dir: Path | None = None) -> TestResult:
@@ -242,15 +194,13 @@ def handle_submit(source_code: str, tests: list[dict], compile_cmd: str, src_ext
             )
 
         binary = Path(tmpdir) / "solution"
-        test_output, matrix, extra = run_tests(binary, tests, task_dir)
+        test_output, matrix = run_tests(binary, tests, task_dir)
 
         return TestResult(
             compiled=True,
             compiler_output=comp.stderr,
             test_output=test_output,
             matrix=matrix,
-            version_matrices=extra["version_matrices"] if extra else None,
-            disc_matrices=extra["disc_matrices"] if extra else None,
         )
 
 
@@ -554,8 +504,6 @@ def run_attempt(
         submissions=submissions,
         final_matrix=final_matrix,
         elapsed_seconds=round(elapsed, 1),
-        version_matrices=last_compiled_result.version_matrices if last_compiled_result else None,
-        disc_matrices=last_compiled_result.disc_matrices if last_compiled_result else None,
     )
 
 
@@ -599,33 +547,6 @@ def print_summary(results: list[AttemptResult], model: str, task: str, prompt: s
         lines.append(f"  Actually Invalid FP={agg.fp:<14d} TN={agg.tn}")
         lines.append(f"  MCC={agg.mcc:.3f}")
 
-        # Combined mode: per-version and discrimination breakdown
-        has_versions = any(r.version_matrices for r in scored)
-        if has_versions:
-            for ver in ["1.0", "1.1"]:
-                vm = ConfusionMatrix(
-                    tp=sum(r.version_matrices[ver].tp for r in scored if r.version_matrices),
-                    fn=sum(r.version_matrices[ver].fn for r in scored if r.version_matrices),
-                    fp=sum(r.version_matrices[ver].fp for r in scored if r.version_matrices),
-                    tn=sum(r.version_matrices[ver].tn for r in scored if r.version_matrices),
-                )
-                pct = vm.passed / vm.total * 100 if vm.total else 0
-                lines.append(f"\n  By version {ver} (sum over {n} attempts): {vm.passed}/{vm.total} ({pct:.1f}%)")
-                lines.append(f"    TP={vm.tp}  FN={vm.fn}  FP={vm.fp}  TN={vm.tn}  MCC={vm.mcc:.3f}")
-
-            # Discrimination tests
-            has_disc = any(r.disc_matrices for r in scored)
-            if has_disc:
-                lines.append(f"\n  Discrimination tests (where 1.0 != 1.1 expected):")
-                for ver in ["1.0", "1.1"]:
-                    dm = ConfusionMatrix(
-                        tp=sum(r.disc_matrices[ver].tp for r in scored if r.disc_matrices),
-                        fn=sum(r.disc_matrices[ver].fn for r in scored if r.disc_matrices),
-                        fp=sum(r.disc_matrices[ver].fp for r in scored if r.disc_matrices),
-                        tn=sum(r.disc_matrices[ver].tn for r in scored if r.disc_matrices),
-                    )
-                    pct = dm.passed / dm.total * 100 if dm.total else 0
-                    lines.append(f"    {ver}-side: {dm.passed}/{dm.total} ({pct:.1f}%)")
     else:
         lines.append("\nNo valid submissions across all attempts.")
 
