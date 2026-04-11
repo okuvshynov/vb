@@ -6,6 +6,7 @@ import concurrent.futures
 import datetime
 import json
 import os
+import math
 import re
 import shlex
 import shutil
@@ -43,6 +44,15 @@ class ConfusionMatrix:
     @property
     def total(self) -> int:
         return self.tp + self.fn + self.fp + self.tn
+
+    @property
+    def mcc(self) -> float:
+        """Matthews Correlation Coefficient (phi coefficient)."""
+        denom_sq = ((self.tp + self.fp) * (self.tp + self.fn)
+                    * (self.tn + self.fp) * (self.tn + self.fn))
+        if denom_sq == 0:
+            return 0.0
+        return (self.tp * self.tn - self.fp * self.fn) / math.sqrt(denom_sq)
 
 
 @dataclass
@@ -468,7 +478,7 @@ def run_attempt(
             if result.compiled:
                 last_compiled_result = result
                 m = result.matrix
-                status = f"{m.passed}/{m.total} (TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn})"
+                status = f"{m.passed}/{m.total} (TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn}) MCC={m.mcc:.3f}"
 
             _log(f"  turn {turn}, submission {submissions}: {status}", label)
 
@@ -562,7 +572,7 @@ def print_summary(results: list[AttemptResult], model: str, task: str, prompt: s
         status = "PASS" if m.passed == m.total and m.total > 0 else "FAIL"
         lines.append(
             f"  attempt {r.attempt_index}: {score} ({status}) "
-            f"| TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn} "
+            f"| TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn} | MCC={m.mcc:.3f} "
             f"| {r.submissions} submissions | {r.turns_used} turns | {r.elapsed_seconds}s"
         )
 
@@ -587,6 +597,7 @@ def print_summary(results: list[AttemptResult], model: str, task: str, prompt: s
         lines.append(f"                  Predicted Valid  Predicted Invalid")
         lines.append(f"  Actually Valid   TP={agg.tp:<14d} FN={agg.fn}")
         lines.append(f"  Actually Invalid FP={agg.fp:<14d} TN={agg.tn}")
+        lines.append(f"  MCC={agg.mcc:.3f}")
 
         # Combined mode: per-version and discrimination breakdown
         has_versions = any(r.version_matrices for r in scored)
@@ -600,7 +611,7 @@ def print_summary(results: list[AttemptResult], model: str, task: str, prompt: s
                 )
                 pct = vm.passed / vm.total * 100 if vm.total else 0
                 lines.append(f"\n  By version {ver} (sum over {n} attempts): {vm.passed}/{vm.total} ({pct:.1f}%)")
-                lines.append(f"    TP={vm.tp}  FN={vm.fn}  FP={vm.fp}  TN={vm.tn}")
+                lines.append(f"    TP={vm.tp}  FN={vm.fn}  FP={vm.fp}  TN={vm.tn}  MCC={vm.mcc:.3f}")
 
             # Discrimination tests
             has_disc = any(r.disc_matrices for r in scored)
