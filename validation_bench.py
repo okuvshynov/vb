@@ -478,60 +478,6 @@ def run_attempt(
     )
 
 
-def final_matrix(r: AttemptResult) -> ConfusionMatrix | None:
-    """Return the last submission's matrix, or None if no compiled submissions."""
-    return r.submissions[-1].matrix if r.submissions else None
-
-
-def print_summary(results: list[AttemptResult], model: str, task: str) -> str:
-    lines = []
-    lines.append("")
-    lines.append("=" * 60)
-    lines.append(f"Task: {task} | Model: {model} | Attempts: {len(results)}")
-    lines.append("=" * 60)
-
-    for r in results:
-        m = final_matrix(r)
-        if m and m.total > 0:
-            score = f"{m.passed}/{m.total}"
-            status = "PASS" if m.passed == m.total else "FAIL"
-            lines.append(
-                f"  attempt {r.attempt_index}: {score} ({status}) "
-                f"| TP={m.tp} FN={m.fn} FP={m.fp} TN={m.tn} | MCC={m.mcc:.3f} "
-                f"| {len(r.submissions)} submissions | {r.elapsed_seconds}s"
-            )
-        else:
-            lines.append(f"  attempt {r.attempt_index}: 0/0 (FAIL) | {r.elapsed_seconds}s")
-
-    scored = [r for r in results if final_matrix(r) and final_matrix(r).total > 0]
-    if scored:
-        scores = [final_matrix(r).passed / final_matrix(r).total for r in scored]
-        mean = sum(scores) / len(scores)
-        all_pass = sum(1 for s in scores if s == 1.0)
-        lines.append(f"\nMean score: {mean:.2%}")
-        lines.append(f"Min: {min(scores):.2%} | Max: {max(scores):.2%}")
-        lines.append(f"All-pass rate: {all_pass}/{len(scored)} ({all_pass/len(scored):.0%})")
-
-        agg = ConfusionMatrix(
-            tp=sum(final_matrix(r).tp for r in scored),
-            fn=sum(final_matrix(r).fn for r in scored),
-            fp=sum(final_matrix(r).fp for r in scored),
-            tn=sum(final_matrix(r).tn for r in scored),
-        )
-        n = len(scored)
-        lines.append(f"\nAggregate confusion matrix (sum over {n} attempts):")
-        lines.append(f"                  Predicted Valid  Predicted Invalid")
-        lines.append(f"  Actually Valid   TP={agg.tp:<14d} FN={agg.fn}")
-        lines.append(f"  Actually Invalid FP={agg.fp:<14d} TN={agg.tn}")
-        lines.append(f"  MCC={agg.mcc:.3f}")
-    else:
-        lines.append("\nNo valid submissions across all attempts.")
-
-    summary = "\n".join(lines)
-    print(summary)
-    return summary
-
-
 def main():
     parser = argparse.ArgumentParser(description="AI Coding Benchmark Harness")
     parser.add_argument("--task", required=True, help="Task name (directory under tasks/)")
@@ -682,7 +628,6 @@ def main():
                 }
                 f.write(json.dumps(record) + "\n")
 
-        print_summary(results, model, args.task)
         print(f"\nResults appended to {results_file}")
 
 
