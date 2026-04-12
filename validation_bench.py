@@ -7,7 +7,6 @@ import json
 import os
 import math
 import re
-import shlex
 import shutil
 import subprocess
 import sys
@@ -119,14 +118,13 @@ def load_tests(tests_file: Path) -> list[dict]:
 
 
 DOCKER_IMAGE = "vb-sandbox"
+COMPILE_CMD = "clang++ -std=c++17 -O2"
 
 
 class Sandbox:
     """Docker container sandbox for compiling and running untrusted code."""
 
-    def __init__(self, compile_cmd: str, src_ext: str):
-        self.compile_cmd = compile_cmd
-        self.src_ext = src_ext
+    def __init__(self):
         self.container_id: str | None = None
 
     def start(self):
@@ -163,16 +161,15 @@ class Sandbox:
 
     def compile(self, source_code: str) -> tuple[bool, str]:
         """Copy source into container and compile. Returns (success, compiler_output)."""
-        src_name = f"solution{self.src_ext}"
         # Write source via stdin to avoid mount
-        write = self._exec(["sh", "-c", f"cat > /work/{src_name}"],
+        write = self._exec(["sh", "-c", "cat > /work/solution.cpp"],
                            input_data=source_code.encode())
         if write.returncode != 0:
             return False, f"Failed to write source: {write.stderr.decode()}"
 
         try:
             comp = self._exec(
-                ["sh", "-c", f"cd /work && {self.compile_cmd} -o solution {src_name}"],
+                ["sh", "-c", f"cd /work && {COMPILE_CMD} -o solution solution.cpp"],
                 timeout=30,
             )
         except subprocess.TimeoutExpired:
@@ -368,14 +365,12 @@ def run_attempt(
     max_turns: int,
     sampling_params: dict,
     attempts_dir: Path,
-    compile_cmd: str,
-    src_ext: str,
     task_dir: Path,
     api_base: str | None = None,
     api_key: str | None = None,
     timeout: float = 600,
 ) -> AttemptResult | InfraFailure:
-    sandbox = Sandbox(compile_cmd, src_ext)
+    sandbox = Sandbox()
     sandbox.start()
 
     staging = tempfile.TemporaryDirectory()
@@ -452,7 +447,7 @@ def run_attempt(
             # Save submission source code
             sub_dir = submissions_dir / str(submission_count)
             sub_dir.mkdir()
-            (sub_dir / f"solution{src_ext}").write_text(source_code)
+            (sub_dir / "solution.cpp").write_text(source_code)
 
             result = handle_submit(source_code, tests, sandbox, task_dir)
 
@@ -556,17 +551,8 @@ def main():
             print(f"Error: missing file: {f}", file=sys.stderr)
             sys.exit(1)
 
-    compile_file = tasks_dir / "compile"
-    if compile_file.exists():
-        compile_cmd = compile_file.read_text().strip()
-    else:
-        compile_cmd = "clang++ -std=c++17 -O2"
-
-    compiler_binary = shlex.split(compile_cmd)[0]
-    src_ext = ".cpp" if "++" in compiler_binary else ".c"
-
     user_prompt = prompt_file.read_text()
-    user_prompt = user_prompt.replace("{compile_cmd}", compile_cmd)
+    user_prompt = user_prompt.replace("{compile_cmd}", COMPILE_CMD)
     tests = load_tests(tests_file)
 
     api_base = args.api_base
@@ -653,8 +639,6 @@ def main():
                 max_turns=args.max_turns,
                 sampling_params=sampling_params,
                 attempts_dir=attempts_dir,
-                compile_cmd=compile_cmd,
-                src_ext=src_ext,
                 task_dir=tasks_dir,
                 api_base=api_base,
                 api_key=api_key,
