@@ -98,6 +98,6 @@ Each line in `tests.jsonl` has the following fields:
 
 ## Results format
 
-Results are stored as JSONL files: `results/<task>/<slug>.jsonl`, one line per attempt. Each line contains the task, model, timestamp, sampling params, and per-submission data (turn number + confusion matrix). These files are version-controlled.
+All attempts are appended to a single `results/results.jsonl` file, one line per attempt. Each line is self-describing: task, model, slug, timestamp, sampling params, and per-submission data (turn number + confusion matrix). Analysis filters/groups by those fields rather than by path. This file is version-controlled.
 
 Debug logs (full conversation transcripts, submitted source code, compiler/test output) are stored separately in `~/.vb-data/` (or `$VB_DATA_DIR`) and are not version-controlled.

@@ -574,7 +574,7 @@ def main():
     # Resolve directories
     slug = args.slug or derive_slug(model, args.reasoning_effort)
     results_base = Path(__file__).parent / args.results_dir
-    results_file = results_base / args.task / f"{slug}.jsonl"
+    results_file = results_base / "results.jsonl"
 
     data_dir_base = Path(args.data_dir or os.environ.get("VB_DATA_DIR", "") or Path.home() / ".vb-data")
     data_run_dir = data_dir_base / args.task / slug
