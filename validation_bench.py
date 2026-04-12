@@ -330,17 +330,12 @@ def next_attempt_index(attempts_dir: Path) -> int:
 
 
 def claim_attempt_dir(attempts_dir: Path) -> tuple[int, Path]:
-    """Atomically claim next attempt directory."""
+    """Claim next attempt directory."""
     attempts_dir.mkdir(parents=True, exist_ok=True)
-    for _ in range(100):
-        idx = next_attempt_index(attempts_dir)
-        attempt_dir = attempts_dir / str(idx)
-        try:
-            attempt_dir.mkdir()
-            return idx, attempt_dir
-        except FileExistsError:
-            continue
-    raise RuntimeError("Could not claim attempt dir after 100 retries")
+    idx = next_attempt_index(attempts_dir)
+    attempt_dir = attempts_dir / str(idx)
+    attempt_dir.mkdir()
+    return idx, attempt_dir
 
 
 def serialize_message(msg) -> dict:

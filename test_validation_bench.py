@@ -1,9 +1,6 @@
 """Tests for validation_bench helper functions."""
 
-import json
-import threading
 import pytest
-from pathlib import Path
 from validation_bench import derive_slug, claim_attempt_dir, InfraFailure
 
 
@@ -51,39 +48,6 @@ def test_claim_attempt_dir_sequential(tmp_path):
     assert dir0.is_dir()
     assert dir1.is_dir()
     assert dir2.is_dir()
-
-
-def test_claim_attempt_dir_race_safety(tmp_path):
-    """Concurrent calls to claim_attempt_dir never collide."""
-    attempts_dir = tmp_path / "attempts"
-    n_threads = 20
-    results = [None] * n_threads
-    errors = []
-
-    def claim(i):
-        try:
-            results[i] = claim_attempt_dir(attempts_dir)
-        except Exception as e:
-            errors.append(e)
-
-    threads = [threading.Thread(target=claim, args=(i,)) for i in range(n_threads)]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
-
-    assert not errors, f"Errors during concurrent claims: {errors}"
-
-    indices = [r[0] for r in results]
-    dirs = [r[1] for r in results]
-
-    # All indices unique
-    assert len(set(indices)) == n_threads
-    # All dirs unique
-    assert len(set(str(d) for d in dirs)) == n_threads
-    # All dirs exist
-    for d in dirs:
-        assert d.is_dir()
 
 
 def test_claim_attempt_dir_creates_parent(tmp_path):
