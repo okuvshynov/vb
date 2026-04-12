@@ -384,6 +384,7 @@ def run_attempt(
     api_error: Exception | None = None
     error_turn = -1
     start = time.time()
+    turn = 0
 
     for turn in range(max_turns):
         try:
@@ -501,7 +502,7 @@ def run_attempt(
         staging.cleanup()
         return InfraFailure(
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            turn=turn if 'turn' in dir() else 0,
+            turn=turn,
             error_type="no_submissions",
             error_message="Model completed without making any submissions",
         )
