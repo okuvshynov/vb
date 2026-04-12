@@ -1,7 +1,9 @@
 """Tests for validation_bench helper functions."""
 
 import pytest
-from validation_bench import derive_slug, claim_attempt_dir, InfraFailure
+import re
+
+from validation_bench import derive_slug, make_attempt_id, InfraFailure
 
 
 @pytest.mark.parametrize("model, effort, expected", [
@@ -32,31 +34,16 @@ def test_derive_slug(model, effort, expected):
     assert derive_slug(model, effort) == expected
 
 
-def test_claim_attempt_dir_sequential(tmp_path):
-    """claim_attempt_dir assigns sequential indices."""
-    attempts_dir = tmp_path / "attempts"
-    idx0, dir0 = claim_attempt_dir(attempts_dir)
-    idx1, dir1 = claim_attempt_dir(attempts_dir)
-    idx2, dir2 = claim_attempt_dir(attempts_dir)
-
-    assert idx0 == 0
-    assert idx1 == 1
-    assert idx2 == 2
-    assert dir0.name == "0"
-    assert dir1.name == "1"
-    assert dir2.name == "2"
-    assert dir0.is_dir()
-    assert dir1.is_dir()
-    assert dir2.is_dir()
+def test_make_attempt_id_format():
+    """Attempt IDs follow <task>_<slug>_YYYYMMDD-HHMMSS-<4hex>."""
+    aid = make_attempt_id("toml-1.1-cpp", "gpt-5.3-codex")
+    assert re.fullmatch(r"toml-1\.1-cpp_gpt-5\.3-codex_\d{8}-\d{6}-[0-9a-f]{4}", aid)
 
 
-def test_claim_attempt_dir_creates_parent(tmp_path):
-    """claim_attempt_dir creates the attempts directory if it doesn't exist."""
-    attempts_dir = tmp_path / "deep" / "nested" / "attempts"
-    assert not attempts_dir.exists()
-    idx, d = claim_attempt_dir(attempts_dir)
-    assert idx == 0
-    assert d.is_dir()
+def test_make_attempt_id_unique():
+    """Back-to-back IDs differ even within the same second."""
+    ids = {make_attempt_id("t", "s") for _ in range(50)}
+    assert len(ids) == 50
 
 
 def test_infra_failure_dataclass():

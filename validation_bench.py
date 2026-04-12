@@ -7,6 +7,7 @@ import json
 import os
 import math
 import re
+import secrets
 import shutil
 import subprocess
 import sys
@@ -69,7 +70,7 @@ class Submission:
 
 @dataclass
 class AttemptResult:
-    attempt_index: int
+    attempt_id: str
     timestamp: str  # ISO 8601, recorded when attempt completes
     elapsed_seconds: float
     submissions: list[Submission]
@@ -321,21 +322,10 @@ def derive_slug(model: str, reasoning_effort: str | None = None) -> str:
     return name
 
 
-def next_attempt_index(attempts_dir: Path) -> int:
-    """Find the next available attempt index in an existing attempts directory."""
-    if not attempts_dir.is_dir():
-        return 0
-    existing = [int(d.name) for d in attempts_dir.iterdir() if d.is_dir() and d.name.isdigit()]
-    return max(existing) + 1 if existing else 0
-
-
-def claim_attempt_dir(attempts_dir: Path) -> tuple[int, Path]:
-    """Claim next attempt directory."""
-    attempts_dir.mkdir(parents=True, exist_ok=True)
-    idx = next_attempt_index(attempts_dir)
-    attempt_dir = attempts_dir / str(idx)
-    attempt_dir.mkdir()
-    return idx, attempt_dir
+def make_attempt_id(task: str, slug: str) -> str:
+    """Generate a unique, sortable attempt ID: <task>_<slug>_YYYYMMDD-HHMMSS-<4hex>."""
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%S")
+    return f"{task}_{slug}_{ts}-{secrets.token_hex(2)}"
 
 
 def serialize_message(msg) -> dict:
@@ -359,8 +349,9 @@ def run_attempt(
     tests: list[dict],
     max_turns: int,
     sampling_params: dict,
-    attempts_dir: Path,
+    attempt_dir: Path,
     task_dir: Path,
+    attempt_id: str,
     api_base: str | None = None,
     api_key: str | None = None,
     timeout: float = 600,
@@ -503,14 +494,14 @@ def run_attempt(
         )
 
     # Save debug logs
-    attempt_index, attempt_dir = claim_attempt_dir(attempts_dir)
+    attempt_dir.mkdir(parents=True, exist_ok=True)
     shutil.move(str(submissions_dir), str(attempt_dir / "submissions"))
     save_attempt_log(attempt_dir, messages)
 
     staging.cleanup()
 
     return AttemptResult(
-        attempt_index=attempt_index,
+        attempt_id=attempt_id,
         timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
         elapsed_seconds=round(elapsed, 1),
         submissions=submission_results,
@@ -577,24 +568,17 @@ def main():
     results_file = results_base / "results.jsonl"
 
     data_dir_base = Path(args.data_dir or os.environ.get("VB_DATA_DIR", "") or Path.home() / ".vb-data")
-    data_run_dir = data_dir_base / args.task / slug
-    attempts_dir = data_run_dir / "attempts"
-    attempts_dir.mkdir(parents=True, exist_ok=True)
-
-    # Check for existing attempts
-    existing = next_attempt_index(attempts_dir)
-    if existing > 0:
-        print(f"Appending to existing run ({existing} attempts already present)")
+    data_dir_base.mkdir(parents=True, exist_ok=True)
 
     print(f"Running task '{args.task}' with model '{model}'")
     sampling_str = ", ".join(f"{k}={v}" for k, v in sampling_params.items()) or "server defaults"
     print(f"Attempts: {args.n_attempts} | Max turns: {args.max_turns} | Sampling: {sampling_str}")
-    print(f"Debug logs: {data_run_dir}")
+    print(f"Debug logs: {data_dir_base}")
     print(f"Results: {results_file}")
     print("-" * 60)
 
     results_file.parent.mkdir(parents=True, exist_ok=True)
-    failures_file = data_run_dir / "failures.jsonl"
+    failures_file = data_dir_base / "failures.jsonl"
 
     def save_result(r: AttemptResult):
         record = {
@@ -602,7 +586,7 @@ def main():
             "model": model,
             "slug": slug,
             "timestamp": r.timestamp,
-            "attempt": r.attempt_index,
+            "attempt_id": r.attempt_id,
             "elapsed_seconds": r.elapsed_seconds,
             "sampling_params": sampling_params,
             "submissions": [
@@ -628,14 +612,17 @@ def main():
     try:
         for i in range(args.n_attempts):
             _log(f"\n--- Attempt {i + 1}/{args.n_attempts} ---")
+            attempt_id = make_attempt_id(args.task, slug)
+            attempt_dir = data_dir_base / attempt_id
             r = run_attempt(
                 model=model,
                 user_prompt=user_prompt,
                 tests=tests,
                 max_turns=args.max_turns,
                 sampling_params=sampling_params,
-                attempts_dir=attempts_dir,
+                attempt_dir=attempt_dir,
                 task_dir=tasks_dir,
+                attempt_id=attempt_id,
                 api_base=api_base,
                 api_key=api_key,
                 timeout=args.timeout,
@@ -645,7 +632,7 @@ def main():
                 _log(f"  Infrastructure failure: {r.error_type}: {r.error_message}")
             else:
                 save_result(r)
-                _log(f"  [attempt {r.attempt_index}] saved to {results_file}")
+                _log(f"  [{r.attempt_id}] saved to {results_file}")
     except KeyboardInterrupt:
         print("\n\nInterrupted!")
 

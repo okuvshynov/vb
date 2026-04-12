@@ -98,6 +98,6 @@ Each line in `tests.jsonl` has the following fields:
 
 ## Results format
 
-All attempts are appended to a single `results/results.jsonl` file, one line per attempt. Each line is self-describing: task, model, slug, timestamp, sampling params, and per-submission data (turn number + confusion matrix). Analysis filters/groups by those fields rather than by path. This file is version-controlled.
+All attempts are appended to a single `results/results.jsonl` file, one line per attempt. Each line is self-describing: task, model, slug, timestamp, `attempt_id`, sampling params, and per-submission data (turn number + confusion matrix). Analysis filters/groups by those fields rather than by path. This file is version-controlled.
 
-Debug logs (full conversation transcripts, submitted source code, compiler/test output) are stored separately in `~/.vb-data/` (or `$VB_DATA_DIR`) and are not version-controlled.
+Each attempt gets a unique `attempt_id` of the form `<task>_<slug>_<YYYYMMDD-HHMMSS>-<4hex>`. Debug logs (full conversation transcripts, submitted source code, compiler/test output) are written to `~/.vb-data/<attempt_id>/` (or under `$VB_DATA_DIR`) and are not version-controlled. The ID is the sole bridge between a results row and its debug dir.
