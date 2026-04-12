@@ -118,8 +118,79 @@ def load_tests(tests_file: Path) -> list[dict]:
     return tests
 
 
-def run_tests(binary: Path, tests: list[dict], task_dir: Path) -> tuple[str, ConfusionMatrix]:
-    """Run all test cases against the binary, return (output_text, matrix)."""
+DOCKER_IMAGE = "vb-sandbox"
+
+
+class Sandbox:
+    """Docker container sandbox for compiling and running untrusted code."""
+
+    def __init__(self, compile_cmd: str, src_ext: str):
+        self.compile_cmd = compile_cmd
+        self.src_ext = src_ext
+        self.container_id: str | None = None
+
+    def start(self):
+        result = subprocess.run(
+            ["docker", "run", "-d", "--rm",
+             "--network=none",
+             "--memory=512m",
+             "--cpus=1",
+             "--pids-limit=256",
+             "--read-only",
+             "--tmpfs=/work:rw,exec,size=64m",
+             "--tmpfs=/tmp:rw,size=64m",
+             DOCKER_IMAGE, "sleep", "infinity"],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"Failed to start sandbox: {result.stderr}")
+        self.container_id = result.stdout.strip()
+
+    def stop(self):
+        if self.container_id:
+            subprocess.run(["docker", "kill", self.container_id],
+                           capture_output=True)
+            self.container_id = None
+
+    def _exec(self, cmd: list[str], input_data: bytes | None = None,
+              timeout: float = 30) -> subprocess.CompletedProcess:
+        full_cmd = ["docker", "exec"]
+        if input_data is not None:
+            full_cmd.append("-i")
+        full_cmd.extend([self.container_id] + cmd)
+        return subprocess.run(full_cmd, input=input_data,
+                              capture_output=True, timeout=timeout)
+
+    def compile(self, source_code: str) -> tuple[bool, str]:
+        """Copy source into container and compile. Returns (success, compiler_output)."""
+        src_name = f"solution{self.src_ext}"
+        # Write source via stdin to avoid mount
+        write = self._exec(["sh", "-c", f"cat > /work/{src_name}"],
+                           input_data=source_code.encode())
+        if write.returncode != 0:
+            return False, f"Failed to write source: {write.stderr.decode()}"
+
+        try:
+            comp = self._exec(
+                ["sh", "-c", f"cd /work && {self.compile_cmd} -o solution {src_name}"],
+                timeout=30,
+            )
+        except subprocess.TimeoutExpired:
+            return False, "Compilation timed out (30s limit)."
+
+        return comp.returncode == 0, comp.stderr.decode()
+
+    def run_binary(self, input_data: bytes) -> int:
+        """Run /work/solution with input via stdin. Returns exit code (-1 on timeout)."""
+        try:
+            proc = self._exec(["/work/solution"], input_data=input_data, timeout=5)
+            return proc.returncode
+        except subprocess.TimeoutExpired:
+            return -1
+
+
+def run_tests(sandbox: Sandbox, tests: list[dict], task_dir: Path) -> tuple[str, ConfusionMatrix]:
+    """Run all test cases against the binary in sandbox, return (output_text, matrix)."""
     matrix = ConfusionMatrix()
     lines = []
 
@@ -130,14 +201,7 @@ def run_tests(binary: Path, tests: list[dict], task_dir: Path) -> tuple[str, Con
         label = t["label"]
         expected = t["expected"]
 
-        try:
-            proc = subprocess.run(
-                [str(binary)], input=input_data,
-                capture_output=True, timeout=5,
-            )
-            rc = proc.returncode
-        except subprocess.TimeoutExpired:
-            rc = -1
+        rc = sandbox.run_binary(input_data)
 
         passed = (expected == "valid" and rc == 0) or (expected == "invalid" and rc != 0)
         if passed:
@@ -156,46 +220,25 @@ def run_tests(binary: Path, tests: list[dict], task_dir: Path) -> tuple[str, Con
     return "\n".join(lines), matrix
 
 
-def handle_submit(source_code: str, tests: list[dict], compile_cmd: str, src_ext: str, task_dir: Path) -> TestResult:
-    with tempfile.TemporaryDirectory() as tmpdir:
-        src_name = f"solution{src_ext}"
-        src = Path(tmpdir) / src_name
-        src.write_text(source_code)
+def handle_submit(source_code: str, tests: list[dict], sandbox: Sandbox, task_dir: Path) -> TestResult:
+    compiled, compiler_output = sandbox.compile(source_code)
 
-        # Compile
-        try:
-            comp = subprocess.run(
-                shlex.split(compile_cmd) + ["-o", "solution", src_name],
-                cwd=tmpdir,
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-        except subprocess.TimeoutExpired:
-            return TestResult(
-                compiled=False,
-                compiler_output="Compilation timed out (30s limit).",
-                test_output="",
-                matrix=ConfusionMatrix(),
-            )
-
-        if comp.returncode != 0:
-            return TestResult(
-                compiled=False,
-                compiler_output=comp.stderr,
-                test_output="",
-                matrix=ConfusionMatrix(),
-            )
-
-        binary = Path(tmpdir) / "solution"
-        test_output, matrix = run_tests(binary, tests, task_dir)
-
+    if not compiled:
         return TestResult(
-            compiled=True,
-            compiler_output=comp.stderr,
-            test_output=test_output,
-            matrix=matrix,
+            compiled=False,
+            compiler_output=compiler_output,
+            test_output="",
+            matrix=ConfusionMatrix(),
         )
+
+    test_output, matrix = run_tests(sandbox, tests, task_dir)
+
+    return TestResult(
+        compiled=True,
+        compiler_output=compiler_output,
+        test_output=test_output,
+        matrix=matrix,
+    )
 
 
 def format_tool_result(result: TestResult) -> str:
@@ -332,6 +375,9 @@ def run_attempt(
     api_key: str | None = None,
     timeout: float = 600,
 ) -> AttemptResult | InfraFailure:
+    sandbox = Sandbox(compile_cmd, src_ext)
+    sandbox.start()
+
     staging = tempfile.TemporaryDirectory()
     staging_dir = Path(staging.name)
     submissions_dir = staging_dir / "submissions"
@@ -408,7 +454,7 @@ def run_attempt(
             sub_dir.mkdir()
             (sub_dir / f"solution{src_ext}").write_text(source_code)
 
-            result = handle_submit(source_code, tests, compile_cmd, src_ext, task_dir)
+            result = handle_submit(source_code, tests, sandbox, task_dir)
 
             # Save compiler and test output
             (sub_dir / "compiler.txt").write_text(result.compiler_output)
@@ -441,6 +487,8 @@ def run_attempt(
                 break
 
     elapsed = time.time() - start
+
+    sandbox.stop()
 
     # If API error occurred, treat entire attempt as infrastructure failure
     if api_error is not None:
