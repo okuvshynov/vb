@@ -98,6 +98,6 @@ Each line in `tests.jsonl` has the following fields:
 
 ## Results format
 
-All attempts are appended to a single `results/results.jsonl` file, one line per attempt. Each line is self-describing: task, model, slug, timestamp, `attempt_id`, sampling params, and per-submission data (turn number + confusion matrix). Analysis filters/groups by those fields rather than by path. This file is version-controlled.
+All results are appended to a single `results/results.jsonl` file, **one line per submitted turn** (not per attempt). Each row is self-describing and flat: `task`, `model`, `slug`, `sampling_params`, `attempt_id`, `attempt_timestamp`, `attempt_elapsed_seconds`, `turn`, and either the confusion matrix (`tp`, `fn`, `fp`, `tn`, `mcc`) for compiled submissions or `error` (e.g. `compile_error`, `compile_timeout`) for failed ones. Rows sharing an `attempt_id` belong to the same attempt. Analysis is a single `pd.read_json(lines=True)` away. This file is version-controlled.
 
 Each attempt gets a unique `attempt_id` of the form `<task>_<slug>_<YYYYMMDD-HHMMSS>-<4hex>`. Debug logs (full conversation transcripts, submitted source code, compiler/test output) are written to `~/.vb-data/<attempt_id>/` (or under `$VB_DATA_DIR`) and are not version-controlled. The ID is the sole bridge between a results row and its debug dir.

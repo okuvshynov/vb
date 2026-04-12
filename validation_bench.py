@@ -581,24 +581,25 @@ def main():
     failures_file = data_dir_base / "failures.jsonl"
 
     def save_result(r: AttemptResult):
-        record = {
+        base = {
             "task": args.task,
             "model": model,
             "slug": slug,
-            "timestamp": r.timestamp,
-            "attempt_id": r.attempt_id,
-            "elapsed_seconds": r.elapsed_seconds,
             "sampling_params": sampling_params,
-            "submissions": [
-                {"turn": s.turn, "matrix": {"tp": s.matrix.tp, "fn": s.matrix.fn,
-                                            "fp": s.matrix.fp, "tn": s.matrix.tn}}
-                if s.matrix else
-                {"turn": s.turn, "error": s.error}
-                for s in r.submissions
-            ],
+            "attempt_id": r.attempt_id,
+            "attempt_timestamp": r.timestamp,
+            "attempt_elapsed_seconds": r.elapsed_seconds,
         }
         with open(results_file, "a") as f:
-            f.write(json.dumps(record) + "\n")
+            for s in r.submissions:
+                row = {**base, "turn": s.turn}
+                if s.matrix is not None:
+                    m = s.matrix
+                    row.update({"tp": m.tp, "fn": m.fn, "fp": m.fp, "tn": m.tn,
+                                "mcc": round(m.mcc, 6)})
+                else:
+                    row["error"] = s.error
+                f.write(json.dumps(row) + "\n")
 
     def save_failure(fail: InfraFailure):
         with open(failures_file, "a") as f:
