@@ -611,8 +611,37 @@ def main():
     print(f"Results: {results_file}")
     print("-" * 60)
 
-    results: list[AttemptResult] = []
-    failures: list[InfraFailure] = []
+    results_file.parent.mkdir(parents=True, exist_ok=True)
+    failures_file = data_run_dir / "failures.jsonl"
+
+    def save_result(r: AttemptResult):
+        record = {
+            "task": args.task,
+            "model": model,
+            "slug": slug,
+            "timestamp": r.timestamp,
+            "attempt": r.attempt_index,
+            "elapsed_seconds": r.elapsed_seconds,
+            "sampling_params": sampling_params,
+            "submissions": [
+                {"turn": s.turn, "matrix": {"tp": s.matrix.tp, "fn": s.matrix.fn,
+                                            "fp": s.matrix.fp, "tn": s.matrix.tn}}
+                if s.matrix else
+                {"turn": s.turn, "error": s.error}
+                for s in r.submissions
+            ],
+        }
+        with open(results_file, "a") as f:
+            f.write(json.dumps(record) + "\n")
+
+    def save_failure(fail: InfraFailure):
+        with open(failures_file, "a") as f:
+            f.write(json.dumps({
+                "timestamp": fail.timestamp,
+                "turn": fail.turn,
+                "error_type": fail.error_type,
+                "error_message": fail.error_message,
+            }) + "\n")
 
     try:
         for i in range(args.n_attempts):
@@ -632,51 +661,13 @@ def main():
                 timeout=args.timeout,
             )
             if isinstance(r, InfraFailure):
-                failures.append(r)
+                save_failure(r)
                 _log(f"  Infrastructure failure: {r.error_type}: {r.error_message}")
             else:
-                results.append(r)
-                _log(f"  [attempt {r.attempt_index}] debug logs saved")
+                save_result(r)
+                _log(f"  [attempt {r.attempt_index}] saved to {results_file}")
     except KeyboardInterrupt:
-        print("\n\nInterrupted! Showing results collected so far.")
-
-    # Append failures to failures.jsonl (debug logs)
-    if failures:
-        failures_file = data_run_dir / "failures.jsonl"
-        with open(failures_file, "a") as f:
-            for fail in failures:
-                f.write(json.dumps({
-                    "timestamp": fail.timestamp,
-                    "turn": fail.turn,
-                    "error_type": fail.error_type,
-                    "error_message": fail.error_message,
-                }) + "\n")
-        print(f"\n{len(failures)} infrastructure failure(s) logged to {failures_file}")
-
-    # Append results to JSONL (version-controlled)
-    if results:
-        results_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(results_file, "a") as f:
-            for r in results:
-                record = {
-                    "task": args.task,
-                    "model": model,
-                    "slug": slug,
-                    "timestamp": r.timestamp,
-                    "attempt": r.attempt_index,
-                    "elapsed_seconds": r.elapsed_seconds,
-                    "sampling_params": sampling_params,
-                    "submissions": [
-                        {"turn": s.turn, "matrix": {"tp": s.matrix.tp, "fn": s.matrix.fn,
-                                                    "fp": s.matrix.fp, "tn": s.matrix.tn}}
-                        if s.matrix else
-                        {"turn": s.turn, "error": s.error}
-                        for s in r.submissions
-                    ],
-                }
-                f.write(json.dumps(record) + "\n")
-
-        print(f"\nResults appended to {results_file}")
+        print("\n\nInterrupted!")
 
 
 if __name__ == "__main__":
