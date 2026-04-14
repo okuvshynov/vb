@@ -374,7 +374,7 @@ def run_attempt(
 
     for turn in range(max_turns):
         try:
-            response = litellm.completion(
+            stream = litellm.completion(
                 model=model,
                 messages=messages,
                 tools=[SUBMIT_TOOL],
@@ -382,11 +382,35 @@ def run_attempt(
                 api_base=api_base,
                 api_key=api_key,
                 timeout=timeout,
+                stream=True,
+                stream_options={"include_usage": True},
                 cache_control_injection_points=[
                     {"location": "message", "index": 0},
                 ],
                 **sampling_params,
             )
+            chunks = []
+            chars = 0
+            last_log = time.time()
+            for chunk in stream:
+                chunks.append(chunk)
+                try:
+                    delta = chunk.choices[0].delta
+                    for attr in ("content", "reasoning_content", "reasoning"):
+                        val = getattr(delta, attr, None)
+                        if val:
+                            chars += len(val)
+                    if delta.tool_calls:
+                        for tc in delta.tool_calls:
+                            if tc.function and tc.function.arguments:
+                                chars += len(tc.function.arguments)
+                except (AttributeError, IndexError):
+                    pass
+                now = time.time()
+                if now - last_log >= 5:
+                    _log(f"  turn {turn}: streaming... {chars} chars, {len(chunks)} chunks")
+                    last_log = now
+            response = litellm.stream_chunk_builder(chunks, messages=messages)
         except Exception as e:
             _log(f"  API error on turn {turn}: {e}")
             api_error = e
