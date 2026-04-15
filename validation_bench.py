@@ -2,6 +2,7 @@
 """AI Coding Benchmark Harness — evaluates models on code generation tasks."""
 
 import argparse
+import asyncio
 import datetime
 import json
 import os
@@ -343,6 +344,52 @@ def save_attempt_log(attempt_dir: Path, messages: list):
     )
 
 
+async def _stream_turn(
+    turn: int,
+    model: str,
+    messages: list,
+    api_base: str | None,
+    api_key: str | None,
+    timeout: float,
+    sampling_params: dict,
+):
+    """Stream one completion turn via litellm.acompletion, logging a heartbeat."""
+    stream = await litellm.acompletion(
+        model=model,
+        messages=messages,
+        tools=[SUBMIT_TOOL],
+        tool_choice="required",
+        api_base=api_base,
+        api_key=api_key,
+        timeout=timeout,
+        stream=True,
+        cache_control_injection_points=[{"location": "message", "index": 0}],
+        **sampling_params,
+    )
+    chunks = []
+    chars = 0
+    last_log = time.time()
+    async for chunk in stream:
+        chunks.append(chunk)
+        try:
+            delta = chunk.choices[0].delta
+            for attr in ("content", "reasoning_content", "reasoning"):
+                val = getattr(delta, attr, None)
+                if val:
+                    chars += len(val)
+            if delta.tool_calls:
+                for tc in delta.tool_calls:
+                    if tc.function and tc.function.arguments:
+                        chars += len(tc.function.arguments)
+        except (AttributeError, IndexError):
+            pass
+        now = time.time()
+        if now - last_log >= 5:
+            _log(f"  turn {turn}: streaming... {chars} chars, {len(chunks)} chunks")
+            last_log = now
+    return litellm.stream_chunk_builder(chunks, messages=messages)
+
+
 def run_attempt(
     model: str,
     user_prompt: str,
@@ -372,45 +419,18 @@ def run_attempt(
     start = time.time()
     turn = 0
 
+    loop = asyncio.new_event_loop()
     for turn in range(max_turns):
         try:
-            stream = litellm.completion(
+            response = loop.run_until_complete(_stream_turn(
+                turn=turn,
                 model=model,
                 messages=messages,
-                tools=[SUBMIT_TOOL],
-                tool_choice="required",
                 api_base=api_base,
                 api_key=api_key,
                 timeout=timeout,
-                stream=True,
-                stream_options={"include_usage": True},
-                cache_control_injection_points=[
-                    {"location": "message", "index": 0},
-                ],
-                **sampling_params,
-            )
-            chunks = []
-            chars = 0
-            last_log = time.time()
-            for chunk in stream:
-                chunks.append(chunk)
-                try:
-                    delta = chunk.choices[0].delta
-                    for attr in ("content", "reasoning_content", "reasoning"):
-                        val = getattr(delta, attr, None)
-                        if val:
-                            chars += len(val)
-                    if delta.tool_calls:
-                        for tc in delta.tool_calls:
-                            if tc.function and tc.function.arguments:
-                                chars += len(tc.function.arguments)
-                except (AttributeError, IndexError):
-                    pass
-                now = time.time()
-                if now - last_log >= 5:
-                    _log(f"  turn {turn}: streaming... {chars} chars, {len(chunks)} chunks")
-                    last_log = now
-            response = litellm.stream_chunk_builder(chunks, messages=messages)
+                sampling_params=sampling_params,
+            ))
         except Exception as e:
             _log(f"  API error on turn {turn}: {e}")
             api_error = e
@@ -494,6 +514,8 @@ def run_attempt(
 
     elapsed = time.time() - start
 
+    loop.close()
+    asyncio.set_event_loop(None)
     sandbox.stop()
 
     # If API error occurred, treat entire attempt as infrastructure failure
