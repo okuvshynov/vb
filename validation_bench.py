@@ -285,22 +285,29 @@ def derive_slug(model: str, reasoning_effort: str | None = None) -> str:
     Examples:
         anthropic/claude-opus-4-6        -> claude-opus-4.6
         anthropic/claude-sonnet-4-20250514 -> claude-sonnet-4.0
-        minimax/MiniMax-M2.5             -> minimax-m2.5
         openai/gpt-5.3-codex             -> gpt-5.3-codex
         openai/gpt-5.3-codex + high      -> gpt-5.3-codex-high
-        zai/glm-5                        -> glm-5
-        moonshot/kimi-k2.5               -> kimi-k2.5
+        fireworks_ai/accounts/fireworks/models/glm-5p1 -> fireworks-glm-5p1
+        openrouter/z-ai/glm-5.1          -> openrouter-glm-5.1
         mistral/devstral-latest          -> devstral
         openai/Qwen3.5-122B-A10B-UD-Q6_K_XL-00001-of-00004.gguf -> qwen3.5-122b-a10b-q6_k_xl
-        openai/Qwen3.5-397B-A17B-UD-IQ3_XXS-00001-of-00004.gguf -> qwen3.5-397b-a17b-iq3_xxs
     """
-    # Strip provider prefix (first "/"-separated segment)
-    if "/" in model:
-        model = model.split("/", 1)[1]
-    # Strip Fireworks-style "accounts/<org>/models/" path segment
-    model = re.sub(r"^accounts/[^/]+/models/", "", model)
-    # Collapse any remaining slashes (e.g. openrouter "z-ai/glm-5.1") into dashes
-    name = model.replace("/", "-")
+    # Hosted-OSS prefixes keep a short provider tag; first-party prefixes drop it
+    # (OpenAI/Anthropic identity is implicit in the model name).
+    if model.startswith("fireworks_ai/") or model.startswith("fireworks/"):
+        rest = model.split("/", 1)[1]
+        rest = re.sub(r"^accounts/[^/]+/models/", "", rest)
+        name = f"fireworks-{rest}"
+    elif model.startswith("openrouter/"):
+        rest = model.split("/", 1)[1]
+        rest = rest.split("/", 1)[1] if "/" in rest else rest  # drop org, keep model
+        name = f"openrouter-{rest}"
+    elif "/" in model:
+        name = model.split("/", 1)[1]
+    else:
+        name = model
+    # Collapse any remaining slashes.
+    name = name.replace("/", "-")
 
     # Strip GGUF filenames: keep quant level, drop shard suffix and extension
     # e.g. Qwen3.5-122B-A10B-UD-Q6_K_XL-00001-of-00004.gguf -> Qwen3.5-122B-A10B-Q6_K_XL
@@ -326,9 +333,9 @@ def derive_slug(model: str, reasoning_effort: str | None = None) -> str:
 
 
 def make_attempt_id(task: str, slug: str) -> str:
-    """Generate a unique, sortable attempt ID: <task>_<slug>_YYYYMMDD-HHMMSS-<4hex>."""
+    """Generate a unique, sortable attempt ID: <task>_<slug>_YYYYMMDD-HHMMSS-<8hex>."""
     ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%S")
-    return f"{task}_{slug}_{ts}-{secrets.token_hex(2)}"
+    return f"{task}_{slug}_{ts}-{secrets.token_hex(4)}"
 
 
 def save_attempt_log(attempt_dir: Path, messages: list):
