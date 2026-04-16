@@ -21,11 +21,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import litellm
+from anthropic import AsyncAnthropic
 
 litellm.drop_params = True
 
-# Suppress Pydantic serialization warnings from LiteLLM's response types
-# not exactly matching OpenAI's schemas (harmless type mismatches).
+# LiteLLM-emitted Pydantic noise on response types — harmless, we don't read those fields.
 warnings.filterwarnings("ignore", message="Pydantic serializer warnings")
 
 
@@ -280,7 +280,7 @@ def auto_detect_model(api_base: str, api_key: str) -> str:
 
 
 def derive_slug(model: str, reasoning_effort: str | None = None) -> str:
-    """Derive a filesystem-friendly slug from a LiteLLM model name.
+    """Derive a filesystem-friendly slug from a model string (with optional provider prefix).
 
     Examples:
         anthropic/claude-opus-4-6        -> claude-opus-4.6
@@ -294,11 +294,13 @@ def derive_slug(model: str, reasoning_effort: str | None = None) -> str:
         openai/Qwen3.5-122B-A10B-UD-Q6_K_XL-00001-of-00004.gguf -> qwen3.5-122b-a10b-q6_k_xl
         openai/Qwen3.5-397B-A17B-UD-IQ3_XXS-00001-of-00004.gguf -> qwen3.5-397b-a17b-iq3_xxs
     """
-    # Strip provider prefix
+    # Strip provider prefix (first "/"-separated segment)
     if "/" in model:
-        name = model.split("/", 1)[1]
-    else:
-        name = model
+        model = model.split("/", 1)[1]
+    # Strip Fireworks-style "accounts/<org>/models/" path segment
+    model = re.sub(r"^accounts/[^/]+/models/", "", model)
+    # Collapse any remaining slashes (e.g. openrouter "z-ai/glm-5.1") into dashes
+    name = model.replace("/", "-")
 
     # Strip GGUF filenames: keep quant level, drop shard suffix and extension
     # e.g. Qwen3.5-122B-A10B-UD-Q6_K_XL-00001-of-00004.gguf -> Qwen3.5-122B-A10B-Q6_K_XL
@@ -329,68 +331,227 @@ def make_attempt_id(task: str, slug: str) -> str:
     return f"{task}_{slug}_{ts}-{secrets.token_hex(2)}"
 
 
-def serialize_message(msg) -> dict:
-    """Convert a message (dict or LiteLLM/OpenAI object) to a JSON-serializable dict."""
-    if isinstance(msg, dict):
-        return msg
-    return msg.model_dump(exclude_none=True)
-
-
 def save_attempt_log(attempt_dir: Path, messages: list):
     """Save the full conversation transcript as messages.json."""
-    serialized = [serialize_message(m) for m in messages]
     (attempt_dir / "messages.json").write_text(
-        json.dumps(serialized, indent=2, ensure_ascii=False)
+        json.dumps(messages, indent=2, ensure_ascii=False)
     )
 
 
-async def _stream_turn(
-    turn: int,
-    model: str,
-    messages: list,
-    api_base: str | None,
-    api_key: str | None,
-    timeout: float,
-    sampling_params: dict,
-):
-    """Stream one completion turn via litellm.acompletion, logging a heartbeat."""
-    stream = await litellm.acompletion(
-        model=model,
-        messages=messages,
-        tools=[SUBMIT_TOOL],
-        tool_choice="required",
-        api_base=api_base,
-        api_key=api_key,
-        timeout=timeout,
-        stream=True,
-        cache_control_injection_points=[{"location": "message", "index": 0}],
-        **sampling_params,
-    )
-    chunks = []
-    chars = 0
-    last_log = time.time()
-    async for chunk in stream:
-        chunks.append(chunk)
-        try:
-            delta = chunk.choices[0].delta
-            for attr in ("content", "reasoning_content", "reasoning"):
-                val = getattr(delta, attr, None)
-                if val:
-                    chars += len(val)
-            if delta.tool_calls:
-                for tc in delta.tool_calls:
-                    if tc.function and tc.function.arguments:
-                        chars += len(tc.function.arguments)
-        except (AttributeError, IndexError):
-            pass
-        now = time.time()
-        if now - last_log >= 5:
-            _log(f"  turn {turn}: streaming... {chars} chars, {len(chunks)} chunks")
-            last_log = now
-    return litellm.stream_chunk_builder(chunks, messages=messages)
+def _heartbeat(turn: int, chars: int, chunks_seen: int, last_log: float) -> float:
+    now = time.time()
+    if now - last_log >= 5:
+        _log(f"  turn {turn}: streaming... {chars} chars, {chunks_seen} chunks")
+        return now
+    return last_log
+
+
+class LiteLLMProvider:
+    """Default provider: delegates to litellm so we get codex/responses-API routing,
+    GGUF auto-detect, prompt caching injection points, etc., for free. Returns
+    assistant messages in OpenAI chat-shape dicts."""
+
+    def __init__(self, api_base: str | None, api_key: str | None, timeout: float):
+        self.api_base = api_base
+        self.api_key = api_key
+        self.timeout = timeout
+
+    async def stream_completion(
+        self,
+        turn: int,
+        model: str,
+        messages: list[dict],
+        tools: list[dict],
+        sampling_params: dict,
+    ) -> tuple[dict, str]:
+        stream = await litellm.acompletion(
+            model=model,
+            messages=messages,
+            tools=tools,
+            tool_choice="required",
+            api_base=self.api_base,
+            api_key=self.api_key,
+            timeout=self.timeout,
+            stream=True,
+            cache_control_injection_points=[{"location": "message", "index": 0}],
+            **sampling_params,
+        )
+        chunks = []
+        chars = 0
+        last_log = time.time()
+        async for chunk in stream:
+            chunks.append(chunk)
+            try:
+                delta = chunk.choices[0].delta
+                for attr in ("content", "reasoning_content", "reasoning"):
+                    val = getattr(delta, attr, None)
+                    if val:
+                        chars += len(val)
+                if delta.tool_calls:
+                    for tc in delta.tool_calls:
+                        if tc.function and tc.function.arguments:
+                            chars += len(tc.function.arguments)
+            except (AttributeError, IndexError):
+                pass
+            last_log = _heartbeat(turn, chars, len(chunks), last_log)
+        response = litellm.stream_chunk_builder(chunks, messages=messages)
+        choice = response.choices[0]
+        msg = choice.message.model_dump(exclude_none=True)
+        return msg, choice.finish_reason
+
+
+class AnthropicProvider:
+    """Direct Anthropic SDK adapter — sidesteps litellm's noisy sync-streaming GC bug
+    and gives us explicit control over cache_control. Translates messages to/from
+    OpenAI chat-shape dicts so run_attempt stays provider-agnostic."""
+
+    def __init__(self, api_key: str | None, timeout: float):
+        self.client = AsyncAnthropic(api_key=api_key, timeout=timeout)
+
+    @staticmethod
+    def _to_anthropic_messages(messages: list[dict]) -> list[dict]:
+        """OpenAI chat shape -> Anthropic messages shape."""
+        out: list[dict] = []
+        for m in messages:
+            role = m["role"]
+            if role == "tool":
+                out.append({"role": "user", "content": [{
+                    "type": "tool_result",
+                    "tool_use_id": m["tool_call_id"],
+                    "content": m["content"],
+                }]})
+                continue
+            if role == "assistant":
+                blocks: list[dict] = []
+                if m.get("content"):
+                    blocks.append({"type": "text", "text": m["content"]})
+                for tc in m.get("tool_calls", []) or []:
+                    args = tc["function"]["arguments"]
+                    try:
+                        parsed = json.loads(args) if args else {}
+                    except json.JSONDecodeError:
+                        parsed = {}
+                    blocks.append({
+                        "type": "tool_use",
+                        "id": tc["id"],
+                        "name": tc["function"]["name"],
+                        "input": parsed,
+                    })
+                out.append({"role": "assistant", "content": blocks})
+                continue
+            # role == "user"
+            out.append({"role": "user", "content": [{"type": "text", "text": m["content"]}]})
+        # Cache the first user message's last text block (stable prefix = task prompt).
+        if out and out[0]["role"] == "user":
+            for block in out[0]["content"]:
+                if block.get("type") == "text":
+                    block["cache_control"] = {"type": "ephemeral"}
+                    break
+        return out
+
+    @staticmethod
+    def _to_anthropic_tools(tools: list[dict]) -> list[dict]:
+        """OpenAI tool shape -> Anthropic tool shape."""
+        return [{
+            "name": t["function"]["name"],
+            "description": t["function"].get("description", ""),
+            "input_schema": t["function"]["parameters"],
+        } for t in tools]
+
+    @staticmethod
+    def _stop_reason_to_finish(stop_reason: str | None) -> str:
+        return {
+            "end_turn": "stop",
+            "tool_use": "tool_calls",
+            "max_tokens": "length",
+            "stop_sequence": "stop",
+        }.get(stop_reason or "", "stop")
+
+    async def stream_completion(
+        self,
+        turn: int,
+        model: str,
+        messages: list[dict],
+        tools: list[dict],
+        sampling_params: dict,
+    ) -> tuple[dict, str]:
+        a_messages = self._to_anthropic_messages(messages)
+        a_tools = self._to_anthropic_tools(tools)
+
+        params = dict(sampling_params)
+        max_tokens = params.pop("max_tokens", 8192)
+        # Anthropic doesn't accept reasoning_effort; drop it silently.
+        params.pop("reasoning_effort", None)
+
+        text_parts: list[str] = []
+        tool_blocks: dict[int, dict] = {}  # index -> partial dict
+        chars = 0
+        chunks_seen = 0
+        last_log = time.time()
+        stop_reason: str | None = None
+
+        async with self.client.messages.stream(
+            model=model,
+            max_tokens=max_tokens,
+            messages=a_messages,
+            tools=a_tools,
+            tool_choice={"type": "any"},  # Anthropic equivalent of OpenAI "required"
+            **params,
+        ) as stream:
+            async for event in stream:
+                chunks_seen += 1
+                etype = getattr(event, "type", None)
+                if etype == "content_block_start":
+                    block = event.content_block
+                    if block.type == "tool_use":
+                        tool_blocks[event.index] = {
+                            "id": block.id,
+                            "type": "function",
+                            "function": {"name": block.name, "arguments": ""},
+                        }
+                elif etype == "content_block_delta":
+                    delta = event.delta
+                    dtype = getattr(delta, "type", None)
+                    if dtype == "text_delta":
+                        text_parts.append(delta.text)
+                        chars += len(delta.text)
+                    elif dtype == "input_json_delta":
+                        slot = tool_blocks.get(event.index)
+                        if slot is not None:
+                            slot["function"]["arguments"] += delta.partial_json
+                            chars += len(delta.partial_json)
+                    elif dtype == "thinking_delta":
+                        chars += len(getattr(delta, "thinking", ""))
+                elif etype == "message_delta":
+                    if getattr(event.delta, "stop_reason", None):
+                        stop_reason = event.delta.stop_reason
+                last_log = _heartbeat(turn, chars, chunks_seen, last_log)
+
+        message: dict = {"role": "assistant"}
+        text = "".join(text_parts)
+        if text:
+            message["content"] = text
+        if tool_blocks:
+            message["tool_calls"] = [tool_blocks[i] for i in sorted(tool_blocks)]
+        return message, self._stop_reason_to_finish(stop_reason)
+
+
+def build_provider(model_str: str, api_base: str, api_key_arg: str | None, timeout: float
+                   ) -> tuple[object, str]:
+    """Return (provider, real_model). Anthropic models go to AnthropicProvider;
+    everything else (including openai/, fireworks_ai/, openrouter/, bare local)
+    goes to litellm."""
+    if model_str.startswith("anthropic/"):
+        api_key = api_key_arg or os.environ.get("ANTHROPIC_API_KEY")
+        return AnthropicProvider(api_key=api_key, timeout=timeout), model_str.split("/", 1)[1]
+    # litellm needs the provider prefix; bare names get "openai/" so litellm hits api_base.
+    if "/" in model_str:
+        return LiteLLMProvider(api_base=None, api_key=api_key_arg, timeout=timeout), model_str
+    return LiteLLMProvider(api_base=api_base, api_key=api_key_arg, timeout=timeout), f"openai/{model_str}"
 
 
 def run_attempt(
+    provider,
     model: str,
     user_prompt: str,
     tests: list[dict],
@@ -399,9 +560,6 @@ def run_attempt(
     attempt_dir: Path,
     task_dir: Path,
     attempt_id: str,
-    api_base: str | None = None,
-    api_key: str | None = None,
-    timeout: float = 600,
 ) -> AttemptResult | InfraFailure:
     sandbox = Sandbox()
     sandbox.start()
@@ -422,54 +580,52 @@ def run_attempt(
     loop = asyncio.new_event_loop()
     for turn in range(max_turns):
         try:
-            response = loop.run_until_complete(_stream_turn(
-                turn=turn,
-                model=model,
-                messages=messages,
-                api_base=api_base,
-                api_key=api_key,
-                timeout=timeout,
-                sampling_params=sampling_params,
-            ))
+            assistant_msg, finish_reason = loop.run_until_complete(
+                provider.stream_completion(
+                    turn=turn,
+                    model=model,
+                    messages=messages,
+                    tools=[SUBMIT_TOOL],
+                    sampling_params=sampling_params,
+                )
+            )
         except Exception as e:
             _log(f"  API error on turn {turn}: {e}")
             api_error = e
             error_turn = turn
             break
 
-        choice = response.choices[0]
-        assistant_msg = choice.message
-        finish_reason = choice.finish_reason
-
-        # Convert to dict immediately to avoid Pydantic serialization warnings
-        # on subsequent litellm.completion() calls and during save_attempt_log().
-        messages.append(serialize_message(assistant_msg))
+        messages.append(assistant_msg)
 
         if finish_reason == "length":
             _log(f"  turn {turn}: response truncated (max_tokens too low)")
 
-        if not assistant_msg.tool_calls:
-            # Model stopped without calling a tool
+        tool_calls = assistant_msg.get("tool_calls", [])
+        if not tool_calls:
             break
 
-        for tool_call in assistant_msg.tool_calls:
-            if tool_call.function.name != "submit":
-                tool_result_str = f"Unknown tool: {tool_call.function.name}. Use the `submit` tool."
+        for tool_call in tool_calls:
+            tc_id = tool_call["id"]
+            name = tool_call["function"]["name"]
+            arguments = tool_call["function"]["arguments"]
+
+            if name != "submit":
+                tool_result_str = f"Unknown tool: {name}. Use the `submit` tool."
                 messages.append({
                     "role": "tool",
-                    "tool_call_id": tool_call.id,
+                    "tool_call_id": tc_id,
                     "content": tool_result_str,
                 })
                 continue
 
             try:
-                args = json.loads(tool_call.function.arguments)
+                args = json.loads(arguments)
                 source_code = args["source_code"]
             except (json.JSONDecodeError, KeyError) as e:
                 tool_result_str = f"Invalid tool arguments: {e}. Pass source_code as a string."
                 messages.append({
                     "role": "tool",
-                    "tool_call_id": tool_call.id,
+                    "tool_call_id": tc_id,
                     "content": tool_result_str,
                 })
                 continue
@@ -502,7 +658,7 @@ def run_attempt(
 
             messages.append({
                 "role": "tool",
-                "tool_call_id": tool_call.id,
+                "tool_call_id": tc_id,
                 "content": tool_result_str,
             })
 
@@ -560,7 +716,7 @@ def main():
     parser.add_argument("--n-attempts", type=int, default=1, help="Number of independent attempts")
     parser.add_argument("--api-base", default="http://localhost:8080/v1", help="API base URL (for local/custom endpoints)")
     parser.add_argument("--api-key", default=None, help="API key (or set OPENAI_API_KEY / ANTHROPIC_API_KEY env var)")
-    parser.add_argument("--model", default="", help="Model name in LiteLLM format: anthropic/claude-sonnet-4-20250514, openai/gpt-4o, or bare name for local servers (empty = auto-detect from local server)")
+    parser.add_argument("--model", default="", help="Model name with provider prefix (openai/, anthropic/, fireworks_ai/, openrouter/) or bare name for the --api-base endpoint (empty = auto-detect)")
     parser.add_argument("--temperature", type=float, default=None, help="Sampling temperature (omit to use server default)")
     parser.add_argument("--reasoning-effort", choices=["low", "medium", "high"], default=None, help="Reasoning effort for reasoning models (low/medium/high)")
     parser.add_argument("--max-tokens", type=int, default=32768, help="Max tokens per response (default: 32768)")
@@ -588,18 +744,13 @@ def main():
     user_prompt = user_prompt.replace("{compile_cmd}", COMPILE_CMD)
     tests = load_tests(tests_file)
 
-    api_base = args.api_base
-    api_key = args.api_key
-
     if args.model:
-        model = args.model
-        if "/" in model:
-            api_base = None
-        else:
-            model = f"openai/{model}"
+        model_str = args.model
     else:
-        bare_model = auto_detect_model(api_base, api_key or "no-key")
-        model = f"openai/{bare_model}"
+        model_str = auto_detect_model(args.api_base, args.api_key or "no-key")
+
+    provider, real_model = build_provider(model_str, args.api_base, args.api_key, args.timeout)
+    kind = "anthropic" if isinstance(provider, AnthropicProvider) else "litellm"
 
     # Build sampling params
     sampling_params = {"max_tokens": args.max_tokens}
@@ -609,14 +760,14 @@ def main():
         sampling_params["reasoning_effort"] = args.reasoning_effort
 
     # Resolve directories
-    slug = args.slug or derive_slug(model, args.reasoning_effort)
+    slug = args.slug or derive_slug(model_str, args.reasoning_effort)
     results_base = Path(__file__).parent / args.results_dir
     results_file = results_base / "results.jsonl"
 
     data_dir_base = Path(args.data_dir or os.environ.get("VB_DATA_DIR", "") or Path.home() / ".vb-data")
     data_dir_base.mkdir(parents=True, exist_ok=True)
 
-    print(f"Running task '{args.task}' with model '{model}'")
+    print(f"Running task '{args.task}' with model '{model_str}' (provider={kind}, real_model='{real_model}')")
     sampling_str = ", ".join(f"{k}={v}" for k, v in sampling_params.items()) or "server defaults"
     print(f"Attempts: {args.n_attempts} | Max turns: {args.max_turns} | Sampling: {sampling_str}")
     print(f"Debug logs: {data_dir_base}")
@@ -629,7 +780,7 @@ def main():
     def save_result(r: AttemptResult):
         base = {
             "task": args.task,
-            "model": model,
+            "model": model_str,
             "slug": slug,
             "sampling_params": sampling_params,
             "attempt_id": r.attempt_id,
@@ -662,7 +813,8 @@ def main():
             attempt_id = make_attempt_id(args.task, slug)
             attempt_dir = data_dir_base / attempt_id
             r = run_attempt(
-                model=model,
+                provider=provider,
+                model=real_model,
                 user_prompt=user_prompt,
                 tests=tests,
                 max_turns=args.max_turns,
@@ -670,9 +822,6 @@ def main():
                 attempt_dir=attempt_dir,
                 task_dir=tasks_dir,
                 attempt_id=attempt_id,
-                api_base=api_base,
-                api_key=api_key,
-                timeout=args.timeout,
             )
             if isinstance(r, InfraFailure):
                 save_failure(r)
