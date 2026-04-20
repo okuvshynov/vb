@@ -83,23 +83,101 @@ def plot_boxplots(scores: dict[str, list[float]], task: str, output: Path):
     print(f"Saved {output}")
 
 
+def plot_dumbbell(scores_a: dict[str, list[float]], scores_b: dict[str, list[float]],
+                  task_a: str, task_b: str, output: Path):
+    """Dumbbell chart comparing mean MCC between two tasks for shared slugs."""
+    shared = sorted(set(scores_a) & set(scores_b))
+    if not shared:
+        print(f"No shared slugs between '{task_a}' and '{task_b}'")
+        return
+
+    import statistics
+    means_a = {s: statistics.mean(scores_a[s]) for s in shared}
+    means_b = {s: statistics.mean(scores_b[s]) for s in shared}
+    # Sort by gap (most degradation at bottom, best-performing on top)
+    shared.sort(key=lambda s: means_b[s] - means_a[s])
+
+    fig, ax = plt.subplots(figsize=(10, max(3, len(shared) * 0.5)))
+
+    for i, slug in enumerate(shared):
+        ma, mb = means_a[slug], means_b[slug]
+        color = COLOR_FIRST_PARTY if _is_first_party(slug) else COLOR_OSS
+        ax.axhspan(i - 0.4, i + 0.4, color=color, alpha=0.06)
+        ax.plot([ma, mb], [i, i], color=color, linewidth=2, alpha=0.5, zorder=2)
+        ax.scatter([ma], [i], color=color, s=60, zorder=3, marker="o", edgecolors="white", linewidths=0.5)
+        ax.scatter([mb], [i], color=color, s=60, zorder=3, marker="s", edgecolors="white", linewidths=0.5)
+        drop_pct = (mb - ma) / ma * 100 if ma != 0 else 0
+        label_x = max(ma, mb) + 0.01
+        ax.text(label_x, i, f"{drop_pct:+.0f}%", va="center", fontsize=8, color="#555")
+
+    na = {s: len(scores_a[s]) for s in shared}
+    nb = {s: len(scores_b[s]) for s in shared}
+    labels = [f"{s} ({na[s]}/{nb[s]})" for s in shared]
+    ax.set_yticks(range(len(shared)))
+    ax.set_yticklabels(labels)
+    ax.set_xlabel("Mean best MCC per attempt")
+    short_a = task_a.replace("toml-1.0-cpp", "spec").replace("toml-1.1-cpp", "1.1-spec")
+    short_b = task_b.replace("toml-1.0-cpp-nospec", "nospec").replace("toml-1.1-cpp-nospec", "1.1-nospec")
+    ax.set_title(f"Spec vs no-spec — {short_a} vs {short_b}")
+    ax.set_xlim(-0.05, 1.15)
+    ax.grid(axis="x", alpha=0.3)
+
+    # Legend
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], marker="o", color="w", markerfacecolor="#666", markersize=8, label=task_a),
+        Line2D([0], [0], marker="s", color="w", markerfacecolor="#666", markersize=8, label=task_b),
+    ]
+    ax.legend(handles=legend_elements, loc="lower left", fontsize=8)
+
+    fig.tight_layout()
+    fig.savefig(output, dpi=150)
+    plt.close(fig)
+    print(f"Saved {output}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Plot MCC boxplots per model slug")
-    parser.add_argument("--task", default="toml-1.0-cpp", help="Task to plot (default: toml-1.0-cpp)")
-    parser.add_argument("--results", default=None, help="Path to results.jsonl")
-    parser.add_argument("--output", default=None, help="Output image path (default: plots/<task>.png)")
-    parser.add_argument("--exclude", nargs="*", default=[], help="Slugs to exclude")
+    subparsers = parser.add_subparsers(dest="command")
+
+    box = subparsers.add_parser("boxplot", help="Horizontal boxplots for a single task")
+    box.add_argument("--task", default="toml-1.0-cpp", help="Task to plot (default: toml-1.0-cpp)")
+    box.add_argument("--results", default=None, help="Path to results.jsonl")
+    box.add_argument("--output", default=None, help="Output image path (default: plots/<task>.png)")
+    box.add_argument("--exclude", nargs="*", default=[], help="Slugs to exclude")
+
+    cmp = subparsers.add_parser("compare", help="Dumbbell chart comparing two tasks")
+    cmp.add_argument("--task-a", default="toml-1.0-cpp", help="First task (default: toml-1.0-cpp)")
+    cmp.add_argument("--task-b", default="toml-1.0-cpp-nospec", help="Second task (default: toml-1.0-cpp-nospec)")
+    cmp.add_argument("--results", default=None, help="Path to results.jsonl")
+    cmp.add_argument("--output", default=None, help="Output image path")
+    cmp.add_argument("--exclude", nargs="*", default=[], help="Slugs to exclude")
+
     args = parser.parse_args()
+    if not args.command:
+        parser.print_help()
+        return
 
     results_file = Path(args.results) if args.results else Path(__file__).parent / "results" / "results.jsonl"
-    output = Path(args.output) if args.output else Path(__file__).parent / "plots" / f"{args.task}.png"
-    output.parent.mkdir(parents=True, exist_ok=True)
 
-    scores = load_attempt_scores(results_file, args.task, args.exclude or None)
-    if not scores:
-        print(f"No data for task '{args.task}'")
-        return
-    plot_boxplots(scores, args.task, output)
+    if args.command == "boxplot":
+        output = Path(args.output) if args.output else Path(__file__).parent / "plots" / f"{args.task}.png"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        scores = load_attempt_scores(results_file, args.task, args.exclude or None)
+        if not scores:
+            print(f"No data for task '{args.task}'")
+            return
+        plot_boxplots(scores, args.task, output)
+
+    elif args.command == "compare":
+        output = Path(args.output) if args.output else Path(__file__).parent / "plots" / f"{args.task_a}_vs_{args.task_b}.png"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        scores_a = load_attempt_scores(results_file, args.task_a, args.exclude or None)
+        scores_b = load_attempt_scores(results_file, args.task_b, args.exclude or None)
+        if not scores_a or not scores_b:
+            print(f"No data for one of the tasks")
+            return
+        plot_dumbbell(scores_a, scores_b, args.task_a, args.task_b, output)
 
 
 if __name__ == "__main__":
