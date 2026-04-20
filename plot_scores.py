@@ -136,6 +136,71 @@ def plot_dumbbell(scores_a: dict[str, list[float]], scores_b: dict[str, list[flo
     print(f"Saved {output}")
 
 
+def load_attempt_times(results_file: Path, slug_prefix: str,
+                       exclude: list[str] | None = None
+                       ) -> dict[str, dict[str, list[float]]]:
+    """Read results.jsonl → {task: {slug: [elapsed_seconds_per_attempt]}}."""
+    seen: dict[tuple[str, str, str], float] = {}  # (attempt_id, slug, task) -> seconds
+    for line in results_file.read_text().splitlines():
+        if not line.strip():
+            continue
+        r = json.loads(line)
+        slug = r.get("slug", "")
+        if not slug.startswith(slug_prefix):
+            continue
+        if exclude and slug in exclude:
+            continue
+        elapsed = r.get("attempt_elapsed_seconds")
+        if elapsed is None:
+            continue
+        key = (r["attempt_id"], slug, r["task"])
+        seen[key] = elapsed
+
+    by_task: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
+    for (_, slug, task), elapsed in seen.items():
+        by_task[task][slug].append(elapsed)
+    return dict(by_task)
+
+
+def plot_timing(times_by_task: dict[str, dict[str, list[float]]],
+                slug_prefix: str, output_dir: Path):
+    """One image per task, showing attempt elapsed time per slug as horizontal boxplots."""
+    for task, slugs_data in sorted(times_by_task.items()):
+        slugs = sorted(slugs_data.keys(),
+                       key=lambda s: sorted(slugs_data[s])[len(slugs_data[s]) // 2])
+        data = [slugs_data[s] for s in slugs]
+        labels = [f"{s} (n={len(slugs_data[s])})" for s in slugs]
+        colors = [COLOR_FIRST_PARTY if _is_first_party(s) else COLOR_OSS for s in slugs]
+
+        fig, ax = plt.subplots(figsize=(10, max(2, len(slugs) * 0.45)))
+        bp = ax.boxplot(data, vert=False, patch_artist=True, widths=0.5,
+                        showmeans=True,
+                        meanprops=dict(marker="D", markerfacecolor="white",
+                                       markeredgecolor="#333", markersize=4),
+                        medianprops=dict(color="white", linewidth=1.5),
+                        flierprops=dict(marker="o", markersize=3, alpha=0.5))
+        for patch, c in zip(bp["boxes"], colors):
+            patch.set_facecolor(c)
+            patch.set_alpha(0.7)
+        for i, c in enumerate(colors):
+            ax.axhspan(i + 0.5, i + 1.5, color=c, alpha=0.06)
+        for i, (d, c) in enumerate(zip(data, colors)):
+            y = [i + 1] * len(d)
+            ax.scatter(d, y, color=c, alpha=0.4, s=15, zorder=3)
+
+        ax.set_yticklabels(labels)
+        ax.set_xlabel("Attempt elapsed time (seconds)")
+        ax.set_title(f"Attempt timing — {task} ({slug_prefix}*)")
+        ax.set_xlim(left=0)
+        ax.grid(axis="x", alpha=0.3)
+
+        fig.tight_layout()
+        out = output_dir / f"timing-{slug_prefix}-{task}.png"
+        fig.savefig(out, dpi=150)
+        plt.close(fig)
+        print(f"Saved {out}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Plot MCC boxplots per model slug")
     subparsers = parser.add_subparsers(dest="command")
@@ -152,6 +217,12 @@ def main():
     cmp.add_argument("--results", default=None, help="Path to results.jsonl")
     cmp.add_argument("--output", default=None, help="Output image path")
     cmp.add_argument("--exclude", nargs="*", default=[], help="Slugs to exclude")
+
+    tim = subparsers.add_parser("timing", help="Attempt timing boxplots by slug prefix")
+    tim.add_argument("--prefix", default="fireworks", help="Slug prefix to filter (default: fireworks)")
+    tim.add_argument("--results", default=None, help="Path to results.jsonl")
+    tim.add_argument("--output", default=None, help="Output image path")
+    tim.add_argument("--exclude", nargs="*", default=[], help="Slugs to exclude")
 
     args = parser.parse_args()
     if not args.command:
@@ -178,6 +249,15 @@ def main():
             print(f"No data for one of the tasks")
             return
         plot_dumbbell(scores_a, scores_b, args.task_a, args.task_b, output)
+
+    elif args.command == "timing":
+        output_dir = Path(args.output) if args.output else Path(__file__).parent / "plots"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        times = load_attempt_times(results_file, args.prefix, args.exclude or None)
+        if not times:
+            print(f"No timing data for prefix '{args.prefix}'")
+            return
+        plot_timing(times, args.prefix, output_dir)
 
 
 if __name__ == "__main__":
